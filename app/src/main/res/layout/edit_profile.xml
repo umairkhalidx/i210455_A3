@@ -1,0 +1,244 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    >
+
+    <LinearLayout
+        android:id="@+id/linearLayout3"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:orientation="vertical"
+        android:weightSum="100"
+        android:background="#def8f8"
+        >
+
+        <LinearLayout
+            android:id="@+id/Layout1"
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_weight="24"
+            android:background="#50c2c9"
+            android:orientation="horizontal">
+
+            <ImageButton
+                android:id="@+id/back_btn"
+                android:layout_width="50dp"
+                android:layout_height="30dp"
+                android:layout_marginLeft="30dp"
+                android:layout_marginTop="60dp"
+                android:background="#50c2c9"
+                android:src="@drawable/back_arrow" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginLeft="60dp"
+                android:layout_marginTop="60dp"
+                android:text="Edit Profile"
+                android:textColor="@color/white"
+                android:textSize="28sp"
+                android:textStyle="bold"></TextView>
+
+        </LinearLayout>
+
+        <RelativeLayout
+            android:id="@+id/Layout2"
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_weight="76"
+            android:background="#def8f8"
+            android:orientation="vertical"
+            android:layout_marginTop="50dp"
+            >
+
+            <TextView
+                android:id="@+id/txt_1"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginLeft="20dp"
+                android:textColor="#157177"
+                android:text="Name"
+                android:textSize="16dp"
+                android:textStyle="bold"
+                >
+
+            </TextView>
+
+            <EditText
+                android:id="@+id/input_1"
+                android:layout_width="match_parent"
+                android:layout_height="36dp"
+                android:background="@drawable/textbox_round_corners"
+                android:layout_marginLeft="20dp"
+                android:layout_marginRight="30dp"
+                android:hint="Ali"
+                android:layout_below="@id/txt_1"
+                android:paddingLeft="10dp"
+                >
+
+            </EditText>
+
+            <TextView
+                android:id="@+id/txt_2"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginLeft="20dp"
+                android:textColor="#157177"
+                android:text="Email"
+                android:textSize="16dp"
+                android:textStyle="bold"
+                android:layout_below="@id/input_1"
+                android:layout_marginTop="6dp"
+                >
+
+            </TextView>
+
+            <EditText
+                android:id="@+id/input_2"
+                android:layout_width="match_parent"
+                android:layout_height="36dp"
+                android:background="@drawable/textbox_round_corners"
+                android:layout_marginLeft="20dp"
+                android:layout_marginRight="30dp"
+                android:hint="ali@gmail.com"
+                android:layout_below="@id/txt_2"
+                android:paddingLeft="10dp"
+                >
+
+            </EditText>
+
+            <TextView
+            android:id="@+id/txt_3"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginLeft="20dp"
+            android:textColor="#157177"
+            android:text="Contact Number"
+            android:textSize="16dp"
+            android:textStyle="bold"
+            android:layout_below="@id/input_2"
+            android:layout_marginTop="6dp"
+            >
+
+        </TextView>
+
+        <EditText
+            android:id="@+id/input_3"
+            android:layout_width="match_parent"
+            android:layout_height="36dp"
+            android:background="@drawable/textbox_round_corners"
+            android:layout_marginLeft="20dp"
+            android:layout_marginRight="30dp"
+            android:hint="+92 321 2242022"
+            android:layout_below="@id/txt_3"
+            android:paddingLeft="10dp"
+            >
+
+        </EditText>
+
+
+            <TextView
+                android:id="@+id/txt_4"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginLeft="20dp"
+                android:textColor="#157177"
+                android:text="Country"
+                android:textSize="16dp"
+                android:textStyle="bold"
+                android:layout_below="@id/input_3"
+                android:layout_marginTop="6dp"
+                >
+
+            </TextView>
+
+            <EditText
+                android:id="@+id/input_4"
+                android:layout_width="match_parent"
+                android:layout_height="36dp"
+                android:background="@drawable/textbox_round_corners"
+                android:layout_marginLeft="20dp"
+                android:layout_marginRight="30dp"
+                android:hint="Pakistan"
+                android:layout_below="@id/txt_4"
+                android:paddingLeft="10dp"
+                >
+
+            </EditText>
+
+
+            <TextView
+                android:id="@+id/txt_5"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginLeft="20dp"
+                android:textColor="#157177"
+                android:text="City"
+                android:textSize="16dp"
+                android:textStyle="bold"
+                android:layout_below="@id/input_4"
+                android:layout_marginTop="6dp"
+                >
+
+            </TextView>
+
+            <EditText
+                android:id="@+id/input_5"
+                android:layout_width="match_parent"
+                android:layout_height="36dp"
+                android:background="@drawable/textbox_round_corners"
+                android:layout_marginLeft="20dp"
+                android:layout_marginRight="30dp"
+                android:hint="Islamabad"
+                android:layout_below="@id/txt_5"
+                android:paddingLeft="10dp"
+                >
+
+            </EditText>
+
+            <Button
+                android:id="@+id/update_profile_btn"
+                android:layout_width="330dp"
+                android:layout_height="54dp"
+                android:backgroundTint="#157177"
+                android:text="Update Profile"
+                android:textColor="@color/white"
+                app:cornerRadius="8dp"
+                android:textStyle="bold"
+                android:textSize="16dp"
+                android:layout_alignParentBottom="true"
+                android:layout_centerHorizontal="true"
+                android:layout_marginBottom="20dp"
+                >
+
+            </Button>
+
+        </RelativeLayout>
+
+    </LinearLayout>
+
+    <androidx.cardview.widget.CardView
+        android:id="@+id/cardView"
+        android:layout_width="100dp"
+        android:layout_height="100dp"
+        android:layout_marginTop="130dp"
+        android:backgroundTint="@color/white"
+        app:cardCornerRadius="50dp"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent">
+
+        <ImageView
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:background="@color/black"
+            >
+
+        </ImageView>
+
+    </androidx.cardview.widget.CardView>
+
+</androidx.constraintlayout.widget.ConstraintLayout>

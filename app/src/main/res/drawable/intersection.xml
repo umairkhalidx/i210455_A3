@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="utf-8"?>
+<layer-list xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <item android:top="-40dp" android:right="-40dp" android:bottom="-40dp" android:left="-40dp">
+        <shape android:shape="oval">
+            <size
+                android:width="50dp"
+                android:height="50dp" />
+            <solid android:color="#b6ede7" />
+            <corners android:radius="25dp" />
+        </shape>
+    </item>
+
+</layer-list>
+
+<!--    &lt;!&ndash; Shape 1 &ndash;&gt;-->
+<!--<item android:drawable="@drawable/circle" />-->
+
+<!--    &lt;!&ndash; Shape 2 &ndash;&gt;-->
+<!--<item android:drawable="@drawable/circle"-->
+<!--android:left="-40dp"-->
+<!--    />-->
+
+
+<!--    &lt;!&ndash; Intersection Part (Change color as needed) &ndash;&gt;-->
+<!--<item-->
+<!--android:left="10dp"-->
+<!--android:right="10dp"-->
+<!--android:top="10dp"-->
+<!--android:bottom="10dp">-->
+<!--<shape android:shape="rectangle">-->
+<!--    <corners android:radius="8dp" />-->
+<!--    <solid android:color="#0000FF" /> &lt;!&ndash; Change color for intersection part &ndash;&gt;-->
+<!--</shape>-->
+<!--</item>-->

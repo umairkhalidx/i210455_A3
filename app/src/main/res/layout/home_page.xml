@@ -1,0 +1,577 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_height="match_parent"
+    android:layout_width="match_parent"
+    >
+
+    <LinearLayout
+        android:layout_height="match_parent"
+        android:layout_width="match_parent"
+        android:orientation="vertical"
+        android:weightSum="100"
+        >
+
+        <RelativeLayout
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_weight="18"
+            android:orientation="horizontal"
+            android:background="#def8f8"
+            >
+
+
+            <ImageView
+                android:id="@+id/Circle1"
+                android:layout_width="140dp"
+                android:layout_height="140dp"
+                android:src="@drawable/circle"
+                android:layout_marginTop="-50dp">
+
+            </ImageView>
+
+            <ImageView
+                android:id="@+id/Circle2"
+                android:layout_width="140dp"
+                android:layout_height="140dp"
+                android:src="@drawable/circle"
+                android:layout_marginStart="-70dp"
+                >
+
+            </ImageView>
+
+            <RelativeLayout
+                android:id="@+id/hello_layout"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:layout_marginLeft="38dp"
+                android:layout_marginTop="56dp">
+
+                <TextView
+                    android:id="@+id/txt_hello"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_alignParentStart="true"
+                    android:layout_marginStart="0dp"
+                    android:layout_centerVertical="true"
+                    android:layout_weight="1"
+                    android:text="Hello, "
+                    android:textColor="@color/black"
+                    android:textSize="32sp"
+                    android:textStyle="bold" />
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="0dp"
+                    android:layout_toEndOf="@+id/txt_hello"
+                    android:text="Ali"
+                    android:textColor="#157177"
+                    android:textSize="32sp"
+                    android:textStyle="bold"
+                    android:layout_centerVertical="true" />
+
+                <androidx.cardview.widget.CardView
+                    android:layout_width="36dp"
+                    android:layout_height="36dp"
+                    android:layout_alignParentEnd="true"
+                    android:layout_gravity="end"
+                    android:layout_marginEnd="30dp"
+                    android:backgroundTint="#157177"
+                    app:cardCornerRadius="40dp"
+                    android:layout_centerVertical="true">
+
+                    <ImageButton
+                        android:id="@+id/notifications_btn"
+                        android:layout_width="36dp"
+                        android:layout_height="36dp"
+                        android:layout_gravity="center"
+                        android:backgroundTint="#157177"
+                        android:src="@drawable/bell_icon_white"
+                        app:cornerRadius="30dp"
+                        android:layout_centerVertical="true"/>
+
+                </androidx.cardview.widget.CardView>
+
+            </RelativeLayout>
+
+            <RelativeLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_below="@+id/hello_layout"
+                android:orientation="horizontal"
+                android:layout_marginLeft="38dp"
+                >
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Ready for mentorship? Let’s begin the journey!"
+                    android:textColor="#157177"
+                    >
+
+                </TextView>
+
+
+            </RelativeLayout>
+
+
+
+        </RelativeLayout>
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_weight="74"
+            android:background="#def8f8"
+            android:orientation="vertical">
+
+            <HorizontalScrollView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="6dp"
+                android:layout_marginBottom="6dp"
+                android:scrollbars="none">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:orientation="horizontal"
+                    >
+                    <Button
+                        android:layout_width="40dp"
+                        android:layout_height="wrap_content"
+                        app:cornerRadius="8dp"
+                        android:backgroundTint="#157177"
+                        android:layout_marginLeft="10dp"
+                        android:textSize="14dp"
+                        android:text="All"
+                        android:paddingLeft="0dp"
+                        android:paddingRight="0dp"
+                        >
+                    </Button>
+
+                    <Button
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        app:cornerRadius="8dp"
+                        android:backgroundTint="#bde1e2"
+                        android:layout_marginLeft="10dp"
+                        android:textSize="14dp"
+                        android:text="Education"
+                        android:textColor="#157177"
+                        android:paddingLeft="12dp"
+                        android:paddingRight="12dp"
+                        >
+                    </Button>
+
+                    <Button
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        app:cornerRadius="8dp"
+                        android:backgroundTint="#bde1e2"
+                        android:layout_marginLeft="10dp"
+                        android:textSize="14dp"
+                        android:text="Entrepreneurship"
+                        android:textColor="#157177"
+                        android:paddingLeft="12dp"
+                        android:paddingRight="12dp"
+                        >
+                    </Button>
+
+                    <Button
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        app:cornerRadius="8dp"
+                        android:backgroundTint="#bde1e2"
+                        android:layout_marginLeft="10dp"
+                        android:textSize="14dp"
+                        android:text="Personal Growth"
+                        android:textColor="#157177"
+                        android:paddingLeft="12dp"
+                        android:paddingRight="12dp"
+                        >
+                    </Button>
+
+                    <Button
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        app:cornerRadius="8dp"
+                        android:backgroundTint="#bde1e2"
+                        android:layout_marginLeft="10dp"
+                        android:textSize="14dp"
+                        android:text="Carer"
+                        android:textColor="#157177"
+                        android:paddingLeft="12dp"
+                        android:paddingRight="12dp"
+                        android:layout_marginRight="10dp"
+                        >
+                    </Button>
+                    
+                </LinearLayout>
+                
+            </HorizontalScrollView>
+
+<!--            <LinearLayout-->
+<!--                android:layout_width="match_parent"-->
+<!--                android:layout_height="match_parent">-->
+
+<!--                <ScrollView-->
+<!--                    android:layout_width="match_parent"-->
+<!--                    android:layout_height="match_parent"-->
+<!--                    >-->
+
+
+<!--                </ScrollView>-->
+
+<!--            </LinearLayout>-->
+
+
+            <RelativeLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                >
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Top Mentors For you"
+                    android:textColor="#157177"
+                    android:textStyle="bold"
+                    android:textSize="20dp"
+                    android:layout_marginLeft="20dp"
+                    android:layout_alignParentStart="true"
+                    >
+
+                </TextView>
+
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="View all"
+                    android:textColor="#157177"
+                    android:textSize="14dp"
+                    android:layout_marginRight="20dp"
+                    android:layout_alignParentEnd="true"
+                    android:layout_centerVertical="true"
+                    >
+
+                </TextView>
+
+
+            </RelativeLayout>
+
+            <androidx.recyclerview.widget.RecyclerView
+                android:id="@+id/recyclerview_educator_top"
+                android:layout_width="match_parent"
+                android:layout_height="180dp"
+                android:orientation="horizontal"
+                android:layout_marginTop="10dp"
+                android:layout_marginBottom="10dp"
+                app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager"
+                >
+
+
+            </androidx.recyclerview.widget.RecyclerView>
+
+            <RelativeLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                >
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Education Mentors"
+                    android:textColor="#157177"
+                    android:textStyle="bold"
+                    android:textSize="20dp"
+                    android:layout_marginLeft="20dp"
+                    android:layout_alignParentStart="true"
+                    >
+
+                </TextView>
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="View all"
+                    android:textColor="#157177"
+                    android:textSize="14dp"
+                    android:layout_marginRight="20dp"
+                    android:layout_alignParentEnd="true"
+                    android:layout_centerVertical="true"
+                    >
+
+                </TextView>
+
+
+            </RelativeLayout>
+
+            <androidx.recyclerview.widget.RecyclerView
+                android:id="@+id/recyclerview_educator_edu"
+                android:layout_width="match_parent"
+                android:layout_height="180dp"
+                android:orientation="horizontal"
+                android:layout_marginTop="10dp"
+                android:layout_marginBottom="10dp"
+                app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager"
+                >
+
+
+            </androidx.recyclerview.widget.RecyclerView>
+
+            <RelativeLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                >
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Recent Mentors"
+                    android:textColor="#157177"
+                    android:textStyle="bold"
+                    android:textSize="20dp"
+                    android:layout_marginLeft="20dp"
+                    android:layout_alignParentStart="true"
+                    >
+
+                </TextView>
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="View all"
+                    android:textColor="#157177"
+                    android:textSize="14dp"
+                    android:layout_marginRight="20dp"
+                    android:layout_alignParentEnd="true"
+                    android:layout_centerVertical="true"
+                    >
+
+                </TextView>
+
+
+            </RelativeLayout>
+
+            <androidx.recyclerview.widget.RecyclerView
+                android:id="@+id/recyclerview_educator_rec"
+                android:layout_width="match_parent"
+                android:layout_height="180dp"
+                android:orientation="horizontal"
+                android:layout_marginTop="10dp"
+                android:layout_marginBottom="10dp"
+                app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager"
+                >
+
+
+            </androidx.recyclerview.widget.RecyclerView>
+
+        </LinearLayout>
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_weight="8"
+            android:background="#157177"
+            android:orientation="horizontal"
+            android:weightSum="100"
+            >
+            <LinearLayout
+                android:layout_width="0dp"
+                android:layout_height="match_parent"
+                android:layout_weight="20"
+                android:gravity="center"
+                android:orientation="vertical"
+                >
+
+
+                <ImageButton
+                    android:id="@+id/home_btn"
+                    android:layout_width="50dp"
+                    android:layout_height="30dp"
+                    android:src="@drawable/home"
+                    android:scaleType="fitCenter"
+                    android:background="#157177"
+
+                    >
+
+                </ImageButton>
+
+                <TextView
+                    android:id="@+id/home_txt"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Home"
+                    android:textSize="10sp"
+                    android:layout_marginTop="-4dp"
+                    android:textColor="#def8f8"
+                    >
+
+                </TextView>
+
+            </LinearLayout>
+
+            <LinearLayout
+                android:layout_width="0dp"
+                android:layout_height="match_parent"
+                android:layout_weight="20"
+                android:gravity="center"
+                android:orientation="vertical"
+                >
+
+
+                <ImageButton
+                    android:id="@+id/search_btn"
+                    android:layout_width="50dp"
+                    android:layout_height="30dp"
+                    android:src="@drawable/search"
+                    android:scaleType="fitCenter"
+                    android:background="#157177"
+                    >
+
+                </ImageButton>
+
+                <TextView
+                    android:id="@+id/search_txt"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Search"
+                    android:textSize="10sp"
+                    android:layout_marginTop="-4dp"
+                    android:textColor="#def8f8"
+                    >
+
+                </TextView>
+
+            </LinearLayout>
+
+            <LinearLayout
+                android:layout_width="0dp"
+                android:layout_height="match_parent"
+                android:layout_weight="20"
+                android:gravity="center"
+                android:orientation="vertical"
+                android:backgroundTint="@color/black"
+                >
+                <!--            android:background="@drawable/rounded_layout"-->
+
+                <!--            <ImageButton-->
+                <!--                android:layout_width="60dp"-->
+                <!--                android:layout_height="40dp"-->
+                <!--                android:src="@drawable/add_circle"-->
+                <!--                android:scaleType="fitCenter"-->
+                <!--                android:background="#157177"-->
+                <!--                android:layout_marginTop="-8dp"-->
+                <!--                >-->
+
+                <!--            </ImageButton>-->
+
+            </LinearLayout>
+
+
+            <LinearLayout
+                android:layout_width="0dp"
+                android:layout_height="match_parent"
+                android:layout_weight="20"
+                android:gravity="center"
+                android:orientation="vertical"
+                >
+
+
+                <ImageButton
+                    android:id="@+id/chat_btn"
+                    android:layout_width="50dp"
+                    android:layout_height="30dp"
+                    android:src="@drawable/chat"
+                    android:scaleType="fitCenter"
+                    android:background="#157177"
+
+                    >
+
+                </ImageButton>
+
+                <TextView
+                    android:id="@+id/chat_txt"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Chat"
+                    android:textSize="10sp"
+                    android:layout_marginTop="-4dp"
+                    android:textColor="#def8f8"
+                    >
+
+                </TextView>
+
+            </LinearLayout>
+            <LinearLayout
+                android:layout_width="0dp"
+                android:layout_height="match_parent"
+                android:layout_weight="20"
+                android:gravity="center"
+                android:orientation="vertical"
+                >
+
+
+                <ImageButton
+                    android:id="@+id/profile_btn"
+                    android:layout_width="50dp"
+                    android:layout_height="30dp"
+                    android:background="#157177"
+                    android:scaleType="fitCenter"
+                    android:src="@drawable/profile"
+
+                    >
+
+                </ImageButton>
+
+                <TextView
+                    android:id="@+id/profile_txt"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Profile"
+                    android:textSize="10sp"
+                    android:layout_marginTop="-4dp"
+                    android:textColor="#def8f8"
+                    >
+
+                </TextView>
+
+            </LinearLayout>
+
+        </LinearLayout>
+
+
+    </LinearLayout>
+
+    <LinearLayout
+        android:layout_width="60dp"
+        android:layout_height="58dp"
+        android:layout_alignParentBottom="true"
+        android:layout_centerHorizontal="true"
+        android:gravity="center"
+        android:layout_marginBottom="30dp"
+        android:background="@drawable/rounded_layout"
+        >
+
+        <ImageButton
+            android:id="@+id/plus_btn"
+            android:layout_width="70dp"
+            android:layout_height="50dp"
+            android:src="@drawable/add_circle"
+            android:scaleType="fitCenter"
+            android:background="@android:color/transparent"
+            >
+
+        </ImageButton>
+
+    </LinearLayout>
+
+</RelativeLayout>

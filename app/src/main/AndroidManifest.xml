@@ -1,0 +1,95 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools">
+
+    <application
+        android:allowBackup="true"
+        android:dataExtractionRules="@xml/data_extraction_rules"
+        android:fullBackupContent="@xml/backup_rules"
+        android:icon="@mipmap/ic_launcher"
+        android:label="@string/app_name"
+        android:roundIcon="@mipmap/ic_launcher_round"
+        android:supportsRtl="true"
+        android:theme="@style/Theme.I210455"
+        tools:targetApi="31">
+        <activity
+            android:name=".editprofile_activity"
+            android:exported="false" />
+        <activity
+            android:name=".booked_sessions_activity"
+            android:exported="false" />
+        <activity
+            android:name=".call_2_activity"
+            android:exported="false" />
+        <activity
+            android:name=".call_1_activity"
+            android:exported="false" />
+        <activity
+            android:name=".chat_2_activity"
+            android:exported="false" />
+        <activity
+            android:name=".chat_1_activity"
+            android:exported="false" />
+        <activity
+            android:name=".camera_video_activity"
+            android:exported="false" />
+        <activity
+            android:name=".camera_photo_activity"
+            android:exported="false" />
+        <activity
+            android:name=".book_session_activity"
+            android:exported="false" />
+        <activity
+            android:name=".john_cooper_2_activity"
+            android:exported="false" />
+        <activity
+            android:name=".john_cooper_1_activity"
+            android:exported="false" />
+        <activity
+            android:name=".search_results_activity"
+            android:exported="false" />
+        <activity
+            android:name=".notifications_activity"
+            android:exported="false" />
+        <activity
+            android:name=".add_new_mentor_activity"
+            android:exported="false" />
+        <activity
+            android:name=".my_profile_activity"
+            android:exported="false" />
+        <activity
+            android:name=".chats_activity"
+            android:exported="false" />
+        <activity
+            android:name=".lets_find_activity"
+            android:exported="false" />
+        <activity
+            android:name=".reset_password_activity"
+            android:exported="false" />
+        <activity
+            android:name=".dialer_activity"
+            android:exported="false" />
+        <activity
+            android:name=".get_started_activity"
+            android:exported="false" />
+        <activity
+            android:name=".forgot_password_activity"
+            android:exported="false" />
+        <activity
+            android:name=".home_page_activity"
+            android:exported="false" />
+        <activity
+            android:name=".login_activity"
+            android:exported="false" />
+        <activity
+            android:name=".MainActivity"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity>
+    </application>
+
+</manifest>

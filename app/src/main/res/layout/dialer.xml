@@ -1,0 +1,352 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_height="match_parent"
+    android:layout_width="match_parent"
+    android:orientation="vertical"
+    android:weightSum="100"
+    android:background="#def8f8"
+    >
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="40"
+        android:orientation="vertical"
+        >
+        <ImageButton
+            android:id="@+id/back_btn_dialer"
+            android:layout_width="50dp"
+            android:layout_height="60dp"
+            android:src="@drawable/back_arrow"
+            android:background="#def8f8"
+            android:layout_marginLeft="18dp"
+            android:layout_marginTop="30dp"
+
+            />
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Verify your phone number"
+            android:textSize="28dp"
+            android:textColor="#157177"
+            android:textStyle="bold"
+            android:layout_gravity="center"
+            >
+
+        </TextView>
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:gravity="center"
+            android:layout_marginBottom="20dp"
+            android:layout_marginTop="4dp"
+            >
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="We’ve sent a code to "
+                android:textSize="16dp"
+                android:textColor="@color/black"
+                >
+
+            </TextView>
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="+92 321 2242022"
+                android:textSize="16dp"
+                android:textColor="#3d8c90"
+                >
+
+            </TextView>
+
+        </LinearLayout>
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:gravity="center"
+            >
+
+            <ImageView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:src="@drawable/empty_circle"
+                android:layout_marginLeft="6dp"
+                android:layout_marginRight="6dp"
+                />
+            <ImageView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:src="@drawable/empty_circle"
+                android:layout_marginLeft="6dp"
+                android:layout_marginRight="6dp"
+                />
+
+            <ImageView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:src="@drawable/empty_circle"
+                android:layout_marginLeft="6dp"
+                android:layout_marginRight="6dp"
+                />
+
+            <ImageView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:src="@drawable/empty_circle"
+                android:layout_marginLeft="6dp"
+                android:layout_marginRight="6dp"
+                />
+
+            <ImageView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:src="@drawable/empty_circle"
+                android:layout_marginLeft="6dp"
+                android:layout_marginRight="6dp"
+                />
+
+
+
+        </LinearLayout>
+
+        <Button
+            android:id="@+id/verify_btn"
+            android:layout_width="150dp"
+            android:layout_height="44dp"
+            android:layout_gravity="center"
+            android:layout_marginTop="20dp"
+            android:backgroundTint="#157177"
+            android:text="Verify"
+            android:textColor="@color/white"
+            app:cornerRadius="8dp"
+            android:textStyle="bold"
+            android:textSize="16dp"
+            >
+
+        </Button>
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:layout_gravity="bottom"
+            android:gravity="center"
+            >
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Send code again "
+                android:textSize="16dp"
+                android:textColor="@color/black"
+                >
+
+            </TextView>
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="00:20"
+                android:textSize="16dp"
+                android:textColor="#318489"
+                android:textStyle="bold"
+                >
+
+            </TextView>
+
+        </LinearLayout>
+
+    </LinearLayout>
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="60"
+        android:orientation="vertical"
+        android:background="#50c2c9"
+        android:weightSum="100"
+        android:gravity="center"
+        >
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_weight="23"
+            android:orientation="horizontal"
+            android:gravity="center"
+            >
+
+            <Button
+                android:layout_width="72dp"
+                android:layout_height="80dp"
+                app:cornerRadius="16dp"
+                android:text="1"
+                android:textSize="42dp"
+                android:backgroundTint="#90dade"
+                android:layout_marginRight="40dp"
+                >
+
+            </Button>
+
+            <Button
+                android:layout_width="72dp"
+                android:layout_height="80dp"
+                app:cornerRadius="16dp"
+                android:text="2"
+                android:textSize="42dp"
+                android:backgroundTint="#90dade"
+                android:layout_marginRight="40dp"
+                >
+
+            </Button>
+
+            <Button
+                android:layout_width="72dp"
+                android:layout_height="80dp"
+                app:cornerRadius="16dp"
+                android:text="3"
+                android:textSize="42dp"
+                android:backgroundTint="#90dade"
+                >
+
+            </Button>
+
+        </LinearLayout>
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_weight="23"
+            android:orientation="horizontal"
+            android:gravity="center"
+            >
+
+            <Button
+                android:layout_width="72dp"
+                android:layout_height="80dp"
+                app:cornerRadius="16dp"
+                android:text="4"
+                android:textSize="42dp"
+                android:backgroundTint="#90dade"
+                android:layout_marginRight="40dp"
+                >
+
+            </Button>
+
+            <Button
+                android:layout_width="72dp"
+                android:layout_height="80dp"
+                app:cornerRadius="16dp"
+                android:text="5"
+                android:textSize="42dp"
+                android:backgroundTint="#90dade"
+                android:layout_marginRight="40dp"
+                >
+
+            </Button>
+
+            <Button
+                android:layout_width="72dp"
+                android:layout_height="80dp"
+                app:cornerRadius="16dp"
+                android:text="6"
+                android:textSize="42dp"
+                android:backgroundTint="#90dade"
+                >
+
+            </Button>
+
+        </LinearLayout>
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_weight="23"
+            android:orientation="horizontal"
+            android:gravity="center"
+            >
+
+            <Button
+                android:layout_width="72dp"
+                android:layout_height="80dp"
+                app:cornerRadius="16dp"
+                android:text="7"
+                android:textSize="42dp"
+                android:backgroundTint="#90dade"
+                android:layout_marginRight="40dp"
+                >
+
+            </Button>
+
+            <Button
+                android:layout_width="72dp"
+                android:layout_height="80dp"
+                app:cornerRadius="16dp"
+                android:text="8"
+                android:textSize="42dp"
+                android:backgroundTint="#90dade"
+                android:layout_marginRight="40dp"
+                >
+
+            </Button>
+
+            <Button
+                android:layout_width="72dp"
+                android:layout_height="80dp"
+                app:cornerRadius="16dp"
+                android:text="9"
+                android:textSize="42dp"
+                android:backgroundTint="#90dade"
+                >
+
+            </Button>
+
+        </LinearLayout>
+
+        <androidx.constraintlayout.widget.ConstraintLayout
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_weight="23"
+            android:orientation="horizontal">
+
+            <Button
+                android:id="@+id/button2"
+                android:layout_width="72dp"
+                android:layout_height="80dp"
+                android:layout_marginTop="8dp"
+                android:backgroundTint="#90dade"
+                android:text="0"
+                android:textSize="42dp"
+                app:cornerRadius="16dp"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintHorizontal_bias="0.498"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toTopOf="parent">
+
+            </Button>
+
+            <ImageButton
+                android:id="@+id/imageButton"
+                android:layout_width="72dp"
+                android:layout_height="68dp"
+                android:layout_marginEnd="44dp"
+                android:backgroundTint="#50c2c9"
+                android:src="@mipmap/dialer_close"
+                app:layout_constraintBottom_toBottomOf="parent"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintTop_toTopOf="parent">
+
+            </ImageButton>
+
+        </androidx.constraintlayout.widget.ConstraintLayout>
+
+
+    </LinearLayout>
+
+</LinearLayout>
