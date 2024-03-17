@@ -2,7 +2,7 @@ package com.umairkhalid.i210455
 
 import java.io.Serializable
 
-data class Message(
+data class message_data(
     val userId: String = "",
     val messageText: String = "",
     val timestamp: Long = 0,

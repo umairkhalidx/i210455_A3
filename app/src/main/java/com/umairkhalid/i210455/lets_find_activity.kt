@@ -48,7 +48,7 @@ class lets_find_activity : AppCompatActivity() {
                 val nextActivityIntent = Intent(this, search_results_activity::class.java)
                 nextActivityIntent.putExtra("search_txt", txt)
                 startActivity(nextActivityIntent)
-                finish()
+//                finish()
             }
 
 //            val nextActivityIntent = Intent(this, search_results_activity::class.java)
@@ -60,7 +60,7 @@ class lets_find_activity : AppCompatActivity() {
             val nextActivityIntent = Intent(this, search_results_activity::class.java)
             nextActivityIntent.putExtra("search_txt", txt)
             startActivity(nextActivityIntent)
-            finish()
+//            finish()
 //            val nextActivityIntent = Intent(this, search_results_activity::class.java)
 //            startActivity(nextActivityIntent)
         }
@@ -70,7 +70,7 @@ class lets_find_activity : AppCompatActivity() {
             val nextActivityIntent = Intent(this, search_results_activity::class.java)
             nextActivityIntent.putExtra("search_txt", txt)
             startActivity(nextActivityIntent)
-            finish()
+//            finish()
 //            val nextActivityIntent = Intent(this, search_results_activity::class.java)
 //            startActivity(nextActivityIntent)
         }
@@ -80,7 +80,7 @@ class lets_find_activity : AppCompatActivity() {
             val nextActivityIntent = Intent(this, search_results_activity::class.java)
             nextActivityIntent.putExtra("search_txt", txt)
             startActivity(nextActivityIntent)
-            finish()
+//            finish()
 //            val nextActivityIntent = Intent(this, search_results_activity::class.java)
 //            startActivity(nextActivityIntent)
         }
@@ -90,7 +90,7 @@ class lets_find_activity : AppCompatActivity() {
             val nextActivityIntent = Intent(this, search_results_activity::class.java)
             nextActivityIntent.putExtra("search_txt", txt)
             startActivity(nextActivityIntent)
-            finish()
+//            finish()
 //            val nextActivityIntent = Intent(this, search_results_activity::class.java)
 //            startActivity(nextActivityIntent)
         }
@@ -100,7 +100,7 @@ class lets_find_activity : AppCompatActivity() {
             val nextActivityIntent = Intent(this, search_results_activity::class.java)
             nextActivityIntent.putExtra("search_txt", txt)
             startActivity(nextActivityIntent)
-            finish()
+//            finish()
 //            val nextActivityIntent = Intent(this, search_results_activity::class.java)
 //            startActivity(nextActivityIntent)
         }
@@ -110,7 +110,7 @@ class lets_find_activity : AppCompatActivity() {
             val nextActivityIntent = Intent(this, search_results_activity::class.java)
             nextActivityIntent.putExtra("search_txt", txt)
             startActivity(nextActivityIntent)
-            finish()
+//            finish()
 //            val nextActivityIntent = Intent(this, search_results_activity::class.java)
 //            startActivity(nextActivityIntent)
         }
@@ -120,7 +120,7 @@ class lets_find_activity : AppCompatActivity() {
             val nextActivityIntent = Intent(this, search_results_activity::class.java)
             nextActivityIntent.putExtra("search_txt", txt)
             startActivity(nextActivityIntent)
-            finish()
+//            finish()
 //            val nextActivityIntent = Intent(this, john_cooper_1_activity::class.java)
 //            startActivity(nextActivityIntent)
         }
@@ -130,7 +130,7 @@ class lets_find_activity : AppCompatActivity() {
             val nextActivityIntent = Intent(this, search_results_activity::class.java)
             nextActivityIntent.putExtra("search_txt", txt)
             startActivity(nextActivityIntent)
-            finish()
+//            finish()
 //            val nextActivityIntent = Intent(this, john_cooper_1_activity::class.java)
 //            startActivity(nextActivityIntent)
         }
@@ -140,7 +140,7 @@ class lets_find_activity : AppCompatActivity() {
             val nextActivityIntent = Intent(this, search_results_activity::class.java)
             nextActivityIntent.putExtra("search_txt", txt)
             startActivity(nextActivityIntent)
-            finish()
+//            finish()
 //            val nextActivityIntent = Intent(this, john_cooper_1_activity::class.java)
 //            startActivity(nextActivityIntent)
         }

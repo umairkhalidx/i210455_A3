@@ -64,8 +64,10 @@ class john_cooper_2_activity : AppCompatActivity() {
 
 
         back_btn.setOnClickListener{
-            val nextActivityIntent = Intent(this, john_cooper_1_activity::class.java)
-            startActivity(nextActivityIntent)
+//            val nextActivityIntent = Intent(this, john_cooper_1_activity::class.java)
+//            startActivity(nextActivityIntent)
+//            finish()
+            onBackPressed()
             finish()
         }
 

@@ -519,6 +519,8 @@
                 android:clickable="true"
                 android:focusable="true"
                 android:onClick="onImageViewClick"
+                android:scaleType="centerCrop"
+
                 >
 
 

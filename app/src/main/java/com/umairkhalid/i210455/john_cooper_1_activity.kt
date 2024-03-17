@@ -73,8 +73,10 @@ class john_cooper_1_activity : AppCompatActivity() {
 
 
         back_btn.setOnClickListener{
-            val nextActivityIntent = Intent(this, lets_find_activity::class.java)
-            startActivity(nextActivityIntent)
+//            val nextActivityIntent = Intent(this, lets_find_activity::class.java)
+//            startActivity(nextActivityIntent)
+//            finish()
+            onBackPressed()
             finish()
         }
 
@@ -85,8 +87,11 @@ class john_cooper_1_activity : AppCompatActivity() {
         }
 
         community_btn.setOnClickListener{
-            val nextActivityIntent = Intent(this, chat_2_activity::class.java)
-            startActivity(nextActivityIntent)
+                val nextActivityIntent = Intent(this, chat_2_activity::class.java)
+                nextActivityIntent.putExtra("MENTOR_NAME", input_txt)
+                startActivity(nextActivityIntent)
+//            val nextActivityIntent = Intent(this, chat_1_activity::class.java)
+//            startActivity(nextActivityIntent)
         }
 
         book_session_btn.setOnClickListener{

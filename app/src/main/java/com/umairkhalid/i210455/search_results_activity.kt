@@ -84,8 +84,10 @@ class search_results_activity : AppCompatActivity(), click_listner {
         }
 
         back_btn_search.setOnClickListener{
-            val nextActivityIntent = Intent(this, lets_find_activity::class.java)
-            startActivity(nextActivityIntent)
+//            val nextActivityIntent = Intent(this, lets_find_activity::class.java)
+//            startActivity(nextActivityIntent)
+            onBackPressed()
+            finish()
         }
 
         // 1- AdapterView: RecyclerView

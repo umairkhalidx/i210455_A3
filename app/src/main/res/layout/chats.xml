@@ -71,154 +71,166 @@
 
             </TextView>
 
-            <HorizontalScrollView
+            <androidx.recyclerview.widget.RecyclerView
+                android:id="@+id/chats_recyclerview_community"
                 android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="6dp"
-                android:layout_marginBottom="6dp"
-                android:scrollbars="none"
+                android:layout_height="90dp"
+                android:orientation="horizontal"
+                android:layout_marginTop="10dp"
+                android:layout_marginBottom="10dp"
+                app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager"
                 >
-                <LinearLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="match_parent"
-                    android:orientation="horizontal"
-                    >
-                    <androidx.cardview.widget.CardView
-                        android:layout_width="77dp"
-                        android:layout_height="76dp"
-                        android:layout_marginLeft="20dp"
-                        android:backgroundTint="#ffc90a"
-                        app:cardCornerRadius="40dp">
 
-                        <ImageButton
-                            android:layout_width="80dp"
-                            android:layout_height="76dp"
-                            android:layout_gravity="center"
-                            android:backgroundTint="#ffc90a"
-                            android:src="@drawable/filled_white_circle"
-                            app:cornerRadius="30dp">
+            </androidx.recyclerview.widget.RecyclerView>
 
-                        </ImageButton>
+<!--            <HorizontalScrollView-->
+<!--                android:layout_width="match_parent"-->
+<!--                android:layout_height="wrap_content"-->
+<!--                android:layout_marginTop="6dp"-->
+<!--                android:layout_marginBottom="6dp"-->
+<!--                android:scrollbars="none"-->
+<!--                >-->
+<!--                <LinearLayout-->
+<!--                    android:layout_width="match_parent"-->
+<!--                    android:layout_height="match_parent"-->
+<!--                    android:orientation="horizontal"-->
+<!--                    >-->
+<!--                    <androidx.cardview.widget.CardView-->
+<!--                        android:layout_width="77dp"-->
+<!--                        android:layout_height="76dp"-->
+<!--                        android:layout_marginLeft="20dp"-->
+<!--                        android:backgroundTint="#ffc90a"-->
+<!--                        app:cardCornerRadius="40dp">-->
 
-                    </androidx.cardview.widget.CardView>
+<!--                        <ImageButton-->
+<!--                            android:layout_width="80dp"-->
+<!--                            android:layout_height="76dp"-->
+<!--                            android:layout_gravity="center"-->
+<!--                            android:backgroundTint="#ffc90a"-->
+<!--                            android:src="@drawable/filled_white_circle"-->
+<!--                            app:cornerRadius="30dp">-->
 
-                    <androidx.cardview.widget.CardView
-                        android:layout_width="77dp"
-                        android:layout_height="76dp"
-                        android:layout_marginLeft="20dp"
-                        android:backgroundTint="#ffc90a"
-                        app:cardCornerRadius="40dp">
+<!--                        </ImageButton>-->
 
-                        <ImageButton
-                            android:layout_width="80dp"
-                            android:layout_height="76dp"
-                            android:layout_gravity="center"
-                            android:backgroundTint="#ffc90a"
-                            android:src="@drawable/filled_white_circle"
-                            app:cornerRadius="30dp">
+<!--                    </androidx.cardview.widget.CardView>-->
 
-                        </ImageButton>
+<!--                    <androidx.cardview.widget.CardView-->
+<!--                        android:layout_width="77dp"-->
+<!--                        android:layout_height="76dp"-->
+<!--                        android:layout_marginLeft="20dp"-->
+<!--                        android:backgroundTint="#ffc90a"-->
+<!--                        app:cardCornerRadius="40dp">-->
 
-                    </androidx.cardview.widget.CardView>
+<!--                        <ImageButton-->
+<!--                            android:layout_width="80dp"-->
+<!--                            android:layout_height="76dp"-->
+<!--                            android:layout_gravity="center"-->
+<!--                            android:backgroundTint="#ffc90a"-->
+<!--                            android:src="@drawable/filled_white_circle"-->
+<!--                            app:cornerRadius="30dp">-->
 
-                    <androidx.cardview.widget.CardView
-                        android:layout_width="77dp"
-                        android:layout_height="76dp"
-                        android:layout_marginLeft="20dp"
-                        android:backgroundTint="#ffc90a"
-                        app:cardCornerRadius="40dp">
+<!--                        </ImageButton>-->
 
-                        <ImageButton
-                            android:layout_width="80dp"
-                            android:layout_height="76dp"
-                            android:layout_gravity="center"
-                            android:backgroundTint="#ffc90a"
-                            android:src="@drawable/filled_white_circle"
-                            app:cornerRadius="30dp">
+<!--                    </androidx.cardview.widget.CardView>-->
 
-                        </ImageButton>
+<!--                    <androidx.cardview.widget.CardView-->
+<!--                        android:layout_width="77dp"-->
+<!--                        android:layout_height="76dp"-->
+<!--                        android:layout_marginLeft="20dp"-->
+<!--                        android:backgroundTint="#ffc90a"-->
+<!--                        app:cardCornerRadius="40dp">-->
 
-                    </androidx.cardview.widget.CardView>
+<!--                        <ImageButton-->
+<!--                            android:layout_width="80dp"-->
+<!--                            android:layout_height="76dp"-->
+<!--                            android:layout_gravity="center"-->
+<!--                            android:backgroundTint="#ffc90a"-->
+<!--                            android:src="@drawable/filled_white_circle"-->
+<!--                            app:cornerRadius="30dp">-->
 
-                    <androidx.cardview.widget.CardView
-                        android:layout_width="77dp"
-                        android:layout_height="76dp"
-                        android:layout_marginLeft="20dp"
-                        android:backgroundTint="#ffc90a"
-                        app:cardCornerRadius="40dp">
+<!--                        </ImageButton>-->
 
-                        <ImageButton
-                            android:layout_width="80dp"
-                            android:layout_height="76dp"
-                            android:layout_gravity="center"
-                            android:backgroundTint="#ffc90a"
-                            android:src="@drawable/filled_white_circle"
-                            app:cornerRadius="30dp">
+<!--                    </androidx.cardview.widget.CardView>-->
 
-                        </ImageButton>
+<!--                    <androidx.cardview.widget.CardView-->
+<!--                        android:layout_width="77dp"-->
+<!--                        android:layout_height="76dp"-->
+<!--                        android:layout_marginLeft="20dp"-->
+<!--                        android:backgroundTint="#ffc90a"-->
+<!--                        app:cardCornerRadius="40dp">-->
 
-                    </androidx.cardview.widget.CardView>
+<!--                        <ImageButton-->
+<!--                            android:layout_width="80dp"-->
+<!--                            android:layout_height="76dp"-->
+<!--                            android:layout_gravity="center"-->
+<!--                            android:backgroundTint="#ffc90a"-->
+<!--                            android:src="@drawable/filled_white_circle"-->
+<!--                            app:cornerRadius="30dp">-->
 
-                    <androidx.cardview.widget.CardView
-                        android:layout_width="77dp"
-                        android:layout_height="76dp"
-                        android:layout_marginLeft="20dp"
-                        android:backgroundTint="#ffc90a"
-                        app:cardCornerRadius="40dp">
+<!--                        </ImageButton>-->
 
-                        <ImageButton
-                            android:layout_width="80dp"
-                            android:layout_height="76dp"
-                            android:layout_gravity="center"
-                            android:backgroundTint="#ffc90a"
-                            android:src="@drawable/filled_white_circle"
-                            app:cornerRadius="30dp">
+<!--                    </androidx.cardview.widget.CardView>-->
 
-                        </ImageButton>
+<!--                    <androidx.cardview.widget.CardView-->
+<!--                        android:layout_width="77dp"-->
+<!--                        android:layout_height="76dp"-->
+<!--                        android:layout_marginLeft="20dp"-->
+<!--                        android:backgroundTint="#ffc90a"-->
+<!--                        app:cardCornerRadius="40dp">-->
 
-                    </androidx.cardview.widget.CardView>
+<!--                        <ImageButton-->
+<!--                            android:layout_width="80dp"-->
+<!--                            android:layout_height="76dp"-->
+<!--                            android:layout_gravity="center"-->
+<!--                            android:backgroundTint="#ffc90a"-->
+<!--                            android:src="@drawable/filled_white_circle"-->
+<!--                            app:cornerRadius="30dp">-->
 
-                    <androidx.cardview.widget.CardView
-                        android:layout_width="77dp"
-                        android:layout_height="76dp"
-                        android:layout_marginLeft="20dp"
-                        android:backgroundTint="#ffc90a"
-                        app:cardCornerRadius="40dp">
+<!--                        </ImageButton>-->
 
-                        <ImageButton
-                            android:layout_width="80dp"
-                            android:layout_height="76dp"
-                            android:layout_gravity="center"
-                            android:backgroundTint="#ffc90a"
-                            android:src="@drawable/filled_white_circle"
-                            app:cornerRadius="30dp">
+<!--                    </androidx.cardview.widget.CardView>-->
 
-                        </ImageButton>
+<!--                    <androidx.cardview.widget.CardView-->
+<!--                        android:layout_width="77dp"-->
+<!--                        android:layout_height="76dp"-->
+<!--                        android:layout_marginLeft="20dp"-->
+<!--                        android:backgroundTint="#ffc90a"-->
+<!--                        app:cardCornerRadius="40dp">-->
 
-                    </androidx.cardview.widget.CardView>
+<!--                        <ImageButton-->
+<!--                            android:layout_width="80dp"-->
+<!--                            android:layout_height="76dp"-->
+<!--                            android:layout_gravity="center"-->
+<!--                            android:backgroundTint="#ffc90a"-->
+<!--                            android:src="@drawable/filled_white_circle"-->
+<!--                            app:cornerRadius="30dp">-->
 
-                    <androidx.cardview.widget.CardView
-                        android:layout_width="77dp"
-                        android:layout_height="76dp"
-                        android:layout_marginLeft="20dp"
-                        android:backgroundTint="#ffc90a"
-                        app:cardCornerRadius="40dp">
+<!--                        </ImageButton>-->
 
-                        <ImageButton
-                            android:layout_width="80dp"
-                            android:layout_height="76dp"
-                            android:layout_gravity="center"
-                            android:backgroundTint="#ffc90a"
-                            android:src="@drawable/filled_white_circle"
-                            app:cornerRadius="30dp">
+<!--                    </androidx.cardview.widget.CardView>-->
 
-                        </ImageButton>
+<!--                    <androidx.cardview.widget.CardView-->
+<!--                        android:layout_width="77dp"-->
+<!--                        android:layout_height="76dp"-->
+<!--                        android:layout_marginLeft="20dp"-->
+<!--                        android:backgroundTint="#ffc90a"-->
+<!--                        app:cardCornerRadius="40dp">-->
 
-                    </androidx.cardview.widget.CardView>
-                </LinearLayout>
+<!--                        <ImageButton-->
+<!--                            android:layout_width="80dp"-->
+<!--                            android:layout_height="76dp"-->
+<!--                            android:layout_gravity="center"-->
+<!--                            android:backgroundTint="#ffc90a"-->
+<!--                            android:src="@drawable/filled_white_circle"-->
+<!--                            app:cornerRadius="30dp">-->
+
+<!--                        </ImageButton>-->
+
+<!--                    </androidx.cardview.widget.CardView>-->
+<!--                </LinearLayout>-->
 
 
-            </HorizontalScrollView>
+<!--            </HorizontalScrollView>-->
 
             <TextView
                 android:layout_width="match_parent"

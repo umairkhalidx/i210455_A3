@@ -9,10 +9,8 @@ import android.widget.TextView
 import androidx.recyclerview.widget.RecyclerView
 import com.bumptech.glide.Glide
 
-class MessageAdapter(
-    private val messages: List<Message>,
-    private val onMessageClickListener: OnMessageClickListener
-) : RecyclerView.Adapter<MessageAdapter.ViewHolder>() {
+class message_adapter(private val messages: List<message_data>, private val onMessageClickListener: OnMessageClickListener)
+    : RecyclerView.Adapter<message_adapter.ViewHolder>() {
 
     interface OnMessageClickListener {
         fun onMessageClick(position: Int)
@@ -24,7 +22,7 @@ class MessageAdapter(
         private val audioIcon: ImageView = itemView.findViewById(R.id.audioIcon)
         private val imageView: ImageView = itemView.findViewById(R.id.imageView)
 
-        fun bind(message: Message) {
+        fun bind(message: message_data) {
             messageTextView.text = message.messageText
 
             if (message.imageUrl != null) {
@@ -69,7 +67,7 @@ class MessageAdapter(
     }
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
-        val view = LayoutInflater.from(parent.context).inflate(R.layout.item_message, parent, false)
+        val view = LayoutInflater.from(parent.context).inflate(R.layout.recycler_item_message, parent, false)
         return ViewHolder(view)
     }
 

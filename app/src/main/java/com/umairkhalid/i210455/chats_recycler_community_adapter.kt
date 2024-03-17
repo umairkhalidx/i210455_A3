@@ -8,22 +8,19 @@ import android.widget.TextView
 import androidx.recyclerview.widget.RecyclerView
 import com.bumptech.glide.Glide
 
-
-class chats_recycler_adapter(val itemslist: ArrayList<chats_recycler_data>, private val listener: click_listner)
-    : RecyclerView.Adapter<chats_recycler_adapter.chats_recycler_viewholder>()
+class chats_recycler_community_adapter (val itemslist: ArrayList<chats_recycler_community_data>, private val listener: click_listner_community)
+    : RecyclerView.Adapter<chats_recycler_community_adapter.chats_recycler_viewholder>()
 
 {
 
     inner class chats_recycler_viewholder(itemView: View) : RecyclerView.ViewHolder(itemView){
         val rootView: View = itemView
-        lateinit var display_pic :ImageView
+        lateinit var display_pic : ImageView
         lateinit var title : TextView
-//        lateinit var message_count : TextView
 
         init {
-            display_pic= itemView.findViewById(R.id.display_image)
-            title = itemView.findViewById(R.id.name_title)
-//            message_count = itemView.findViewById(R.id.messeages)
+            display_pic= itemView.findViewById(R.id.community_mentor_img)
+            title = itemView.findViewById(R.id.community_mentor_name)
 
         }
 
@@ -31,7 +28,7 @@ class chats_recycler_adapter(val itemslist: ArrayList<chats_recycler_data>, priv
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): chats_recycler_viewholder {
         val v = LayoutInflater.from(parent.context)
-            .inflate(R.layout.chats_recycler_view,parent,false)
+            .inflate(R.layout.recycler_item_community,parent,false)
 
         return chats_recycler_viewholder(v)
     }
@@ -43,6 +40,7 @@ class chats_recycler_adapter(val itemslist: ArrayList<chats_recycler_data>, priv
     override fun onBindViewHolder(holder: chats_recycler_viewholder, position: Int) {
 
 //        holder.display_pic.setImageResource(itemslist[position].img)
+
         Glide.with(holder.itemView.context)
             .load(itemslist[position].img)
             .into(holder.display_pic)
@@ -51,12 +49,8 @@ class chats_recycler_adapter(val itemslist: ArrayList<chats_recycler_data>, priv
 
         holder.rootView.setOnClickListener{
             val txt:String =itemslist[position].title.toString()
-            listener.click_function(txt)
-//            Toast.makeText(holder.itemView.context,"Clicked on a Row",Toast.LENGTH_SHORT).show()
-
+            listener.chat_community_click_function(txt)
         }
-
-//        holder.message_count.setText(itemslist[position].messagecount)
 
     }
 
