@@ -72,203 +72,212 @@
         android:orientation="vertical"
         >
 
-        <androidx.constraintlayout.widget.ConstraintLayout
+        <androidx.recyclerview.widget.RecyclerView
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:gravity="center"
-            android:orientation="horizontal"
-            android:layout_marginBottom="12dp"
+            android:layout_height="match_parent"
+            android:id="@+id/recycleview_booked_sessions"
             >
 
-            <androidx.cardview.widget.CardView
-                android:id="@+id/cardView"
-                android:layout_width="120dp"
-                android:layout_height="120dp"
-                android:layout_alignParentStart="true"
-                android:layout_marginStart="22dp"
-                android:backgroundTint="@color/white"
-                app:cardCornerRadius="20dp"
-                app:layout_constraintBottom_toBottomOf="parent"
-                app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toTopOf="parent">
-
-            </androidx.cardview.widget.CardView>
-
-            <androidx.cardview.widget.CardView
-                android:layout_width="214dp"
-                android:layout_height="60dp"
-                android:layout_alignParentEnd="true"
-                android:backgroundTint="@color/white"
-                app:cardCornerRadius="20dp"
-                app:layout_constraintBottom_toBottomOf="parent"
-                app:layout_constraintEnd_toEndOf="parent"
-                app:layout_constraintStart_toEndOf="@+id/cardView"
-                app:layout_constraintTop_toTopOf="parent">
-
-                <LinearLayout
-                    android:layout_width="wrap_content"
-                    android:layout_height="match_parent"
-                    android:layout_gravity="left"
-                    android:gravity="center_vertical"
-                    android:orientation="vertical"
-                    android:layout_marginLeft="10dp"
-                    >
-
-                    <TextView
-                        android:id="@+id/txt_username_bookedses"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="Jhon Cooper"
-                        android:textColor="#157177"
-                        android:textSize="16sp"
-                        android:textStyle="bold"
-                        >
-                    </TextView>
-
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="UX Designer @ Google"
-                        android:textColor="@color/black"
-                        android:textSize="8sp"
-                        >
+        </androidx.recyclerview.widget.RecyclerView>
 
 
-                    </TextView>
+<!--        <androidx.constraintlayout.widget.ConstraintLayout-->
+<!--            android:layout_width="match_parent"-->
+<!--            android:layout_height="wrap_content"-->
+<!--            android:gravity="center"-->
+<!--            android:orientation="horizontal"-->
+<!--            android:layout_marginBottom="12dp"-->
+<!--            >-->
 
-                </LinearLayout>
+<!--            <androidx.cardview.widget.CardView-->
+<!--                android:id="@+id/cardView"-->
+<!--                android:layout_width="120dp"-->
+<!--                android:layout_height="120dp"-->
+<!--                android:layout_alignParentStart="true"-->
+<!--                android:layout_marginStart="22dp"-->
+<!--                android:backgroundTint="@color/white"-->
+<!--                app:cardCornerRadius="20dp"-->
+<!--                app:layout_constraintBottom_toBottomOf="parent"-->
+<!--                app:layout_constraintStart_toStartOf="parent"-->
+<!--                app:layout_constraintTop_toTopOf="parent">-->
 
-                <LinearLayout
-                    android:layout_width="wrap_content"
-                    android:layout_height="match_parent"
-                    android:layout_gravity="right"
-                    android:gravity="center_vertical"
-                    android:orientation="vertical"
-                    android:layout_marginRight="10dp"
-                    >
+<!--            </androidx.cardview.widget.CardView>-->
 
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="24th Dec 2023"
-                        android:textColor="#ecb800"
-                        android:textSize="12sp"
-                        android:textStyle="bold"
-                        >
-                    </TextView>
+<!--            <androidx.cardview.widget.CardView-->
+<!--                android:layout_width="214dp"-->
+<!--                android:layout_height="60dp"-->
+<!--                android:layout_alignParentEnd="true"-->
+<!--                android:backgroundTint="@color/white"-->
+<!--                app:cardCornerRadius="20dp"-->
+<!--                app:layout_constraintBottom_toBottomOf="parent"-->
+<!--                app:layout_constraintEnd_toEndOf="parent"-->
+<!--                app:layout_constraintStart_toEndOf="@+id/cardView"-->
+<!--                app:layout_constraintTop_toTopOf="parent">-->
 
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="1:00 pm"
-                        android:textColor="#ecb800"
-                        android:textSize="12sp"
-                        android:textStyle="bold"
-                        >
-                    </TextView>
+<!--                <LinearLayout-->
+<!--                    android:layout_width="wrap_content"-->
+<!--                    android:layout_height="match_parent"-->
+<!--                    android:layout_gravity="left"-->
+<!--                    android:gravity="center_vertical"-->
+<!--                    android:orientation="vertical"-->
+<!--                    android:layout_marginLeft="10dp"-->
+<!--                    >-->
 
-                </LinearLayout>
+<!--                    <TextView-->
+<!--                        android:id="@+id/txt_username_bookedses"-->
+<!--                        android:layout_width="wrap_content"-->
+<!--                        android:layout_height="wrap_content"-->
+<!--                        android:text="Jhon Cooper"-->
+<!--                        android:textColor="#157177"-->
+<!--                        android:textSize="16sp"-->
+<!--                        android:textStyle="bold"-->
+<!--                        >-->
+<!--                    </TextView>-->
 
-            </androidx.cardview.widget.CardView>
+<!--                    <TextView-->
+<!--                        android:layout_width="wrap_content"-->
+<!--                        android:layout_height="wrap_content"-->
+<!--                        android:text="UX Designer @ Google"-->
+<!--                        android:textColor="@color/black"-->
+<!--                        android:textSize="8sp"-->
+<!--                        >-->
 
-        </androidx.constraintlayout.widget.ConstraintLayout>
 
-        <androidx.constraintlayout.widget.ConstraintLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:gravity="center"
-            android:orientation="horizontal">
+<!--                    </TextView>-->
 
-            <androidx.cardview.widget.CardView
-                android:id="@+id/cardView1"
-                android:layout_width="120dp"
-                android:layout_height="120dp"
-                android:layout_alignParentStart="true"
-                android:layout_marginStart="22dp"
-                android:backgroundTint="@color/white"
-                app:cardCornerRadius="20dp"
-                app:layout_constraintBottom_toBottomOf="parent"
-                app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toTopOf="parent">
+<!--                </LinearLayout>-->
 
-            </androidx.cardview.widget.CardView>
+<!--                <LinearLayout-->
+<!--                    android:layout_width="wrap_content"-->
+<!--                    android:layout_height="match_parent"-->
+<!--                    android:layout_gravity="right"-->
+<!--                    android:gravity="center_vertical"-->
+<!--                    android:orientation="vertical"-->
+<!--                    android:layout_marginRight="10dp"-->
+<!--                    >-->
 
-            <androidx.cardview.widget.CardView
-                android:layout_width="214dp"
-                android:layout_height="60dp"
-                android:layout_alignParentEnd="true"
-                android:backgroundTint="@color/white"
-                app:cardCornerRadius="20dp"
-                app:layout_constraintBottom_toBottomOf="parent"
-                app:layout_constraintEnd_toEndOf="parent"
-                app:layout_constraintStart_toEndOf="@+id/cardView1"
-                app:layout_constraintTop_toTopOf="parent">
+<!--                    <TextView-->
+<!--                        android:layout_width="wrap_content"-->
+<!--                        android:layout_height="wrap_content"-->
+<!--                        android:text="24th Dec 2023"-->
+<!--                        android:textColor="#ecb800"-->
+<!--                        android:textSize="12sp"-->
+<!--                        android:textStyle="bold"-->
+<!--                        >-->
+<!--                    </TextView>-->
 
-                <LinearLayout
-                    android:layout_width="wrap_content"
-                    android:layout_height="match_parent"
-                    android:layout_gravity="left"
-                    android:gravity="center_vertical"
-                    android:orientation="vertical"
-                    android:layout_marginLeft="10dp"
-                    >
+<!--                    <TextView-->
+<!--                        android:layout_width="wrap_content"-->
+<!--                        android:layout_height="wrap_content"-->
+<!--                        android:text="1:00 pm"-->
+<!--                        android:textColor="#ecb800"-->
+<!--                        android:textSize="12sp"-->
+<!--                        android:textStyle="bold"-->
+<!--                        >-->
+<!--                    </TextView>-->
 
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="Emma Phillips"
-                        android:textColor="#157177"
-                        android:textSize="16sp"
-                        android:textStyle="bold"
-                        >
-                    </TextView>
+<!--                </LinearLayout>-->
 
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="Android Developer"
-                        android:textColor="@color/black"
-                        android:textSize="8sp"
-                        >
+<!--            </androidx.cardview.widget.CardView>-->
 
-                    </TextView>
+<!--        </androidx.constraintlayout.widget.ConstraintLayout>-->
 
-                </LinearLayout>
+<!--        <androidx.constraintlayout.widget.ConstraintLayout-->
+<!--            android:layout_width="match_parent"-->
+<!--            android:layout_height="wrap_content"-->
+<!--            android:gravity="center"-->
+<!--            android:orientation="horizontal">-->
 
-                <LinearLayout
-                    android:layout_width="wrap_content"
-                    android:layout_height="match_parent"
-                    android:layout_gravity="right"
-                    android:gravity="center_vertical"
-                    android:orientation="vertical"
-                    android:layout_marginRight="10dp"
-                    >
+<!--            <androidx.cardview.widget.CardView-->
+<!--                android:id="@+id/cardView1"-->
+<!--                android:layout_width="120dp"-->
+<!--                android:layout_height="120dp"-->
+<!--                android:layout_alignParentStart="true"-->
+<!--                android:layout_marginStart="22dp"-->
+<!--                android:backgroundTint="@color/white"-->
+<!--                app:cardCornerRadius="20dp"-->
+<!--                app:layout_constraintBottom_toBottomOf="parent"-->
+<!--                app:layout_constraintStart_toStartOf="parent"-->
+<!--                app:layout_constraintTop_toTopOf="parent">-->
 
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="1st Jan 2024"
-                        android:textColor="#ecb800"
-                        android:textSize="12sp"
-                        android:textStyle="bold"
-                        >
-                    </TextView>
+<!--            </androidx.cardview.widget.CardView>-->
 
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="09:00 pm"
-                        android:textColor="#ecb800"
-                        android:textSize="12sp"
-                        android:textStyle="bold"
-                        >
-                    </TextView>
+<!--            <androidx.cardview.widget.CardView-->
+<!--                android:layout_width="214dp"-->
+<!--                android:layout_height="60dp"-->
+<!--                android:layout_alignParentEnd="true"-->
+<!--                android:backgroundTint="@color/white"-->
+<!--                app:cardCornerRadius="20dp"-->
+<!--                app:layout_constraintBottom_toBottomOf="parent"-->
+<!--                app:layout_constraintEnd_toEndOf="parent"-->
+<!--                app:layout_constraintStart_toEndOf="@+id/cardView1"-->
+<!--                app:layout_constraintTop_toTopOf="parent">-->
 
-                </LinearLayout>
+<!--                <LinearLayout-->
+<!--                    android:layout_width="wrap_content"-->
+<!--                    android:layout_height="match_parent"-->
+<!--                    android:layout_gravity="left"-->
+<!--                    android:gravity="center_vertical"-->
+<!--                    android:orientation="vertical"-->
+<!--                    android:layout_marginLeft="10dp"-->
+<!--                    >-->
 
-            </androidx.cardview.widget.CardView>
+<!--                    <TextView-->
+<!--                        android:layout_width="wrap_content"-->
+<!--                        android:layout_height="wrap_content"-->
+<!--                        android:text="Emma Phillips"-->
+<!--                        android:textColor="#157177"-->
+<!--                        android:textSize="16sp"-->
+<!--                        android:textStyle="bold"-->
+<!--                        >-->
+<!--                    </TextView>-->
 
-        </androidx.constraintlayout.widget.ConstraintLayout>
+<!--                    <TextView-->
+<!--                        android:layout_width="wrap_content"-->
+<!--                        android:layout_height="wrap_content"-->
+<!--                        android:text="Android Developer"-->
+<!--                        android:textColor="@color/black"-->
+<!--                        android:textSize="8sp"-->
+<!--                        >-->
+
+<!--                    </TextView>-->
+
+<!--                </LinearLayout>-->
+
+<!--                <LinearLayout-->
+<!--                    android:layout_width="wrap_content"-->
+<!--                    android:layout_height="match_parent"-->
+<!--                    android:layout_gravity="right"-->
+<!--                    android:gravity="center_vertical"-->
+<!--                    android:orientation="vertical"-->
+<!--                    android:layout_marginRight="10dp"-->
+<!--                    >-->
+
+<!--                    <TextView-->
+<!--                        android:layout_width="wrap_content"-->
+<!--                        android:layout_height="wrap_content"-->
+<!--                        android:text="1st Jan 2024"-->
+<!--                        android:textColor="#ecb800"-->
+<!--                        android:textSize="12sp"-->
+<!--                        android:textStyle="bold"-->
+<!--                        >-->
+<!--                    </TextView>-->
+
+<!--                    <TextView-->
+<!--                        android:layout_width="wrap_content"-->
+<!--                        android:layout_height="wrap_content"-->
+<!--                        android:text="09:00 pm"-->
+<!--                        android:textColor="#ecb800"-->
+<!--                        android:textSize="12sp"-->
+<!--                        android:textStyle="bold"-->
+<!--                        >-->
+<!--                    </TextView>-->
+
+<!--                </LinearLayout>-->
+
+<!--            </androidx.cardview.widget.CardView>-->
+
+<!--        </androidx.constraintlayout.widget.ConstraintLayout>-->
 
 
     </LinearLayout>

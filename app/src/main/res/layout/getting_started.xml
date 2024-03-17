@@ -108,6 +108,7 @@
             </TextView>
 
             <EditText
+                android:id="@+id/signup_name_txt"
                 android:layout_width="match_parent"
                 android:layout_height="36dp"
                 android:background="@drawable/textbox_round_corners"
@@ -133,6 +134,7 @@
             </TextView>
 
             <EditText
+                android:id="@+id/signup_email_txt"
                 android:layout_width="match_parent"
                 android:layout_height="36dp"
                 android:background="@drawable/textbox_round_corners"
@@ -158,16 +160,16 @@
             </TextView>
 
             <EditText
+                android:id="@+id/signup_contact_txt"
                 android:layout_width="match_parent"
                 android:layout_height="36dp"
-                android:background="@drawable/textbox_round_corners"
                 android:layout_marginLeft="20dp"
                 android:layout_marginTop="6dp"
-                android:layout_marginBottom="6dp"
                 android:layout_marginRight="30dp"
-                android:hint="Enter Contact Number"
-                android:paddingLeft="12dp"
-                >
+                android:layout_marginBottom="6dp"
+                android:background="@drawable/textbox_round_corners"
+                android:hint="Contact Number without Dashes"
+                android:paddingLeft="12dp">
 
             </EditText>
 
@@ -182,7 +184,23 @@
 
             </TextView>
 
-            <EditText
+<!--            <EditText-->
+<!--                android:id="@+id/signup_country_txt"-->
+<!--                android:layout_width="match_parent"-->
+<!--                android:layout_height="36dp"-->
+<!--                android:background="@drawable/textbox_round_corners"-->
+<!--                android:layout_marginLeft="20dp"-->
+<!--                android:layout_marginTop="6dp"-->
+<!--                android:layout_marginBottom="6dp"-->
+<!--                android:layout_marginRight="30dp"-->
+<!--                android:hint="Select Country"-->
+<!--                android:paddingLeft="12dp"-->
+<!--                >-->
+
+<!--            </EditText>-->
+
+            <Spinner
+                android:id="@+id/signup_country_spinner"
                 android:layout_width="match_parent"
                 android:layout_height="36dp"
                 android:background="@drawable/textbox_round_corners"
@@ -190,11 +208,7 @@
                 android:layout_marginTop="6dp"
                 android:layout_marginBottom="6dp"
                 android:layout_marginRight="30dp"
-                android:hint="Select Country"
-                android:paddingLeft="12dp"
-                >
-
-            </EditText>
+                />
 
             <TextView
                 android:layout_width="match_parent"
@@ -207,7 +221,23 @@
 
             </TextView>
 
-            <EditText
+<!--            <EditText-->
+<!--                android:id="@+id/signup_city_txt"-->
+<!--                android:layout_width="match_parent"-->
+<!--                android:layout_height="36dp"-->
+<!--                android:background="@drawable/textbox_round_corners"-->
+<!--                android:layout_marginLeft="20dp"-->
+<!--                android:layout_marginTop="6dp"-->
+<!--                android:layout_marginBottom="6dp"-->
+<!--                android:layout_marginRight="30dp"-->
+<!--                android:hint="Seclect City"-->
+<!--                android:paddingLeft="12dp"-->
+<!--                >-->
+
+<!--            </EditText>-->
+
+            <Spinner
+                android:id="@+id/signup_city_spinner"
                 android:layout_width="match_parent"
                 android:layout_height="36dp"
                 android:background="@drawable/textbox_round_corners"
@@ -215,11 +245,7 @@
                 android:layout_marginTop="6dp"
                 android:layout_marginBottom="6dp"
                 android:layout_marginRight="30dp"
-                android:hint="Seclect City"
-                android:paddingLeft="12dp"
-                >
-
-            </EditText>
+                />
 
 
             <TextView
@@ -233,16 +259,16 @@
             </TextView>
 
             <EditText
+                android:id="@+id/signup_pass_txt"
                 android:layout_width="match_parent"
                 android:layout_height="36dp"
-                android:background="@drawable/textbox_round_corners"
                 android:layout_marginLeft="20dp"
                 android:layout_marginTop="6dp"
-                android:layout_marginBottom="6dp"
                 android:layout_marginRight="30dp"
+                android:layout_marginBottom="6dp"
+                android:background="@drawable/textbox_round_corners"
                 android:hint="Enter your password"
-                android:paddingLeft="12dp"
-                >
+                android:paddingLeft="12dp">
 
             </EditText>
 

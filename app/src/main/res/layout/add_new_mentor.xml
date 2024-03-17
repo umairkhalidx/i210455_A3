@@ -201,6 +201,7 @@
             </TextView>
 
                 <EditText
+                    android:id="@+id/add_mentor_name"
                     android:layout_width="match_parent"
                     android:layout_height="36dp"
                     android:background="@drawable/textbox_round_corners"
@@ -226,16 +227,16 @@
                 </TextView>
 
                 <EditText
+                    android:id="@+id/add_mentor_desc"
                     android:layout_width="match_parent"
                     android:layout_height="36dp"
-                    android:background="@drawable/textbox_round_corners"
                     android:layout_marginLeft="20dp"
                     android:layout_marginTop="6dp"
-                    android:layout_marginBottom="6dp"
                     android:layout_marginRight="30dp"
+                    android:layout_marginBottom="6dp"
+                    android:background="@drawable/textbox_round_corners"
                     android:hint="Enter Description"
-                    android:paddingLeft="10dp"
-                    >
+                    android:paddingLeft="10dp">
 
                 </EditText>
 
@@ -250,7 +251,8 @@
 
                 </TextView>
 
-                <EditText
+                <Spinner
+                    android:id="@+id/mentor_status"
                     android:layout_width="match_parent"
                     android:layout_height="36dp"
                     android:background="@drawable/textbox_round_corners"
@@ -258,11 +260,9 @@
                     android:layout_marginTop="6dp"
                     android:layout_marginBottom="6dp"
                     android:layout_marginRight="30dp"
-                    android:hint="Available"
-                    android:paddingLeft="10dp"
                     >
 
-                </EditText>
+                </Spinner>
 
                 <Button
                     android:id="@+id/upload_btn"

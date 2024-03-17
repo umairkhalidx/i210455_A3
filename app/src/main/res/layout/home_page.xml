@@ -234,6 +234,7 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:orientation="horizontal"
+                android:layout_marginTop="18dp"
                 >
 
                 <TextView
@@ -269,9 +270,9 @@
             <androidx.recyclerview.widget.RecyclerView
                 android:id="@+id/recyclerview_educator_top"
                 android:layout_width="match_parent"
-                android:layout_height="180dp"
+                android:layout_height="190dp"
                 android:orientation="horizontal"
-                android:layout_marginTop="10dp"
+                android:layout_marginTop="18dp"
                 android:layout_marginBottom="10dp"
                 app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager"
                 >
@@ -283,6 +284,7 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:orientation="horizontal"
+                android:layout_marginTop="10dp"
                 >
 
                 <TextView
@@ -317,63 +319,62 @@
             <androidx.recyclerview.widget.RecyclerView
                 android:id="@+id/recyclerview_educator_edu"
                 android:layout_width="match_parent"
-                android:layout_height="180dp"
-                android:orientation="horizontal"
-                android:layout_marginTop="10dp"
+                android:layout_height="190dp"
+                android:layout_marginTop="22dp"
                 android:layout_marginBottom="10dp"
-                app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager"
-                >
+                android:orientation="horizontal"
+                app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager">
 
 
             </androidx.recyclerview.widget.RecyclerView>
 
-            <RelativeLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:orientation="horizontal"
-                >
+            <!--            <RelativeLayout-->
+<!--                android:layout_width="match_parent"-->
+<!--                android:layout_height="wrap_content"-->
+<!--                android:orientation="horizontal"-->
+<!--                >-->
 
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="Recent Mentors"
-                    android:textColor="#157177"
-                    android:textStyle="bold"
-                    android:textSize="20dp"
-                    android:layout_marginLeft="20dp"
-                    android:layout_alignParentStart="true"
-                    >
+<!--                <TextView-->
+<!--                    android:layout_width="wrap_content"-->
+<!--                    android:layout_height="wrap_content"-->
+<!--                    android:text="Recent Mentors"-->
+<!--                    android:textColor="#157177"-->
+<!--                    android:textStyle="bold"-->
+<!--                    android:textSize="20dp"-->
+<!--                    android:layout_marginLeft="20dp"-->
+<!--                    android:layout_alignParentStart="true"-->
+<!--                    >-->
 
-                </TextView>
+<!--                </TextView>-->
 
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="View all"
-                    android:textColor="#157177"
-                    android:textSize="14dp"
-                    android:layout_marginRight="20dp"
-                    android:layout_alignParentEnd="true"
-                    android:layout_centerVertical="true"
-                    >
+<!--                <TextView-->
+<!--                    android:layout_width="wrap_content"-->
+<!--                    android:layout_height="wrap_content"-->
+<!--                    android:text="View all"-->
+<!--                    android:textColor="#157177"-->
+<!--                    android:textSize="14dp"-->
+<!--                    android:layout_marginRight="20dp"-->
+<!--                    android:layout_alignParentEnd="true"-->
+<!--                    android:layout_centerVertical="true"-->
+<!--                    >-->
 
-                </TextView>
-
-
-            </RelativeLayout>
-
-            <androidx.recyclerview.widget.RecyclerView
-                android:id="@+id/recyclerview_educator_rec"
-                android:layout_width="match_parent"
-                android:layout_height="180dp"
-                android:orientation="horizontal"
-                android:layout_marginTop="10dp"
-                android:layout_marginBottom="10dp"
-                app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager"
-                >
+<!--                </TextView>-->
 
 
-            </androidx.recyclerview.widget.RecyclerView>
+<!--            </RelativeLayout>-->
+
+<!--            <androidx.recyclerview.widget.RecyclerView-->
+<!--                android:id="@+id/recyclerview_educator_rec"-->
+<!--                android:layout_width="match_parent"-->
+<!--                android:layout_height="180dp"-->
+<!--                android:orientation="horizontal"-->
+<!--                android:layout_marginTop="10dp"-->
+<!--                android:layout_marginBottom="10dp"-->
+<!--                app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager"-->
+<!--                >-->
+
+
+<!--            </androidx.recyclerview.widget.RecyclerView>-->
 
         </LinearLayout>
 

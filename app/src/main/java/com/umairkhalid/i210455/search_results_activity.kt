@@ -5,10 +5,15 @@ import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.widget.ImageButton
 import android.widget.TextView
+import android.widget.Toast
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
+import com.google.firebase.database.DataSnapshot
+import com.google.firebase.database.DatabaseError
+import com.google.firebase.database.FirebaseDatabase
+import com.google.firebase.database.ValueEventListener
 
-class search_results_activity : AppCompatActivity() {
+class search_results_activity : AppCompatActivity(), click_listner {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
@@ -94,25 +99,188 @@ class search_results_activity : AppCompatActivity() {
         // 2- Data Source: List of  Objects
         var adapter_data_list : ArrayList<recycler_searchresults_data> = ArrayList()
 
-        val v1  = recycler_searchresults_data(R.drawable.rectangle_blank,"Sample 1","Lead - Technology Officer","Available")
-        val v2  = recycler_searchresults_data(R.drawable.rectangle_blank,"Sample 2","Lead - Technology Officer"," Not Available")
-        val v3  = recycler_searchresults_data(R.drawable.rectangle_blank,"Sample 3","Lead - Technology Officer","Not Available")
-        val v4  = recycler_searchresults_data(R.drawable.rectangle_blank,"Sample 4","Lead - Technology Officer","Available")
-        val v5  = recycler_searchresults_data(R.drawable.rectangle_blank,"Sample 5","Lead - Technology Officer","Available")
-        val v6  = recycler_searchresults_data(R.drawable.rectangle_blank,"Sample 6","Lead - Technology Officer","Not Available")
-        val v7  = recycler_searchresults_data(R.drawable.rectangle_blank,"Sample 7","Lead - Technology Officer","Available")
+        val input_txt = intent.getStringExtra("search_txt")
 
-        adapter_data_list.add(v1)
-        adapter_data_list.add(v2)
-        adapter_data_list.add(v3)
-        adapter_data_list.add(v4)
-        adapter_data_list.add(v5)
-        adapter_data_list.add(v6)
-        adapter_data_list.add(v7)
+        if(input_txt=="Entrepreneurship" || input_txt=="Personal" || input_txt=="Education" ){
+            val database = FirebaseDatabase.getInstance()
+            val mentorsRef = database.getReference("mentors")
 
+            val query = mentorsRef.limitToFirst(7) // Limit the query to the first 4 mentors
+
+            query.addListenerForSingleValueEvent(object : ValueEventListener {
+                override fun onDataChange(dataSnapshot: DataSnapshot) {
+
+                    for (mentorSnapshot in dataSnapshot.children) {
+                        val name = mentorSnapshot.child("name").getValue(String::class.java)
+                        val occupation = mentorSnapshot.child("occupation").getValue(String::class.java)
+                        val price = mentorSnapshot.child("price").getValue(String::class.java)
+                        val status = mentorSnapshot.child("status").getValue(String::class.java)
+                        val profilePicUrl = mentorSnapshot.child("profile_pic").getValue(String::class.java)
+
+                        // Check if all required fields are present
+                        if (name != null && occupation != null && price != null && status != null) {
+                            val mentorData = recycler_searchresults_data(
+                                profilePicUrl,
+                                name,
+                                occupation,
+                                status,
+                                price
+                            )
+                            adapter_data_list.add(mentorData)
+                        }
+                    }
+
+                    val adapter = recycler_searchresults_adapter(adapter_data_list,this@search_results_activity)
+                    recyclerView.adapter = adapter
+
+                    // Notify your adapter that the data has changed
+                    adapter.notifyDataSetChanged()
+                }
+
+                override fun onCancelled(databaseError: DatabaseError) {
+                    // Handle error
+                    Toast.makeText(this@search_results_activity, "Unable to Fetch Mentor Data", Toast.LENGTH_LONG).show()
+                }
+            })
+        }
+        else{
+
+            val database = FirebaseDatabase.getInstance()
+            val mentorsRef = database.getReference("mentors")
+
+            val query = mentorsRef.orderByChild("name").equalTo(input_txt.toString())
+
+            query.addListenerForSingleValueEvent(object : ValueEventListener {
+                override fun onDataChange(dataSnapshot: DataSnapshot) {
+                    for (mentorSnapshot in dataSnapshot.children) {
+                        val name = mentorSnapshot.child("name").getValue(String::class.java)
+                        val occupation = mentorSnapshot.child("occupation").getValue(String::class.java)
+                        val price = mentorSnapshot.child("price").getValue(String::class.java)
+                        val status = mentorSnapshot.child("status").getValue(String::class.java)
+                        val profilePicUrl = mentorSnapshot.child("profile_pic").getValue(String::class.java)
+
+
+                        // Check if all required fields are present
+                        if (name != null && occupation != null && price != null && status != null) {
+                            val mentorData = recycler_searchresults_data(
+                                profilePicUrl,
+                                name,
+                                occupation,
+                                status,
+                                price
+                            )
+                            adapter_data_list.add(mentorData)
+                        }
+                    }
+                    val adapter = recycler_searchresults_adapter(adapter_data_list,this@search_results_activity)
+                    recyclerView.adapter = adapter
+
+
+                    // Notify your adapter that the data has changed
+                    // adapter.notifyDataSetChanged()
+                }
+
+                override fun onCancelled(databaseError: DatabaseError) {
+                    // Handle error
+                    Toast.makeText(this@search_results_activity,"Unable to Fetch Mentor Data",Toast.LENGTH_LONG).show()
+                }
+            })
+
+        }
+
+
+
+//        query.addListenerForSingleValueEvent(object : ValueEventListener {
+//            override fun onDataChange(dataSnapshot: DataSnapshot) {
+//                for (mentorSnapshot in dataSnapshot.children) {
+//                    val name = mentorSnapshot.child("name").getValue(String::class.java)
+//                    val occupation = mentorSnapshot.child("occupation").getValue(String::class.java)
+//                    val price = mentorSnapshot.child("price").getValue(String::class.java)
+//                    val status = mentorSnapshot.child("status").getValue(String::class.java)
+//                    val profilePicUrl = mentorSnapshot.child("profile_pic").getValue(String::class.java)
+//
+//                    // Check if all required fields are present
+//                    if (name != null && occupation != null && price != null && status != null && profilePicUrl != null) {
+//                        // Load the profile picture using Glide
+//
+//                        Glide.with(this@search_results_activity)
+//                            .load(profilePicUrl)
+//                            .into(object : CustomTarget<Drawable>() {
+//                                override fun onResourceReady(resource: Drawable, transition: Transition<in Drawable>?) {
+//                                    val mentorData = recycler_searchresults_data(
+//                                        resource,
+//                                        name,
+//                                        occupation,
+//                                        status,
+//                                        price
+//                                    )
+//                                    adapter_data_list.add(mentorData)
+//                                    // Notify your adapter that the data has changed
+//                                    // adapter.notifyDataSetChanged()
+//                                }
+//
+//                                override fun onLoadCleared(placeholder: Drawable?) {
+//                                    // Optional: Handle case when the load is cleared
+//                                }
+//                            })
+//                    }
+//                }
+//                val adapter = recycler_searchresults_adapter(adapter_data_list)
+//                recyclerView.adapter = adapter
+//            }
+//
+//            override fun onCancelled(databaseError: DatabaseError) {
+//                // Handle error
+//                Toast.makeText(this@search_results_activity,"Unable to Fetch Mentor Data",Toast.LENGTH_LONG).show()
+//            }
+//        })
+
+
+
+//        if(input_txt!=null){
+//            var filteredItems = mutableListOf<String>()
+//            if (input_txt.isEmpty()) {
+//                filteredItems.addAll(data_array)
+//            } else {
+//                filteredItems.clear()
+//                for (item in data_array) {
+//                    if (item.toInt()<=input_txt.toInt()) { // Directly check if the string contains the text
+//                        filteredItems.add(item)
+//                    }
+////                if (item.contains(text, ignoreCase = true)) { // Directly check if the string contains the text
+////                    filteredItems.add(item)
+////                }
+//                }
+//            }
+//            adapter.filter_list(filteredItems)
+//
+//        }
+
+//        val v1  = recycler_searchresults_data(R.drawable.rectangle_blank,"Sample 1","Lead - Technology Officer","Available")
+//        val v2  = recycler_searchresults_data(R.drawable.rectangle_blank,"Sample 2","Lead - Technology Officer"," Not Available")
+//        val v3  = recycler_searchresults_data(R.drawable.rectangle_blank,"Sample 3","Lead - Technology Officer","Not Available")
+//        val v4  = recycler_searchresults_data(R.drawable.rectangle_blank,"Sample 4","Lead - Technology Officer","Available")
+//        val v5  = recycler_searchresults_data(R.drawable.rectangle_blank,"Sample 5","Lead - Technology Officer","Available")
+//        val v6  = recycler_searchresults_data(R.drawable.rectangle_blank,"Sample 6","Lead - Technology Officer","Not Available")
+//        val v7  = recycler_searchresults_data(R.drawable.rectangle_blank,"Sample 7","Lead - Technology Officer","Available")
+//
+//        adapter_data_list.add(v1)
+//        adapter_data_list.add(v2)
+//        adapter_data_list.add(v3)
+//        adapter_data_list.add(v4)
+//        adapter_data_list.add(v5)
+//        adapter_data_list.add(v6)
+//        adapter_data_list.add(v7)
+//
         // 3- Adapter
-        val adapter = recycler_searchresults_adapter(adapter_data_list)
-        recyclerView.adapter = adapter
+//        val adapter = recycler_searchresults_adapter(adapter_data_list)
+//        recyclerView.adapter = adapter
+
+    }
+    override fun click_function(txt:String){
+        val nextActivityIntent = Intent(this, john_cooper_1_activity::class.java)
+        nextActivityIntent.putExtra("user_name", txt)
+        startActivity(nextActivityIntent)
 
     }
 }

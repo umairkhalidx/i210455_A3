@@ -14,6 +14,12 @@
         android:background="#def8f8"
         >
 
+<!--                <include-->
+<!--                    layout="@layout/profile_app_bar"-->
+<!--                    android:id="@+id/profile_app_bar"-->
+<!--                    >-->
+<!--                </include>-->
+
         <RelativeLayout
             android:layout_width="match_parent"
             android:layout_height="0dp"
@@ -30,6 +36,8 @@
                 android:background="#def8f8"
                 android:layout_marginLeft="10dp"
                 android:layout_alignParentBottom="true"
+                android:layout_marginBottom="4dp"
+
                 />
 
             <TextView
@@ -45,23 +53,45 @@
                 android:textSize="26dp"
                 android:textStyle="bold"
                 android:layout_alignParentBottom="true"
+                android:layout_marginBottom="4dp"
                 >
 
             </TextView>
 
-            <ImageButton
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
+            <Button
+                android:id="@+id/profile_logout_btn"
+                android:layout_width="86dp"
+                android:layout_height="40dp"
+                android:layout_gravity="center"
+                android:backgroundTint="#157177"
+                android:text="Log Out"
+                android:textColor="@color/white"
+                app:cornerRadius="8dp"
+                android:textStyle="bold"
+                android:textSize="16dp"
+                android:padding="0dp"
+                android:layout_alignParentBottom="true"
                 android:layout_centerVertical="true"
                 android:layout_alignParentEnd="true"
-                android:src="@drawable/three_dots_green"
-                android:background="@android:color/transparent"
-                android:layout_marginRight="30dp"
-                android:layout_alignParentBottom="true"
+                android:layout_marginRight="16dp"
+                android:layout_marginBottom="-2dp"
                 >
 
+            </Button>
 
-            </ImageButton>
+<!--            <ImageButton-->
+<!--                android:layout_width="wrap_content"-->
+<!--                android:layout_height="wrap_content"-->
+<!--                android:layout_centerVertical="true"-->
+<!--                android:layout_alignParentEnd="true"-->
+<!--                android:src="@drawable/three_dots_green"-->
+<!--                android:background="@android:color/transparent"-->
+<!--                android:layout_marginRight="30dp"-->
+<!--                android:layout_alignParentBottom="true"-->
+<!--                >-->
+
+
+<!--            </ImageButton>-->
 
 
 
@@ -73,91 +103,102 @@
             android:layout_weight="30"
             android:orientation="vertical"
             android:background="#def8f8"
+
             >
+            <ImageView
+                android:id="@+id/profile_cover"
+                android:layout_width="600dp"
+                android:layout_height="100dp"
+                android:src="@mipmap/checkered"
+                android:scaleType="centerCrop"
+                >
 
-            <LinearLayout
-                android:id="@+id/box_layout_1"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_alignParentTop="true"
-                android:orientation="horizontal"
-                android:weightSum="100">
-
-                <LinearLayout
-                    android:layout_width="0dp"
-                    android:layout_height="50dp"
-                    android:layout_weight="25"
-                    android:background="#b5ece5">
-
-                </LinearLayout>
-
-                <LinearLayout
-                    android:layout_width="0dp"
-                    android:layout_height="50dp"
-                    android:layout_weight="25"
-                    android:background="#82b9b2">
-
-                </LinearLayout>
-
-                <LinearLayout
-                    android:layout_width="0dp"
-                    android:layout_height="50dp"
-                    android:layout_weight="25"
-                    android:background="#b5ece5">
-
-                </LinearLayout>
-
-                <LinearLayout
-                    android:layout_width="0dp"
-                    android:layout_height="50dp"
-                    android:layout_weight="25"
-                    android:background="#82b9b2">
-
-                </LinearLayout>
-
-            </LinearLayout>
-
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_below="@+id/box_layout_1"
-                android:orientation="horizontal">
-
-                <LinearLayout
-                    android:layout_width="0dp"
-                    android:layout_height="50dp"
-                    android:layout_weight="25"
-                    android:background="#82b9b2">
-
-                </LinearLayout>
-
-                <LinearLayout
-                    android:layout_width="0dp"
-                    android:layout_height="50dp"
-                    android:layout_weight="25"
-                    android:background="#b5ece5">
-
-                </LinearLayout>
+            </ImageView>
 
 
-                <LinearLayout
-                    android:layout_width="0dp"
-                    android:layout_height="50dp"
-                    android:layout_weight="25"
-                    android:background="#82b9b2">
+<!--            <LinearLayout-->
+<!--                android:id="@+id/box_layout_1"-->
+<!--                android:layout_width="match_parent"-->
+<!--                android:layout_height="wrap_content"-->
+<!--                android:layout_alignParentTop="true"-->
+<!--                android:orientation="horizontal"-->
+<!--                android:weightSum="100">-->
 
-                </LinearLayout>
+<!--                <LinearLayout-->
+<!--                    android:layout_width="0dp"-->
+<!--                    android:layout_height="50dp"-->
+<!--                    android:layout_weight="25"-->
+<!--                    android:background="#b5ece5">-->
 
-                <LinearLayout
-                    android:layout_width="0dp"
-                    android:layout_height="50dp"
-                    android:layout_weight="25"
-                    android:background="#b5ece5">
+<!--                </LinearLayout>-->
 
-                </LinearLayout>
+<!--                <LinearLayout-->
+<!--                    android:layout_width="0dp"-->
+<!--                    android:layout_height="50dp"-->
+<!--                    android:layout_weight="25"-->
+<!--                    android:background="#82b9b2">-->
+
+<!--                </LinearLayout>-->
+
+<!--                <LinearLayout-->
+<!--                    android:layout_width="0dp"-->
+<!--                    android:layout_height="50dp"-->
+<!--                    android:layout_weight="25"-->
+<!--                    android:background="#b5ece5">-->
+
+<!--                </LinearLayout>-->
+
+<!--                <LinearLayout-->
+<!--                    android:layout_width="0dp"-->
+<!--                    android:layout_height="50dp"-->
+<!--                    android:layout_weight="25"-->
+<!--                    android:background="#82b9b2">-->
+
+<!--                </LinearLayout>-->
+
+<!--            </LinearLayout>-->
+
+<!--            <LinearLayout-->
+<!--                android:layout_width="match_parent"-->
+<!--                android:layout_height="wrap_content"-->
+<!--                android:layout_below="@+id/box_layout_1"-->
+<!--                android:orientation="horizontal">-->
+
+<!--                <LinearLayout-->
+<!--                    android:layout_width="0dp"-->
+<!--                    android:layout_height="50dp"-->
+<!--                    android:layout_weight="25"-->
+<!--                    android:background="#82b9b2">-->
+
+<!--                </LinearLayout>-->
+
+<!--                <LinearLayout-->
+<!--                    android:layout_width="0dp"-->
+<!--                    android:layout_height="50dp"-->
+<!--                    android:layout_weight="25"-->
+<!--                    android:background="#b5ece5">-->
+
+<!--                </LinearLayout>-->
 
 
-            </LinearLayout>
+<!--                <LinearLayout-->
+<!--                    android:layout_width="0dp"-->
+<!--                    android:layout_height="50dp"-->
+<!--                    android:layout_weight="25"-->
+<!--                    android:background="#82b9b2">-->
+
+<!--                </LinearLayout>-->
+
+<!--                <LinearLayout-->
+<!--                    android:layout_width="0dp"-->
+<!--                    android:layout_height="50dp"-->
+<!--                    android:layout_weight="25"-->
+<!--                    android:background="#b5ece5">-->
+
+<!--                </LinearLayout>-->
+
+
+<!--            </LinearLayout>-->
 
             <Button
                 android:id="@+id/booked_sessions"
@@ -453,7 +494,7 @@
     </LinearLayout>
 
     <LinearLayout
-        android:layout_width="80dp"
+        android:layout_width="wrap_content"
         android:layout_height="130dp"
         android:layout_alignParentStart="true"
         android:layout_alignParentTop="true"
@@ -471,9 +512,14 @@
             >
 
             <ImageView
+                android:id="@+id/profile_dp"
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
-                android:background="@color/black">
+                android:background="@color/black"
+                android:clickable="true"
+                android:focusable="true"
+                android:onClick="onImageViewClick"
+                >
 
 
             </ImageView>
@@ -481,6 +527,7 @@
         </androidx.cardview.widget.CardView>
 
         <TextView
+            android:id="@+id/profile_username"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_gravity="center_horizontal"
@@ -507,6 +554,7 @@
             </ImageView>
 
             <TextView
+                android:id="@+id/profile_city"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="Islamabad"

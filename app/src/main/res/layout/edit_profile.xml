@@ -68,7 +68,7 @@
             </TextView>
 
             <EditText
-                android:id="@+id/input_1"
+                android:id="@+id/input_name"
                 android:layout_width="match_parent"
                 android:layout_height="36dp"
                 android:background="@drawable/textbox_round_corners"
@@ -90,23 +90,24 @@
                 android:text="Email"
                 android:textSize="16dp"
                 android:textStyle="bold"
-                android:layout_below="@id/input_1"
+                android:layout_below="@id/input_name"
                 android:layout_marginTop="6dp"
                 >
 
             </TextView>
 
             <EditText
-                android:id="@+id/input_2"
+                android:id="@+id/input_email"
                 android:layout_width="match_parent"
                 android:layout_height="36dp"
                 android:background="@drawable/textbox_round_corners"
                 android:layout_marginLeft="20dp"
                 android:layout_marginRight="30dp"
-                android:hint="ali@gmail.com"
+                android:hint="Enter Current Email"
                 android:layout_below="@id/txt_2"
                 android:paddingLeft="10dp"
                 >
+<!--                android:hint="ali@gmail.com"-->
 
             </EditText>
 
@@ -119,20 +120,20 @@
             android:text="Contact Number"
             android:textSize="16dp"
             android:textStyle="bold"
-            android:layout_below="@id/input_2"
+            android:layout_below="@id/input_email"
             android:layout_marginTop="6dp"
             >
 
         </TextView>
 
         <EditText
-            android:id="@+id/input_3"
+            android:id="@+id/input_contact"
             android:layout_width="match_parent"
             android:layout_height="36dp"
             android:background="@drawable/textbox_round_corners"
             android:layout_marginLeft="20dp"
             android:layout_marginRight="30dp"
-            android:hint="+92 321 2242022"
+            android:hint="12345678910"
             android:layout_below="@id/txt_3"
             android:paddingLeft="10dp"
             >
@@ -149,14 +150,14 @@
                 android:text="Country"
                 android:textSize="16dp"
                 android:textStyle="bold"
-                android:layout_below="@id/input_3"
+                android:layout_below="@id/input_contact"
                 android:layout_marginTop="6dp"
                 >
 
             </TextView>
 
-            <EditText
-                android:id="@+id/input_4"
+            <Spinner
+                android:id="@+id/input_country"
                 android:layout_width="match_parent"
                 android:layout_height="36dp"
                 android:background="@drawable/textbox_round_corners"
@@ -167,7 +168,7 @@
                 android:paddingLeft="10dp"
                 >
 
-            </EditText>
+            </Spinner>
 
 
             <TextView
@@ -179,14 +180,14 @@
                 android:text="City"
                 android:textSize="16dp"
                 android:textStyle="bold"
-                android:layout_below="@id/input_4"
+                android:layout_below="@id/input_country"
                 android:layout_marginTop="6dp"
                 >
 
             </TextView>
 
-            <EditText
-                android:id="@+id/input_5"
+            <Spinner
+                android:id="@+id/input_city"
                 android:layout_width="match_parent"
                 android:layout_height="36dp"
                 android:background="@drawable/textbox_round_corners"
@@ -197,7 +198,7 @@
                 android:paddingLeft="10dp"
                 >
 
-            </EditText>
+            </Spinner>
 
             <Button
                 android:id="@+id/update_profile_btn"

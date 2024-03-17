@@ -81,15 +81,18 @@
                     android:backgroundTint="#80dad4"
                     app:cardCornerRadius="40dp">
 
-                    <ImageButton
+                    <ImageView
+                        android:id="@+id/mentor_img"
                         android:layout_width="82dp"
                         android:layout_height="90dp"
                         android:layout_gravity="center"
                         android:backgroundTint="#80dad4"
                         android:src="@drawable/filled_white_circle"
-                        app:cornerRadius="30dp">
+                        app:cornerRadius="30dp"
+                        android:scaleType="centerCrop"
+                        >
 
-                    </ImageButton>
+                    </ImageView>
 
                 </androidx.cardview.widget.CardView>
 

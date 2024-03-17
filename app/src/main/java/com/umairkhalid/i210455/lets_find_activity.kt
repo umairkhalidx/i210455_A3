@@ -8,6 +8,7 @@ import android.view.inputmethod.EditorInfo
 import android.widget.EditText
 import android.widget.ImageButton
 import android.widget.TextView
+import android.widget.Toast
 
 class lets_find_activity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -28,6 +29,7 @@ class lets_find_activity : AppCompatActivity() {
 
 
         val searchbar_btn: ImageButton =findViewById(R.id.searchbar_btn)
+        val search_bar :EditText=findViewById(R.id.searchbar)
         val category_btn_1: TextView =findViewById(R.id.textView_1)
         val category_btn_2: TextView =findViewById(R.id.textView_2)
         val category_btn_3: TextView =findViewById(R.id.textView_3)
@@ -39,53 +41,108 @@ class lets_find_activity : AppCompatActivity() {
         val frwd_btn_3: ImageButton =findViewById(R.id.frwd_btn_3)
 
         searchbar_btn.setOnClickListener{
-            val nextActivityIntent = Intent(this, search_results_activity::class.java)
-            startActivity(nextActivityIntent)
+            val txt=search_bar.text.toString()
+            if (txt==null){
+                Toast.makeText(this,"Add Suitable Value",Toast.LENGTH_LONG).show()
+            }else{
+                val nextActivityIntent = Intent(this, search_results_activity::class.java)
+                nextActivityIntent.putExtra("search_txt", txt)
+                startActivity(nextActivityIntent)
+                finish()
+            }
+
+//            val nextActivityIntent = Intent(this, search_results_activity::class.java)
+//            startActivity(nextActivityIntent)
         }
 
         category_btn_1.setOnClickListener{
+            val txt:String ="Entrepreneurship"
             val nextActivityIntent = Intent(this, search_results_activity::class.java)
+            nextActivityIntent.putExtra("search_txt", txt)
             startActivity(nextActivityIntent)
+            finish()
+//            val nextActivityIntent = Intent(this, search_results_activity::class.java)
+//            startActivity(nextActivityIntent)
         }
 
         category_btn_2.setOnClickListener{
+            val txt:String ="Personal"
             val nextActivityIntent = Intent(this, search_results_activity::class.java)
+            nextActivityIntent.putExtra("search_txt", txt)
             startActivity(nextActivityIntent)
+            finish()
+//            val nextActivityIntent = Intent(this, search_results_activity::class.java)
+//            startActivity(nextActivityIntent)
         }
 
         category_btn_3.setOnClickListener{
+            val txt:String ="Education"
             val nextActivityIntent = Intent(this, search_results_activity::class.java)
+            nextActivityIntent.putExtra("search_txt", txt)
             startActivity(nextActivityIntent)
+            finish()
+//            val nextActivityIntent = Intent(this, search_results_activity::class.java)
+//            startActivity(nextActivityIntent)
         }
 
         frwd_btn_1.setOnClickListener{
+            val txt:String ="Entrepreneurship"
             val nextActivityIntent = Intent(this, search_results_activity::class.java)
+            nextActivityIntent.putExtra("search_txt", txt)
             startActivity(nextActivityIntent)
+            finish()
+//            val nextActivityIntent = Intent(this, search_results_activity::class.java)
+//            startActivity(nextActivityIntent)
         }
 
         frwd_btn_2.setOnClickListener{
+            val txt:String ="Personal"
             val nextActivityIntent = Intent(this, search_results_activity::class.java)
+            nextActivityIntent.putExtra("search_txt", txt)
             startActivity(nextActivityIntent)
+            finish()
+//            val nextActivityIntent = Intent(this, search_results_activity::class.java)
+//            startActivity(nextActivityIntent)
         }
 
         frwd_btn_3.setOnClickListener{
+            val txt:String ="Education"
             val nextActivityIntent = Intent(this, search_results_activity::class.java)
+            nextActivityIntent.putExtra("search_txt", txt)
             startActivity(nextActivityIntent)
+            finish()
+//            val nextActivityIntent = Intent(this, search_results_activity::class.java)
+//            startActivity(nextActivityIntent)
         }
 
         search_result_1.setOnClickListener{
-            val nextActivityIntent = Intent(this, john_cooper_1_activity::class.java)
+            val txt:String ="Entrepreneurship"
+            val nextActivityIntent = Intent(this, search_results_activity::class.java)
+            nextActivityIntent.putExtra("search_txt", txt)
             startActivity(nextActivityIntent)
+            finish()
+//            val nextActivityIntent = Intent(this, john_cooper_1_activity::class.java)
+//            startActivity(nextActivityIntent)
         }
 
         search_result_2.setOnClickListener{
-            val nextActivityIntent = Intent(this, john_cooper_1_activity::class.java)
+            val txt:String ="Personal"
+            val nextActivityIntent = Intent(this, search_results_activity::class.java)
+            nextActivityIntent.putExtra("search_txt", txt)
             startActivity(nextActivityIntent)
+            finish()
+//            val nextActivityIntent = Intent(this, john_cooper_1_activity::class.java)
+//            startActivity(nextActivityIntent)
         }
 
         search_result_3.setOnClickListener{
-            val nextActivityIntent = Intent(this, john_cooper_1_activity::class.java)
+            val txt:String ="Education"
+            val nextActivityIntent = Intent(this, search_results_activity::class.java)
+            nextActivityIntent.putExtra("search_txt", txt)
             startActivity(nextActivityIntent)
+            finish()
+//            val nextActivityIntent = Intent(this, john_cooper_1_activity::class.java)
+//            startActivity(nextActivityIntent)
         }
 
 

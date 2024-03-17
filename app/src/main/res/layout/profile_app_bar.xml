@@ -1,0 +1,89 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"-->
+<!--    xmlns:app="http://schemas.android.com/apk/res-auto"-->
+<!--    android:layout_width="match_parent"-->
+<!--    android:layout_height="match_parent">-->
+
+<!--    <androidx.appcompat.widget.Toolbar-->
+<!--        android:id="@+id/my_toolbar"-->
+<!--        android:layout_width="match_parent"-->
+<!--        android:layout_height="?attr/actionBarSize"-->
+<!--        android:background="?attr/colorPrimary"-->
+<!--        app:title="Custom ActionBar"-->
+<!--        app:titleTextColor="@android:color/white" />-->
+
+<!--    &lt;!&ndash; Your other layout elements go here &ndash;&gt;-->
+
+<!--</RelativeLayout>-->
+
+<androidx.appcompat.widget.Toolbar xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:background="#def8f8"
+    android:id="@+id/profile_toolbar">
+
+    <ImageButton
+        android:id="@+id/back_btn"
+        android:layout_width="50dp"
+        android:layout_height="30dp"
+        android:src="@drawable/back_arrow"
+        android:background="#def8f8"
+        android:layout_marginLeft="10dp"
+        android:layout_alignParentBottom="true"
+        />
+
+
+    <TextView
+        android:id="@+id/lets_find"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="left"
+        android:layout_marginStart="11dp"
+        android:layout_marginLeft="42dp"
+        android:layout_toEndOf="@+id/back_btn"
+        android:text="My Profile"
+        android:textColor="#157177"
+        android:textSize="26dp"
+        android:textStyle="bold"
+        android:layout_alignParentBottom="true"
+        />
+
+<!--    </TextView>-->
+
+
+    <!--    <RelativeLayout-->
+<!--        android:layout_width="match_parent"-->
+<!--        android:layout_height="0dp"-->
+<!--        android:layout_weight="10"-->
+<!--        android:orientation="horizontal"-->
+<!--        android:background="#def8f8"-->
+<!--        android:layout_marginBottom="8dp"-->
+<!--        >-->
+<!--        <ImageButton-->
+<!--            android:id="@+id/back_btn"-->
+<!--            android:layout_width="50dp"-->
+<!--            android:layout_height="30dp"-->
+<!--            android:src="@drawable/back_arrow"-->
+<!--            android:background="#def8f8"-->
+<!--            android:layout_marginLeft="10dp"-->
+<!--            android:layout_alignParentBottom="true"-->
+<!--            />-->
+
+<!--        <ImageButton-->
+<!--            android:layout_width="wrap_content"-->
+<!--            android:layout_height="wrap_content"-->
+<!--            android:layout_centerVertical="true"-->
+<!--            android:layout_alignParentEnd="true"-->
+<!--            android:src="@drawable/three_dots_green"-->
+<!--            android:background="@android:color/transparent"-->
+<!--            android:layout_marginRight="30dp"-->
+<!--            android:layout_alignParentBottom="true"-->
+<!--            >-->
+
+
+<!--        </ImageButton>-->
+
+<!--    </RelativeLayout>-->
+
+</androidx.appcompat.widget.Toolbar>

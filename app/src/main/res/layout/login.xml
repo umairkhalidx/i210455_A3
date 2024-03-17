@@ -107,6 +107,7 @@
             </TextView>
 
             <EditText
+                android:id="@+id/login_email_txt"
                 android:layout_width="match_parent"
                 android:layout_height="36dp"
                 android:background="@drawable/textbox_round_corners"
@@ -132,6 +133,7 @@
             </TextView>
 
             <EditText
+                android:id="@+id/login_pass_txt"
                 android:layout_width="match_parent"
                 android:layout_height="36dp"
                 android:background="@drawable/textbox_round_corners"
