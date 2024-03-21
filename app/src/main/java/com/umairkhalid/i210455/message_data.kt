@@ -3,6 +3,7 @@ package com.umairkhalid.i210455
 import java.io.Serializable
 
 data class message_data(
+//    val img: String?="",
     val userId: String = "",
     val messageText: String = "",
     val timestamp: Long = 0,

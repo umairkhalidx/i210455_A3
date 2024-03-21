@@ -183,12 +183,16 @@ class book_session_activity : AppCompatActivity() {
 
         audiocall_btn.setOnClickListener{
             val nextActivityIntent = Intent(this, call_1_activity::class.java)
+            nextActivityIntent.putExtra("MENTOR_NAME", input_txt)
             startActivity(nextActivityIntent)
+            finish()
         }
 
         videocall_btn.setOnClickListener{
             val nextActivityIntent = Intent(this, call_2_activity::class.java)
+            nextActivityIntent.putExtra("MENTOR_NAME", input_txt)
             startActivity(nextActivityIntent)
+            finish()
         }
 
 

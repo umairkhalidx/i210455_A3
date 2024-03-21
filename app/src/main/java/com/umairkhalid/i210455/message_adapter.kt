@@ -6,6 +6,7 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.ImageView
 import android.widget.TextView
+import android.widget.Toast
 import androidx.recyclerview.widget.RecyclerView
 import com.bumptech.glide.Glide
 
@@ -21,9 +22,18 @@ class message_adapter(private val messages: List<message_data>, private val onMe
         private val messageTextView: TextView = itemView.findViewById(R.id.messageTextView)
         private val audioIcon: ImageView = itemView.findViewById(R.id.audioIcon)
         private val imageView: ImageView = itemView.findViewById(R.id.imageView)
+//        private val display_pic : ImageView = itemView.findViewById(R.id.message_img)
 
         fun bind(message: message_data) {
             messageTextView.text = message.messageText
+
+//            Glide.with(itemView.context)
+//                .load(message.img)
+//                .into(display_pic)
+
+//            Glide.with(holder.itemView.context)
+//                .load(itemslist[position].img)
+//                .into(holder.display_pic)
 
             if (message.imageUrl != null) {
                 audioIcon.visibility = View.GONE
@@ -31,6 +41,11 @@ class message_adapter(private val messages: List<message_data>, private val onMe
                 Glide.with(itemView.context)
                     .load(message.imageUrl)
                     .into(imageView)
+
+//                Glide.with(itemView.context)
+//                    .load(message.img)
+//                    .into(display_pic)
+
             } else if (message.fileUrl != null) {
                 audioIcon.visibility = View.GONE
                 imageView.visibility = View.GONE

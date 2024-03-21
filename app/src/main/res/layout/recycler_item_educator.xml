@@ -109,11 +109,12 @@
                     </TextView>
 
                     <ImageView
+                        android:id="@+id/heart_btn"
                         android:layout_width="18dp"
                         android:layout_height="20dp"
-                        android:src="@drawable/red_heart_btn"
+                        android:src="@drawable/heart_unfilled"
                         android:layout_gravity="center"
-
+                        android:clickable="true"
                         >
 
                     </ImageView>

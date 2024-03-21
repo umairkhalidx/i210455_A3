@@ -1,6 +1,8 @@
 package com.umairkhalid.i210455
 
+import android.content.Context
 import android.content.Intent
+import android.net.ConnectivityManager
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.widget.ImageButton
@@ -13,6 +15,8 @@ import com.google.firebase.database.DataSnapshot
 import com.google.firebase.database.DatabaseError
 import com.google.firebase.database.FirebaseDatabase
 import com.google.firebase.database.ValueEventListener
+import com.google.gson.Gson
+import com.google.gson.reflect.TypeToken
 
 class chats_activity : AppCompatActivity() , click_listner,click_listner_community{
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -91,8 +95,57 @@ class chats_activity : AppCompatActivity() , click_listner,click_listner_communi
         }
 
 
+        if (!isNetworkAvailable()) {
+            Toast.makeText(this, "No Internet Connection", Toast.LENGTH_LONG).show()
 
-        // 1- AdapterView: RecyclerView
+            // 1- AdapterView: RecyclerView
+            val recyclerView : RecyclerView = findViewById(R.id.chats_recycleview)
+            recyclerView.layoutManager = LinearLayoutManager(this,
+                LinearLayoutManager.VERTICAL,
+                false
+            )
+
+            val sharedPref_1 = getSharedPreferences("chats_prefs", Context.MODE_PRIVATE)
+            val json_1 = sharedPref_1.getString("chats_list", "")
+
+            val gson_1 = Gson()
+            val type_1 = object : TypeToken<ArrayList<chats_recycler_data>>() {}.type
+            val adapter_data_list: ArrayList<chats_recycler_data> = gson_1.fromJson(json_1, type_1)
+
+
+            val adapter = chats_recycler_adapter(adapter_data_list,this@chats_activity)
+            recyclerView.adapter = adapter
+
+            // Notify your adapter that the data has changed
+            adapter.notifyDataSetChanged()
+
+
+            // 1- AdapterView: RecyclerView
+            val recyclerView_community : RecyclerView = findViewById(R.id.chats_recyclerview_community)
+            recyclerView_community.layoutManager = LinearLayoutManager(this,
+                LinearLayoutManager.HORIZONTAL,
+                false
+            )
+
+            val sharedPref_2 = getSharedPreferences("chats_community_prefs", Context.MODE_PRIVATE)
+            val json_2 = sharedPref_2.getString("community_list", "")
+
+            val gson_2 = Gson()
+            val type_2 = object : TypeToken<ArrayList<chats_recycler_community_data>>() {}.type
+            val adapter_data_list_community: ArrayList<chats_recycler_community_data> = gson_2.fromJson(json_2, type_2)
+
+
+
+            val adapter_3 = chats_recycler_community_adapter(adapter_data_list_community,this@chats_activity)
+            recyclerView_community.adapter = adapter_3
+
+            // Notify your adapter that the data has changed
+            adapter_3.notifyDataSetChanged()
+
+        }
+
+
+            // 1- AdapterView: RecyclerView
         val recyclerView : RecyclerView = findViewById(R.id.chats_recycleview)
         recyclerView.layoutManager = LinearLayoutManager(this,
             LinearLayoutManager.VERTICAL,
@@ -159,7 +212,15 @@ class chats_activity : AppCompatActivity() , click_listner,click_listner_communi
                                     recyclerView.adapter = adapter
 
                                     // Notify your adapter that the data has changed
-                                    // adapter.notifyDataSetChanged()
+                                     adapter.notifyDataSetChanged()
+
+                                    val gson = Gson()
+                                    val json = gson.toJson(adapter_data_list)
+                                    val sharedPref = getSharedPreferences("chats_prefs", Context.MODE_PRIVATE)
+                                    val editor = sharedPref.edit()
+                                    editor.putString("chats_list", json)
+                                    editor.apply()
+
                                 }
 
                                 override fun onCancelled(databaseError: DatabaseError) {
@@ -262,7 +323,14 @@ class chats_activity : AppCompatActivity() , click_listner,click_listner_communi
                                     recyclerView_community.adapter = adapter_2
 
                                     // Notify your adapter that the data has changed
-                                    // adapter.notifyDataSetChanged()
+                                    adapter_2.notifyDataSetChanged()
+
+                                    val gson = Gson()
+                                    val json = gson.toJson(adapter_data_list_community)
+                                    val sharedPref = getSharedPreferences("chats_community_prefs", Context.MODE_PRIVATE)
+                                    val editor = sharedPref.edit()
+                                    editor.putString("community_list", json)
+                                    editor.apply()
                                 }
 
                                 override fun onCancelled(databaseError: DatabaseError) {
@@ -290,10 +358,22 @@ class chats_activity : AppCompatActivity() , click_listner,click_listner_communi
 
     }
 
+    override fun change_heart(flag:Int,txt:String) {
+        TODO("Not yet implemented")
+    }
+
     override fun chat_community_click_function(txt:String){
         val nextActivityIntent = Intent(this, chat_2_activity::class.java)
         nextActivityIntent.putExtra("MENTOR_NAME", txt)
         startActivity(nextActivityIntent)
 
     }
+
+    private fun isNetworkAvailable(): Boolean {
+        val connectivityManager =
+            getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
+        val activeNetworkInfo = connectivityManager.activeNetworkInfo
+        return activeNetworkInfo != null && activeNetworkInfo.isConnected
+    }
+
 }

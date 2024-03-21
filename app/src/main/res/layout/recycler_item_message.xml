@@ -2,20 +2,20 @@
 <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:orientation="vertical"
     android:layout_marginStart="8dp"
     android:layout_marginEnd="16dp"
     android:layout_marginTop="4dp"
-    android:layout_marginBottom="4dp"
-    >
+    android:layout_marginBottom="4dp">
 
     <LinearLayout
+        android:id="@+id/linearLayout"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_alignParentEnd="true"
         android:background="@drawable/round_edit_text"
-        android:padding="6dp"
-        >
+        android:padding="6dp">
 
         <TextView
             android:id="@+id/senderTextView"
@@ -46,7 +46,32 @@
 
     </LinearLayout>
 
+<!--    <androidx.cardview.widget.CardView-->
+<!--        android:id="@+id/cardView"-->
+<!--        android:layout_width="30dp"-->
+<!--        android:layout_height="30dp"-->
+<!--        android:layout_marginEnd="10dp"-->
+<!--        android:layout_centerVertical="true"-->
+<!--        android:scaleType="centerCrop"-->
+<!--        android:layout_toStartOf="@+id/linearLayout"-->
+<!--        app:cardCornerRadius="50dp"-->
+<!--        >-->
+
+<!--        <ImageView-->
+<!--            android:id="@+id/message_img"-->
+<!--            android:layout_width="match_parent"-->
+<!--            android:layout_height="match_parent"-->
+<!--            android:scaleType="centerCrop"-->
+<!--            >-->
+
+<!--        </ImageView>-->
+
+<!--    </androidx.cardview.widget.CardView>>-->
+
+
 </RelativeLayout>
+
+
 
 <!--    android:background="@drawable/rounded_edit_text"-->
 <!--    android:src="@drawable/ic_audio_icon"-->

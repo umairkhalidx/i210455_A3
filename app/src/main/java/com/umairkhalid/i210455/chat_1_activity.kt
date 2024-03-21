@@ -26,6 +26,7 @@ import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.database.*
 import com.google.firebase.storage.FirebaseStorage
 import com.google.firebase.storage.StorageReference
+import com.squareup.picasso.Picasso
 import java.io.ByteArrayOutputStream
 import java.util.*
 
@@ -131,18 +132,7 @@ class chat_1_activity : AppCompatActivity() {
             finish()
         }
 
-        val audiocall_btn: ImageButton =findViewById(R.id.audiocall_button)
-        val videocall_btn: ImageButton =findViewById(R.id.videocall_btn)
 
-        audiocall_btn.setOnClickListener{
-            val nextActivityIntent = Intent(this, call_1_activity::class.java)
-            startActivity(nextActivityIntent)
-        }
-
-        videocall_btn.setOnClickListener{
-            val nextActivityIntent = Intent(this, call_2_activity::class.java)
-            startActivity(nextActivityIntent)
-        }
 
         auth = FirebaseAuth.getInstance()
         database = FirebaseDatabase.getInstance()
@@ -173,6 +163,21 @@ class chat_1_activity : AppCompatActivity() {
         mentorName?.let {
             mentorNameTextView.text = it
             messages_ref = database.reference.child("users").child(userId).child("messages").child("messages_$it") // Use mentor's name in the database path
+        }
+
+        val audiocall_btn: ImageButton =findViewById(R.id.audiocall_button)
+        val videocall_btn: ImageButton =findViewById(R.id.videocall_btn)
+
+        audiocall_btn.setOnClickListener{
+            val nextActivityIntent = Intent(this, call_1_activity::class.java)
+            nextActivityIntent.putExtra("MENTOR_NAME",mentorName )
+            startActivity(nextActivityIntent)
+        }
+
+        videocall_btn.setOnClickListener{
+            val nextActivityIntent = Intent(this, call_2_activity::class.java)
+            nextActivityIntent.putExtra("MENTOR_NAME",mentorName )
+            startActivity(nextActivityIntent)
         }
 
         // Setup RecyclerView and Adapter

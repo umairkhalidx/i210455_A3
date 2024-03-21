@@ -8,12 +8,14 @@ import android.widget.TextView
 import android.widget.Toast
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
+import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.database.DataSnapshot
 import com.google.firebase.database.DatabaseError
 import com.google.firebase.database.FirebaseDatabase
 import com.google.firebase.database.ValueEventListener
 
 class search_results_activity : AppCompatActivity(), click_listner {
+    private var  mAuth = FirebaseAuth.getInstance();
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
@@ -121,22 +123,86 @@ class search_results_activity : AppCompatActivity(), click_listner {
 
                         // Check if all required fields are present
                         if (name != null && occupation != null && price != null && status != null) {
-                            val mentorData = recycler_searchresults_data(
-                                profilePicUrl,
-                                name,
-                                occupation,
-                                status,
-                                price
-                            )
-                            adapter_data_list.add(mentorData)
+                            val curr_usr = mAuth.currentUser
+                            val user_id = curr_usr?.uid.toString()
+                            val userRef = database.getReference("users").child(user_id)
+
+                            userRef.addListenerForSingleValueEvent(object : ValueEventListener {
+                                override fun onDataChange(dataSnapshot: DataSnapshot) {
+                                    if (dataSnapshot.hasChild("favourite")) {
+                                        val fav_ref = userRef.child("favourite")
+                                        fav_ref.addListenerForSingleValueEvent(object : ValueEventListener {
+                                            override fun onDataChange(dataSnapshot: DataSnapshot) {
+                                                if (dataSnapshot.exists()) {
+                                                    if (dataSnapshot.hasChild(name)) {
+                                                        val mentorData = recycler_searchresults_data(
+                                                            profilePicUrl,
+                                                            name,
+                                                            occupation,
+                                                            status,
+                                                            price,R.drawable.red_heart_btn,1
+                                                        )
+                                                        adapter_data_list.add(mentorData)
+                                                        val adapter = recycler_searchresults_adapter(adapter_data_list,this@search_results_activity)
+                                                        recyclerView.adapter = adapter
+
+                                                        // Notify your adapter that the data has changed
+                                                        adapter.notifyDataSetChanged()
+
+                                                    } else {
+                                                        val mentorData = recycler_searchresults_data(
+                                                            profilePicUrl,
+                                                            name,
+                                                            occupation,
+                                                            status,
+                                                            price,R.drawable.heart_unfilled,0
+                                                        )
+                                                        adapter_data_list.add(mentorData)
+                                                        val adapter = recycler_searchresults_adapter(adapter_data_list,this@search_results_activity)
+                                                        recyclerView.adapter = adapter
+
+                                                        // Notify your adapter that the data has changed
+                                                        adapter.notifyDataSetChanged()
+
+                                                    }
+                                                }
+                                            }
+
+                                            override fun onCancelled(databaseError: DatabaseError) {
+                                                // Handle error
+                                            }
+                                        })
+                                    } else {
+
+                                        val mentorData = recycler_searchresults_data(
+                                            profilePicUrl,
+                                            name,
+                                            occupation,
+                                            status,
+                                            price,R.drawable.heart_unfilled,0
+                                        )
+                                        adapter_data_list.add(mentorData)
+                                        val adapter = recycler_searchresults_adapter(adapter_data_list,this@search_results_activity)
+                                        recyclerView.adapter = adapter
+
+                                        // Notify your adapter that the data has changed
+                                        adapter.notifyDataSetChanged()
+
+                                    }
+                                }
+
+                                override fun onCancelled(databaseError: DatabaseError) {
+                                    // Handle error
+                                }
+                            })
                         }
                     }
 
-                    val adapter = recycler_searchresults_adapter(adapter_data_list,this@search_results_activity)
-                    recyclerView.adapter = adapter
-
-                    // Notify your adapter that the data has changed
-                    adapter.notifyDataSetChanged()
+//                    val adapter = recycler_searchresults_adapter(adapter_data_list,this@search_results_activity)
+//                    recyclerView.adapter = adapter
+//
+//                    // Notify your adapter that the data has changed
+//                    adapter.notifyDataSetChanged()
                 }
 
                 override fun onCancelled(databaseError: DatabaseError) {
@@ -164,22 +230,92 @@ class search_results_activity : AppCompatActivity(), click_listner {
 
                         // Check if all required fields are present
                         if (name != null && occupation != null && price != null && status != null) {
-                            val mentorData = recycler_searchresults_data(
-                                profilePicUrl,
-                                name,
-                                occupation,
-                                status,
-                                price
-                            )
-                            adapter_data_list.add(mentorData)
+                            val curr_usr = mAuth.currentUser
+                            val user_id = curr_usr?.uid.toString()
+                            val userRef = database.getReference("users").child(user_id)
+
+                            userRef.addListenerForSingleValueEvent(object : ValueEventListener {
+                                override fun onDataChange(dataSnapshot: DataSnapshot) {
+                                    if (dataSnapshot.hasChild("favourite")) {
+                                        val fav_ref = userRef.child("favourite")
+                                        fav_ref.addListenerForSingleValueEvent(object : ValueEventListener {
+                                            override fun onDataChange(dataSnapshot: DataSnapshot) {
+                                                if (dataSnapshot.exists()) {
+                                                    if (dataSnapshot.hasChild(name)) {
+                                                        val mentorData = recycler_searchresults_data(
+                                                            profilePicUrl,
+                                                            name,
+                                                            occupation,
+                                                            status,
+                                                            price,R.drawable.red_heart_btn,1
+                                                        )
+                                                        adapter_data_list.add(mentorData)
+                                                        val adapter = recycler_searchresults_adapter(adapter_data_list,this@search_results_activity)
+                                                        recyclerView.adapter = adapter
+                                                        Toast.makeText(this@search_results_activity,"SUII1",Toast.LENGTH_SHORT).show()
+
+
+                                                        // Notify your adapter that the data has changed
+                                                        adapter.notifyDataSetChanged()
+
+                                                    } else {
+                                                        val mentorData = recycler_searchresults_data(
+                                                            profilePicUrl,
+                                                            name,
+                                                            occupation,
+                                                            status,
+                                                            price,R.drawable.heart_unfilled,0
+                                                        )
+                                                        adapter_data_list.add(mentorData)
+                                                        val adapter = recycler_searchresults_adapter(adapter_data_list,this@search_results_activity)
+                                                        recyclerView.adapter = adapter
+
+                                                        Toast.makeText(this@search_results_activity,"SUII2",Toast.LENGTH_SHORT).show()
+
+                                                        // Notify your adapter that the data has changed
+                                                        adapter.notifyDataSetChanged()
+
+                                                    }
+                                                }
+                                            }
+
+                                            override fun onCancelled(databaseError: DatabaseError) {
+                                                // Handle error
+                                            }
+                                        })
+                                    } else {
+
+                                        val mentorData = recycler_searchresults_data(
+                                            profilePicUrl,
+                                            name,
+                                            occupation,
+                                            status,
+                                            price,R.drawable.heart_unfilled,0
+                                        )
+                                        adapter_data_list.add(mentorData)
+                                        val adapter = recycler_searchresults_adapter(adapter_data_list,this@search_results_activity)
+                                        recyclerView.adapter = adapter
+                                        Toast.makeText(this@search_results_activity,"SUII3",Toast.LENGTH_SHORT).show()
+
+
+                                        // Notify your adapter that the data has changed
+                                        adapter.notifyDataSetChanged()
+
+                                    }
+                                }
+
+                                override fun onCancelled(databaseError: DatabaseError) {
+                                    // Handle error
+                                }
+                            })
                         }
                     }
-                    val adapter = recycler_searchresults_adapter(adapter_data_list,this@search_results_activity)
-                    recyclerView.adapter = adapter
-
-
-                    // Notify your adapter that the data has changed
-                    // adapter.notifyDataSetChanged()
+//                    val adapter = recycler_searchresults_adapter(adapter_data_list,this@search_results_activity)
+//                    recyclerView.adapter = adapter
+//
+//
+//                    // Notify your adapter that the data has changed
+//                     adapter.notifyDataSetChanged()
                 }
 
                 override fun onCancelled(databaseError: DatabaseError) {
@@ -284,5 +420,26 @@ class search_results_activity : AppCompatActivity(), click_listner {
         nextActivityIntent.putExtra("user_name", txt)
         startActivity(nextActivityIntent)
 
+    }
+
+    override fun change_heart(flag:Int,txt:String) {
+        val database = FirebaseDatabase.getInstance()
+        var my_ref = database.getReference("users")
+
+        val curr = mAuth.currentUser
+        val id= curr?.uid.toString()
+
+        if(flag==0){
+
+            my_ref = database.reference.child("users").child(id)
+            my_ref.child("favourite").child(txt).setValue("true")
+
+        }
+        else if (flag==1){
+
+            val favouriteRef = database.reference.child("users").child(id).child("favourite")
+            favouriteRef.child(txt).removeValue()
+
+        }
     }
 }

@@ -9,6 +9,7 @@ import android.widget.AdapterView
 import android.widget.ArrayAdapter
 import android.widget.Button
 import android.widget.ImageButton
+import android.widget.ImageView
 import android.widget.Spinner
 import android.widget.TextView
 import android.widget.Toast
@@ -20,6 +21,7 @@ import com.google.firebase.database.DataSnapshot
 import com.google.firebase.database.DatabaseError
 import com.google.firebase.database.FirebaseDatabase
 import com.google.firebase.database.ValueEventListener
+import com.squareup.picasso.Picasso
 
 class editprofile_activity : AppCompatActivity() {
     private var  mAuth = FirebaseAuth.getInstance();
@@ -35,6 +37,31 @@ class editprofile_activity : AppCompatActivity() {
         val name_input: TextView =findViewById(R.id.input_name)
         val email_input: TextView =findViewById(R.id.input_email)
         val contact_input: TextView =findViewById(R.id.input_contact)
+        val user_img: ImageView = findViewById(R.id.user_image)
+
+        var database = FirebaseDatabase.getInstance()
+        val my_ref = database.getReference("users")
+        var currentUser = FirebaseAuth.getInstance().currentUser
+        val userId = currentUser?.uid
+
+        if(userId!=null){
+
+            my_ref.addValueEventListener(object : ValueEventListener {
+                override fun onDataChange(dataSnapshot: DataSnapshot) {
+                    val pic_url= dataSnapshot.child(userId).child("picture").value.toString()
+
+                    if(pic_url!=null){
+                        Picasso.get().load(pic_url).into(user_img)
+                    }
+
+                }
+                override fun onCancelled(databaseError: DatabaseError) {
+                    // Handle error
+                    Log.d("TAG", "Unable to retrieve Data")
+
+                }
+            })
+        }
 
         val city_spinner: Spinner = findViewById(R.id.input_city)
         city_spinner.prompt = "Select City"

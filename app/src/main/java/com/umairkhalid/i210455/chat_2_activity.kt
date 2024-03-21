@@ -138,18 +138,7 @@ class chat_2_activity : AppCompatActivity() {
             finish()
         }
 
-        val audiocall_btn: ImageButton =findViewById(R.id.audiocall_btn)
-        val videocall_btn: ImageButton =findViewById(R.id.call_btn_1)
 
-        audiocall_btn.setOnClickListener{
-            val nextActivityIntent = Intent(this, call_1_activity::class.java)
-            startActivity(nextActivityIntent)
-        }
-
-        videocall_btn.setOnClickListener{
-            val nextActivityIntent = Intent(this, call_2_activity::class.java)
-            startActivity(nextActivityIntent)
-        }
 
         auth = FirebaseAuth.getInstance()
         database = FirebaseDatabase.getInstance()
@@ -182,6 +171,23 @@ class chat_2_activity : AppCompatActivity() {
             mentorNameTextView.text = it
             messages_ref = database.reference.child("community").child("messages_$it") // Use mentor's name in the database path
         }
+
+
+        val audiocall_btn: ImageButton =findViewById(R.id.audiocall_btn)
+        val videocall_btn: ImageButton =findViewById(R.id.call_btn_1)
+
+        audiocall_btn.setOnClickListener{
+            val nextActivityIntent = Intent(this, call_1_activity::class.java)
+            nextActivityIntent.putExtra("MENTOR_NAME",mentorName )
+            startActivity(nextActivityIntent)
+        }
+
+        videocall_btn.setOnClickListener{
+            val nextActivityIntent = Intent(this, call_2_activity::class.java)
+            nextActivityIntent.putExtra("MENTOR_NAME",mentorName )
+            startActivity(nextActivityIntent)
+        }
+
 
         val temp_database = FirebaseDatabase.getInstance()
         val temp_ref= temp_database.getReference("mentors")

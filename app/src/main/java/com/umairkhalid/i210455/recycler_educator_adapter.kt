@@ -22,6 +22,8 @@ class recycler_educator_adapter(val itemslist: ArrayList<recycler_educator_data>
         lateinit var designation : TextView
         lateinit var status : TextView
         lateinit var price:TextView
+        lateinit var heart:ImageView
+        var my_flag:Int=0
 
         init {
             display_pic= itemView.findViewById(R.id.display_image)
@@ -29,6 +31,7 @@ class recycler_educator_adapter(val itemslist: ArrayList<recycler_educator_data>
             designation = itemView.findViewById(R.id.designation)
             status = itemView.findViewById(R.id.status)
             price=itemView.findViewById(R.id.edu_price)
+            heart=itemView.findViewById(R.id.heart_btn)
 
         }
 
@@ -53,6 +56,21 @@ class recycler_educator_adapter(val itemslist: ArrayList<recycler_educator_data>
 //            Toast.makeText(holder.itemView.context,"Clicked on a Row",Toast.LENGTH_SHORT).show()
 
         }
+        holder.heart.setOnClickListener{
+            if(holder.my_flag==0){
+                holder.heart.setImageResource(R.drawable.red_heart_btn)
+                val txt:String =itemslist[position].title.toString()
+                listener.change_heart(holder.my_flag,txt)
+                holder.my_flag=1
+
+            }else{
+                holder.heart.setImageResource(R.drawable.heart_unfilled)
+                val txt:String =itemslist[position].title.toString()
+                listener.change_heart(holder.my_flag,txt)
+                holder.my_flag=0
+            }
+        }
+
 
 //        holder.display_pic.setImageResource(itemslist[position].img)
         Glide.with(holder.itemView.context)
@@ -63,6 +81,8 @@ class recycler_educator_adapter(val itemslist: ArrayList<recycler_educator_data>
         holder.designation.setText(itemslist[position].desig)
         holder.status.setText(itemslist[position].status)
         holder.price.setText(itemslist[position].price)
+        holder.heart.setImageResource(itemslist[position].heart_img)
+        holder.my_flag = itemslist[position].flag
 
     }
 

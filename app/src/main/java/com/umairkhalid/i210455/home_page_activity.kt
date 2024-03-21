@@ -1,6 +1,8 @@
 package com.umairkhalid.i210455
 
+import android.content.Context
 import android.content.Intent
+import android.net.ConnectivityManager
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.util.Log
@@ -16,6 +18,8 @@ import com.google.firebase.database.DataSnapshot
 import com.google.firebase.database.DatabaseError
 import com.google.firebase.database.FirebaseDatabase
 import com.google.firebase.database.ValueEventListener
+import com.google.gson.Gson
+import com.google.gson.reflect.TypeToken
 import kotlin.math.max
 
 class home_page_activity : AppCompatActivity() , click_listner {
@@ -37,6 +41,59 @@ class home_page_activity : AppCompatActivity() , click_listner {
         val notifications_btn: ImageButton =findViewById(R.id.notifications_btn)
         val username : TextView=findViewById(R.id.txt_username)
 
+        if (!isNetworkAvailable()) {
+            Toast.makeText(this,"No Internet Connection",Toast.LENGTH_LONG).show()
+
+            val sharedPref_1 = getSharedPreferences("home_page_prefs", Context.MODE_PRIVATE)
+            val storedUsername = sharedPref_1.getString("username", "")
+            username.text=storedUsername
+
+            // Initialize SharedPreferences
+            val sharedPref = getSharedPreferences("home_adapter_top_prefs", Context.MODE_PRIVATE)
+            val json = sharedPref.getString("home_adapter_top", "")
+
+            val gson = Gson()
+            val type = object : TypeToken<ArrayList<recycler_educator_data>>() {}.type
+            val adapter_data_list_top: ArrayList<recycler_educator_data> = gson.fromJson(json, type)
+
+            // 1- AdapterView: RecyclerView
+            val recyclerView_top : RecyclerView = findViewById(R.id.recyclerview_educator_top)
+            recyclerView_top.layoutManager = LinearLayoutManager(this,
+                LinearLayoutManager.HORIZONTAL,
+                false
+            )
+
+            val adapter_top = recycler_educator_adapter(adapter_data_list_top,this@home_page_activity)
+            recyclerView_top.adapter = adapter_top
+
+            // Notify your adapter that the data has changed
+            adapter_top.notifyDataSetChanged()
+
+
+            val recyclerView_edu : RecyclerView = findViewById(R.id.recyclerview_educator_edu)
+            recyclerView_edu.layoutManager = LinearLayoutManager(this,
+                LinearLayoutManager.HORIZONTAL,
+                false
+            )
+
+            // Initialize SharedPreferences
+            val sharedPref_2 = getSharedPreferences("home_adapter_edu_prefs", Context.MODE_PRIVATE)
+            val json_1 = sharedPref_2.getString("home_adapter_edu", "")
+
+            val gson_1 = Gson()
+            val type_1 = object : TypeToken<ArrayList<recycler_educator_data>>() {}.type
+            val adapter_data_list_edu: ArrayList<recycler_educator_data> = gson_1.fromJson(json_1, type_1)
+
+
+            val lastFourMentors = adapter_data_list_edu.takeLast(4)
+            val adapter_edu = recycler_educator_adapter(ArrayList(lastFourMentors),this@home_page_activity)
+            recyclerView_edu.adapter = adapter_edu
+
+            // Notify your adapter that the data has changed
+            adapter_edu.notifyDataSetChanged()
+
+        }
+
         var database = FirebaseDatabase.getInstance()
         val my_ref = database.getReference("users")
         val currentUser = FirebaseAuth.getInstance().currentUser
@@ -48,6 +105,10 @@ class home_page_activity : AppCompatActivity() , click_listner {
                 override fun onDataChange(dataSnapshot: DataSnapshot) {
                     val name = dataSnapshot.child(userId).child("name").value.toString()
                     username.text = name
+                    val sharedPref = getSharedPreferences("home_page_prefs", Context.MODE_PRIVATE)
+                    val editor = sharedPref.edit()
+                    editor.putString("username", name)
+                    editor.apply()
                 }
                 override fun onCancelled(databaseError: DatabaseError) {
                     // Handle error
@@ -143,22 +204,104 @@ class home_page_activity : AppCompatActivity() , click_listner {
 
                     // Check if all required fields are present
                     if (name != null && occupation != null && price != null && status != null) {
-                        val mentorData = recycler_educator_data(
-                            profilePicUrl,
-                            name,
-                            occupation,
-                            status,
-                            price
-                        )
-                        adapter_data_list_top.add(mentorData)
+                        val curr_usr = mAuth.currentUser
+                        val user_id = curr_usr?.uid.toString()
+                        val userRef = database.getReference("users").child(user_id)
+
+                        userRef.addListenerForSingleValueEvent(object : ValueEventListener {
+                            override fun onDataChange(dataSnapshot: DataSnapshot) {
+                                if (dataSnapshot.hasChild("favourite")) {
+                                    val fav_ref = userRef.child("favourite")
+                                    fav_ref.addListenerForSingleValueEvent(object : ValueEventListener {
+                                        override fun onDataChange(dataSnapshot: DataSnapshot) {
+                                            if (dataSnapshot.exists()) {
+                                                if (dataSnapshot.hasChild(name)) {
+                                                    val mentorData = recycler_educator_data(
+                                                        profilePicUrl,
+                                                        name,
+                                                        occupation,
+                                                        status,
+                                                        price,R.drawable.red_heart_btn,1
+                                                    )
+                                                    adapter_data_list_top.add(mentorData)
+                                                    val adapter_top = recycler_educator_adapter(adapter_data_list_top,this@home_page_activity)
+                                                    recyclerView_top.adapter = adapter_top
+
+                                                    // Notify your adapter that the data has changed
+                                                    adapter_top.notifyDataSetChanged()
+
+                                                    val gson = Gson()
+                                                    val json = gson.toJson(adapter_data_list_top)
+                                                    val sharedPref = getSharedPreferences("home_adapter_top_prefs", Context.MODE_PRIVATE)
+                                                    val editor = sharedPref.edit()
+                                                    editor.putString("home_adapter_top", json)
+                                                    editor.apply()
+                                                } else {
+                                                    val mentorData = recycler_educator_data(
+                                                        profilePicUrl,
+                                                        name,
+                                                        occupation,
+                                                        status,
+                                                        price,R.drawable.heart_unfilled,0
+                                                    )
+                                                    adapter_data_list_top.add(mentorData)
+                                                    val adapter_top = recycler_educator_adapter(adapter_data_list_top,this@home_page_activity)
+                                                    recyclerView_top.adapter = adapter_top
+
+                                                    // Notify your adapter that the data has changed
+                                                    adapter_top.notifyDataSetChanged()
+
+                                                    val gson = Gson()
+                                                    val json = gson.toJson(adapter_data_list_top)
+                                                    val sharedPref = getSharedPreferences("home_adapter_top_prefs", Context.MODE_PRIVATE)
+                                                    val editor = sharedPref.edit()
+                                                    editor.putString("home_adapter_top", json)
+                                                    editor.apply()
+                                                }
+                                            }
+                                        }
+
+                                        override fun onCancelled(databaseError: DatabaseError) {
+                                            // Handle error
+                                        }
+                                    })
+                                } else {
+
+                                    val mentorData = recycler_educator_data(
+                                        profilePicUrl,
+                                        name,
+                                        occupation,
+                                        status,
+                                        price,R.drawable.heart_unfilled,0
+                                    )
+                                    adapter_data_list_top.add(mentorData)
+                                    val adapter_top = recycler_educator_adapter(adapter_data_list_top,this@home_page_activity)
+                                    recyclerView_top.adapter = adapter_top
+
+                                    // Notify your adapter that the data has changed
+                                    adapter_top.notifyDataSetChanged()
+
+                                    val gson = Gson()
+                                    val json = gson.toJson(adapter_data_list_top)
+                                    val sharedPref = getSharedPreferences("home_adapter_top_prefs", Context.MODE_PRIVATE)
+                                    val editor = sharedPref.edit()
+                                    editor.putString("home_adapter_top", json)
+                                    editor.apply()
+
+                                }
+                            }
+
+                            override fun onCancelled(databaseError: DatabaseError) {
+                                // Handle error
+                            }
+                        })
                     }
                 }
-
-                val adapter_top = recycler_educator_adapter(adapter_data_list_top,this@home_page_activity)
-                recyclerView_top.adapter = adapter_top
-
-                // Notify your adapter that the data has changed
-                adapter_top.notifyDataSetChanged()
+//                val adapter_top = recycler_educator_adapter(adapter_data_list_top,this@home_page_activity)
+//                recyclerView_top.adapter = adapter_top
+//
+//                // Notify your adapter that the data has changed
+//                adapter_top.notifyDataSetChanged()
             }
 
             override fun onCancelled(databaseError: DatabaseError) {
@@ -226,22 +369,110 @@ class home_page_activity : AppCompatActivity() , click_listner {
 
                             // Check if all required fields are present
                             if (name != null && occupation != null && price != null && status != null) {
-                                val mentorData = recycler_educator_data(
-                                    profilePicUrl,
-                                    name,
-                                    occupation,
-                                    status,
-                                    price
-                                )
-                                adapter_data_list_edu.add(mentorData)
+                                val curr_usr = mAuth.currentUser
+                                val user_id = curr_usr?.uid.toString()
+                                val userRef = database.getReference("users").child(user_id)
+
+                                userRef.addListenerForSingleValueEvent(object : ValueEventListener {
+                                    override fun onDataChange(dataSnapshot: DataSnapshot) {
+                                        if (dataSnapshot.hasChild("favourite")) {
+                                            val fav_ref = userRef.child("favourite")
+                                            fav_ref.addListenerForSingleValueEvent(object : ValueEventListener {
+                                                override fun onDataChange(dataSnapshot: DataSnapshot) {
+                                                    if (dataSnapshot.exists()) {
+                                                        if (dataSnapshot.hasChild(name)) {
+                                                            val mentorData = recycler_educator_data(
+                                                                profilePicUrl,
+                                                                name,
+                                                                occupation,
+                                                                status,
+                                                                price,R.drawable.red_heart_btn,1
+                                                            )
+                                                            adapter_data_list_edu.add(mentorData)
+                                                            val lastFourMentors = adapter_data_list_edu.takeLast(4)
+                                                            val adapter_edu = recycler_educator_adapter(ArrayList(lastFourMentors),this@home_page_activity)
+                                                            recyclerView_edu.adapter = adapter_edu
+
+                                                            // Notify your adapter that the data has changed
+                                                            adapter_edu.notifyDataSetChanged()
+
+                                                            val gson = Gson()
+                                                            val json = gson.toJson(adapter_data_list_edu)
+                                                            val sharedPref = getSharedPreferences("home_adapter_edu_prefs", Context.MODE_PRIVATE)
+                                                            val editor = sharedPref.edit()
+                                                            editor.putString("home_adapter_edu", json)
+                                                            editor.apply()
+
+                                                        } else {
+                                                            val mentorData = recycler_educator_data(
+                                                                profilePicUrl,
+                                                                name,
+                                                                occupation,
+                                                                status,
+                                                                price,R.drawable.heart_unfilled,0
+                                                            )
+                                                            adapter_data_list_edu.add(mentorData)
+                                                            val lastFourMentors = adapter_data_list_edu.takeLast(4)
+                                                            val adapter_edu = recycler_educator_adapter(ArrayList(lastFourMentors),this@home_page_activity)
+                                                            recyclerView_edu.adapter = adapter_edu
+
+                                                            // Notify your adapter that the data has changed
+                                                            adapter_edu.notifyDataSetChanged()
+
+                                                            val gson = Gson()
+                                                            val json = gson.toJson(adapter_data_list_edu)
+                                                            val sharedPref = getSharedPreferences("home_adapter_edu_prefs", Context.MODE_PRIVATE)
+                                                            val editor = sharedPref.edit()
+                                                            editor.putString("home_adapter_edu", json)
+                                                            editor.apply()
+
+                                                        }
+                                                    }
+                                                }
+
+                                                override fun onCancelled(databaseError: DatabaseError) {
+                                                    // Handle error
+                                                }
+                                            })
+                                        } else {
+
+                                            val mentorData = recycler_educator_data(
+                                                profilePicUrl,
+                                                name,
+                                                occupation,
+                                                status,
+                                                price,R.drawable.heart_unfilled,0
+                                            )
+                                            adapter_data_list_edu.add(mentorData)
+                                            val lastFourMentors = adapter_data_list_edu.takeLast(4)
+                                            val adapter_edu = recycler_educator_adapter(ArrayList(lastFourMentors),this@home_page_activity)
+                                            recyclerView_edu.adapter = adapter_edu
+
+                                            // Notify your adapter that the data has changed
+                                            adapter_edu.notifyDataSetChanged()
+
+                                            val gson = Gson()
+                                            val json = gson.toJson(adapter_data_list_edu)
+                                            val sharedPref = getSharedPreferences("home_adapter_edu_prefs", Context.MODE_PRIVATE)
+                                            val editor = sharedPref.edit()
+                                            editor.putString("home_adapter_edu", json)
+                                            editor.apply()
+
+                                        }
+                                    }
+
+                                    override fun onCancelled(databaseError: DatabaseError) {
+                                        // Handle error
+                                    }
+                                })
                             }
                         }
-                        val lastFourMentors = adapter_data_list_edu.takeLast(4)
-                        val adapter_edu = recycler_educator_adapter(ArrayList(lastFourMentors),this@home_page_activity)
-                        recyclerView_edu.adapter = adapter_edu
-
-                        // Notify your adapter that the data has changed
-                        adapter_edu.notifyDataSetChanged()
+//                        val lastFourMentors = adapter_data_list_edu.takeLast(4)
+//                        val adapter_edu = recycler_educator_adapter(ArrayList(lastFourMentors),this@home_page_activity)
+//                        recyclerView_edu.adapter = adapter_edu
+//
+//                        // Notify your adapter that the data has changed
+//                        adapter_edu.notifyDataSetChanged()
                     }
 
                     override fun onCancelled(databaseError: DatabaseError) {
@@ -319,4 +550,35 @@ class home_page_activity : AppCompatActivity() , click_listner {
         startActivity(nextActivityIntent)
 
     }
+
+    override fun change_heart(flag:Int,txt:String){
+        val database = FirebaseDatabase.getInstance()
+        var my_ref = database.getReference("users")
+
+        val curr = mAuth.currentUser
+        val id= curr?.uid.toString()
+
+        if(flag==0){
+
+            my_ref = database.reference.child("users").child(id)
+            my_ref.child("favourite").child(txt).setValue("true")
+
+        }
+        else if (flag==1){
+
+            val favouriteRef = database.reference.child("users").child(id).child("favourite")
+            favouriteRef.child(txt).removeValue()
+
+        }
+
+    }
+
+
+    private fun isNetworkAvailable(): Boolean {
+        val connectivityManager =
+            getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
+        val activeNetworkInfo = connectivityManager.activeNetworkInfo
+        return activeNetworkInfo != null && activeNetworkInfo.isConnected
+    }
+
 }

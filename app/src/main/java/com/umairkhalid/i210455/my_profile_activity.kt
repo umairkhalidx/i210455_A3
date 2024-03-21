@@ -1,7 +1,9 @@
 package com.umairkhalid.i210455
 
 import android.app.Activity
+import android.content.Context
 import android.content.Intent
+import android.net.ConnectivityManager
 import android.net.Uri
 import android.os.Bundle
 import android.util.Log
@@ -20,6 +22,8 @@ import com.google.firebase.database.FirebaseDatabase
 import com.google.firebase.database.ValueEventListener
 import com.google.firebase.storage.FirebaseStorage
 import com.google.firebase.storage.StorageReference
+import com.google.gson.Gson
+import com.google.gson.reflect.TypeToken
 import com.squareup.picasso.Picasso
 
 
@@ -83,6 +87,63 @@ class my_profile_activity : AppCompatActivity()  , click_listner{
         var pic_url:String=""
         var cover_url:String=""
 
+        if (!isNetworkAvailable()) {
+            Toast.makeText(this,"No Internet Connection",Toast.LENGTH_LONG).show()
+
+            val sharedPref_1 = getSharedPreferences("profile_page_prefs", Context.MODE_PRIVATE)
+            val storedUsername = sharedPref_1.getString("username", "")
+            val storedcity = sharedPref_1.getString("city", "")
+            pic_url = sharedPref_1.getString("profile_pic", "").toString()
+            cover_url = sharedPref_1.getString("cover_pic", "").toString()
+            username.text=storedUsername
+            user_city.text=storedcity
+
+            Picasso.get().load(pic_url).into(profile_pic)
+            Picasso.get().load(cover_url).into(cover_page)
+
+
+            val recyclerView_fav : RecyclerView = findViewById(R.id.recyclerview_favmentor)
+            recyclerView_fav.layoutManager = LinearLayoutManager(this,
+                LinearLayoutManager.HORIZONTAL,
+                false
+            )
+
+            val sharedPref_2 = getSharedPreferences("profile_adapter_fav_prefs", Context.MODE_PRIVATE)
+            val json = sharedPref_2.getString("profile_adapter_fav", "")
+
+            val gson = Gson()
+            val type = object : TypeToken<ArrayList<recycler_educator_data>>() {}.type
+            val adapter_data_list_fav: ArrayList<recycler_educator_data> = gson.fromJson(json, type)
+
+            val adapter_top = recycler_educator_adapter(adapter_data_list_fav,this@my_profile_activity)
+            recyclerView_fav.adapter = adapter_top
+
+            // Notify your adapter that the data has changed
+            adapter_top.notifyDataSetChanged()
+
+
+            // 1- AdapterView: RecyclerView
+            val recyclerView : RecyclerView = findViewById(R.id.recyclerview_myreview)
+            recyclerView.layoutManager = LinearLayoutManager(this,
+                LinearLayoutManager.HORIZONTAL,
+                false
+            )
+
+            val sharedPref_3 = getSharedPreferences("profile_adapter_rev_prefs", Context.MODE_PRIVATE)
+            val json_3 = sharedPref_3.getString("profile_adapter_rev", "")
+
+            val gson_3 = Gson()
+            val type_3 = object : TypeToken<ArrayList<recycler_review_data>>() {}.type
+            val adapter_data_list_rev: ArrayList<recycler_review_data> = gson_3.fromJson(json_3, type_3)
+
+            val adapter_rev = recycler_review_adapter(adapter_data_list_rev)
+            recyclerView.adapter = adapter_rev
+
+            // Notify your adapter that the data has changed
+            adapter_rev.notifyDataSetChanged()
+
+        }
+
         var database = FirebaseDatabase.getInstance()
         val my_ref = database.getReference("users")
         var currentUser = FirebaseAuth.getInstance().currentUser
@@ -98,6 +159,14 @@ class my_profile_activity : AppCompatActivity()  , click_listner{
                     cover_url = dataSnapshot.child(userId).child("cover").value.toString()
                     username.text=name
                     user_city.text=city
+
+                    val sharedPref = getSharedPreferences("profile_page_prefs", Context.MODE_PRIVATE)
+                    val editor = sharedPref.edit()
+                    editor.putString("username", name)
+                    editor.putString("city",city)
+                    editor.putString("profile_pic",pic_url)
+                    editor.putString("cover_pic",cover_url)
+                    editor.apply()
 
                     if(pic_url!=null){
                         Picasso.get().load(pic_url).into(profile_pic)
@@ -207,44 +276,117 @@ class my_profile_activity : AppCompatActivity()  , click_listner{
         database = FirebaseDatabase.getInstance()
         val mentorsRef = database.getReference("mentors")
 
-        val query = mentorsRef.orderByChild("favourite").equalTo("True")
+        var cur = FirebaseAuth.getInstance().currentUser
+        val user_Id = cur?.uid.toString()
+        val currentUserFavoritesRef = FirebaseDatabase.getInstance().getReference("users").child(user_Id).child("favourite")
 
-        query.addListenerForSingleValueEvent(object : ValueEventListener {
+        currentUserFavoritesRef.addListenerForSingleValueEvent(object : ValueEventListener {
             override fun onDataChange(dataSnapshot: DataSnapshot) {
-                for (mentorSnapshot in dataSnapshot.children) {
+                val favoriteMentors = mutableListOf<String>()
 
-                    val name = mentorSnapshot.child("name").getValue(String::class.java)
-                    val occupation = mentorSnapshot.child("occupation").getValue(String::class.java)
-                    val price = mentorSnapshot.child("price").getValue(String::class.java)
-                    val status = mentorSnapshot.child("status").getValue(String::class.java)
-                    val profilePicUrl = mentorSnapshot.child("profile_pic").getValue(String::class.java)
-
-                    // Check if all required fields are present
-                    if (name != null && occupation != null && price != null && status != null) {
-                        val mentorData = recycler_educator_data(
-                            profilePicUrl,
-                            name,
-                            occupation,
-                            status,
-                            price
-                        )
-                        adapter_data_list_fav.add(mentorData)
-                    }
+                // Iterate through the favorite list and collect mentor names
+                for (favoriteSnapshot in dataSnapshot.children) {
+                    val mentorName = favoriteSnapshot.key
+                    mentorName?.let { favoriteMentors.add(it) }
                 }
 
-                val adapter_top = recycler_educator_adapter(adapter_data_list_fav,this@my_profile_activity)
-                recyclerView_fav.adapter = adapter_top
+                // Query the mentors node for mentors whose names are in the favorite list
+                val mentorsRef = FirebaseDatabase.getInstance().getReference("mentors")
+                mentorsRef.addListenerForSingleValueEvent(object : ValueEventListener {
+                    override fun onDataChange(mentorsDataSnapshot: DataSnapshot) {
+                        for (mentorSnapshot in mentorsDataSnapshot.children) {
+                            val mentorName = mentorSnapshot.child("name").getValue(String::class.java).toString()
 
-                // Notify your adapter that the data has changed
-                adapter_top.notifyDataSetChanged()
+                            // Check if the mentor is in the favorite list
+                            if (mentorName in favoriteMentors) {
+                                val occupation = mentorSnapshot.child("occupation").getValue(String::class.java).toString()
+                                val price = mentorSnapshot.child("price").getValue(String::class.java).toString()
+                                val status = mentorSnapshot.child("status").getValue(String::class.java).toString()
+                                val profilePicUrl = mentorSnapshot.child("profile_pic").getValue(String::class.java).toString()
+                                val mentorData = recycler_educator_data(
+                                    profilePicUrl,
+                                    mentorName,
+                                    occupation,
+                                    status,
+                                    price,R.drawable.red_heart_btn,1
+                                )
+
+                                adapter_data_list_fav.add(mentorData)
+                                val adapter_top = recycler_educator_adapter(adapter_data_list_fav,this@my_profile_activity)
+                                recyclerView_fav.adapter = adapter_top
+
+                                // Notify your adapter that the data has changed
+                                adapter_top.notifyDataSetChanged()
+
+                                val gson = Gson()
+                                val json = gson.toJson(adapter_data_list_fav)
+                                val sharedPref = getSharedPreferences("profile_adapter_fav_prefs", Context.MODE_PRIVATE)
+                                val editor = sharedPref.edit()
+                                editor.putString("profile_adapter_fav", json)
+                                editor.apply()
+
+                            }
+
+                        }
+                    }
+
+                    override fun onCancelled(databaseError: DatabaseError) {
+                        // Handle error
+                        Toast.makeText(this@my_profile_activity, "Unable to Fetch Mentor Data", Toast.LENGTH_LONG).show()
+                    }
+                })
             }
 
             override fun onCancelled(databaseError: DatabaseError) {
                 // Handle error
-                Toast.makeText(this@my_profile_activity, "Unable to Fetch Mentor Data", Toast.LENGTH_LONG).show()
-
+                Toast.makeText(this@my_profile_activity, "Unable to Fetch Favorite Mentors", Toast.LENGTH_LONG).show()
             }
         })
+
+//        database = FirebaseDatabase.getInstance()
+//        val mentorsRef = database.getReference("mentors")
+//
+//        val query = mentorsRef.orderByChild("favourite").equalTo("True")
+//
+//        query.addListenerForSingleValueEvent(object : ValueEventListener {
+//            override fun onDataChange(dataSnapshot: DataSnapshot) {
+//                for (mentorSnapshot in dataSnapshot.children) {
+//
+//                    val name = mentorSnapshot.child("name").getValue(String::class.java)
+//                    val occupation = mentorSnapshot.child("occupation").getValue(String::class.java)
+//                    val price = mentorSnapshot.child("price").getValue(String::class.java)
+//                    val status = mentorSnapshot.child("status").getValue(String::class.java)
+//                    val profilePicUrl = mentorSnapshot.child("profile_pic").getValue(String::class.java)
+//
+//                    // Check if all required fields are present
+//                    if (name != null && occupation != null && price != null && status != null) {
+//                        val mentorData = recycler_educator_data(
+//                            profilePicUrl,
+//                            name,
+//                            occupation,
+//                            status,
+//                            price,R.drawable.heart_unfilled,0
+//                        )
+//                        adapter_data_list_fav.add(mentorData)
+//                    }
+//                }
+//
+//                val adapter_top = recycler_educator_adapter(adapter_data_list_fav,this@my_profile_activity)
+//                recyclerView_fav.adapter = adapter_top
+//
+//                // Notify your adapter that the data has changed
+//                adapter_top.notifyDataSetChanged()
+//            }
+//
+//            override fun onCancelled(databaseError: DatabaseError) {
+//                // Handle error
+//                Toast.makeText(this@my_profile_activity, "Unable to Fetch Mentor Data", Toast.LENGTH_LONG).show()
+//
+//            }
+//        })
+
+
+
 
 //        val v1  = recycler_educator_data(R.drawable.rectangle_blank,"Sample 1","Lead - Technology Officer","Available")
 //        val v2  = recycler_educator_data(R.drawable.rectangle_blank,"Sample 2","Lead - Technology Officer"," Not Available")
@@ -310,6 +452,14 @@ class my_profile_activity : AppCompatActivity()  , click_listner{
 
                     // Notify your adapter that the data has changed
                     adapter_rev.notifyDataSetChanged()
+
+                    val gson = Gson()
+                    val json = gson.toJson(adapter_data_list_rev)
+                    val sharedPref = getSharedPreferences("profile_adapter_rev_prefs", Context.MODE_PRIVATE)
+                    val editor = sharedPref.edit()
+                    editor.putString("profile_adapter_rev", json)
+                    editor.apply()
+
                 }
 
                 override fun onCancelled(databaseError: DatabaseError) {
@@ -454,6 +604,16 @@ class my_profile_activity : AppCompatActivity()  , click_listner{
         nextActivityIntent.putExtra("user_name", txt)
         startActivity(nextActivityIntent)
 
+    }
+    override fun change_heart(flag:Int,txt:String){
+TODO()
+    }
+
+    private fun isNetworkAvailable(): Boolean {
+        val connectivityManager =
+            getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
+        val activeNetworkInfo = connectivityManager.activeNetworkInfo
+        return activeNetworkInfo != null && activeNetworkInfo.isConnected
     }
 
 }

@@ -1,5 +1,6 @@
 package com.umairkhalid.i210455
 
+import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -25,6 +26,8 @@ RecyclerView.Adapter<recycler_searchresults_adapter.searchresult_viewholder>()
             lateinit var designation : TextView
             lateinit var status : TextView
             lateinit var price:TextView
+            lateinit var heart:ImageView
+            var my_flag:Int=0
 
             init {
                 display_pic= itemView.findViewById(R.id.display_image)
@@ -32,6 +35,7 @@ RecyclerView.Adapter<recycler_searchresults_adapter.searchresult_viewholder>()
                 designation = itemView.findViewById(R.id.designation)
                 status = itemView.findViewById(R.id.status)
                 price=itemView.findViewById(R.id.mentor_price)
+                heart=itemView.findViewById(R.id.heart_button)
 
             }
 
@@ -57,6 +61,21 @@ RecyclerView.Adapter<recycler_searchresults_adapter.searchresult_viewholder>()
 
         }
 
+        holder.heart.setOnClickListener{
+            if(holder.my_flag==0){
+                holder.heart.setImageResource(R.drawable.red_heart_btn)
+                val txt:String =itemslist[position].title.toString()
+                listener.change_heart(holder.my_flag,txt)
+                holder.my_flag=1
+
+            }else{
+                holder.heart.setImageResource(R.drawable.heart_unfilled)
+                val txt:String =itemslist[position].title.toString()
+                listener.change_heart(holder.my_flag,txt)
+                holder.my_flag=0
+            }
+        }
+
 //        holder.display_pic.setImageResource(itemslist[position].img)
         Glide.with(holder.itemView.context)
             .load(itemslist[position].img)
@@ -66,6 +85,8 @@ RecyclerView.Adapter<recycler_searchresults_adapter.searchresult_viewholder>()
         holder.designation.setText(itemslist[position].desig)
         holder.status.setText(itemslist[position].status)
         holder.price.setText(itemslist[position].price)
+        holder.heart.setImageResource(itemslist[position].heart_img)
+        holder.my_flag = itemslist[position].flag
 
     }
 
