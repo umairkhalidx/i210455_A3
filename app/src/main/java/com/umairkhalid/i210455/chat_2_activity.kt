@@ -1,6 +1,7 @@
 package com.umairkhalid.i210455
 
 import android.Manifest
+import android.annotation.SuppressLint
 import android.app.Activity
 import android.content.Intent
 import android.content.pm.PackageManager
@@ -19,10 +20,14 @@ import android.widget.ImageButton
 import android.widget.ImageView
 import android.widget.TextView
 import android.widget.Toast
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AlertDialog
 import androidx.core.app.ActivityCompat
+import androidx.core.content.ContextCompat
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
+import com.google.android.gms.tasks.OnCompleteListener
+import com.google.firebase.FirebaseApp
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.database.ChildEventListener
 import com.google.firebase.database.DataSnapshot
@@ -30,13 +35,25 @@ import com.google.firebase.database.DatabaseError
 import com.google.firebase.database.DatabaseReference
 import com.google.firebase.database.FirebaseDatabase
 import com.google.firebase.database.ValueEventListener
+import com.google.firebase.messaging.FirebaseMessaging
 import com.google.firebase.storage.FirebaseStorage
 import com.google.firebase.storage.StorageReference
 import com.squareup.picasso.Picasso
+import okhttp3.Call
+import okhttp3.Callback
+import okhttp3.MediaType.Companion.toMediaType
+import okhttp3.OkHttpClient
+import okhttp3.Request
+import okhttp3.RequestBody.Companion.toRequestBody
+import okhttp3.Response
+import org.json.JSONObject
 import java.io.ByteArrayOutputStream
+import java.io.IOException
 import java.util.UUID
 
 class chat_2_activity : AppCompatActivity() {
+
+    @SuppressLint("MissingInflatedId")
 
     private lateinit var message_recycle_view: RecyclerView
     private lateinit var message_adapter: message_adapter
@@ -48,6 +65,19 @@ class chat_2_activity : AppCompatActivity() {
     private lateinit var camera_btn: ImageButton
     private lateinit var call_button: ImageButton
     private lateinit var videocall_button: ImageButton
+
+    private val requestPermissionLauncher = registerForActivityResult(
+        ActivityResultContracts.RequestPermission()
+    ) { isGranted: Boolean ->
+        if (isGranted) {
+            // Permission is granted, you can proceed with sending notifications
+        } else {
+            // Permission is not granted, handle accordingly
+        }
+    }
+
+    var my_flag:Int=0
+
 
     private lateinit var auth: FirebaseAuth
     private lateinit var database: FirebaseDatabase
@@ -67,6 +97,30 @@ class chat_2_activity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.chat_2)
+
+        FirebaseApp.initializeApp(this)
+        //firebase token
+        FirebaseMessaging.getInstance().token.addOnCompleteListener(OnCompleteListener { task ->
+            if (!task.isSuccessful) {
+                Log.w("TAG", "Fetching FCM registration token failed", task.exception)
+                return@OnCompleteListener
+            }
+            // Get new FCM registration token
+            val token = task.result
+            Log.d("MyToken", token)
+        })
+
+        askNotificationPermission()
+
+        var requestPermissionLauncher = registerForActivityResult(
+            ActivityResultContracts.RequestPermission(),)
+        { isGranted: Boolean ->
+            if (isGranted) {
+                // FCM SDK (and your app) can post notifications.
+            } else {
+                askNotificationPermission()
+            }
+        }
 
         val home_btn: ImageButton =findViewById(R.id.home_btn)
         val home_txt: TextView =findViewById(R.id.home_txt)
@@ -253,7 +307,7 @@ class chat_2_activity : AppCompatActivity() {
         send_btn.setOnClickListener {
             val messageText = editTextMessage.text.toString().trim()
             if (messageText.isNotEmpty()) {
-                send_message_func(messageText)
+                send_message_func(messageText,mentorName.toString())
             }
         }
 
@@ -348,7 +402,7 @@ class chat_2_activity : AppCompatActivity() {
 
         // Check for internet connectivity and sync offline messages
         if (check_network()) {
-            sync_offline_messages()
+            sync_offline_messages(mentorName.toString())
         } else {
             Toast.makeText(this, "No internet connection. Offline mode.", Toast.LENGTH_SHORT).show()
         }
@@ -358,13 +412,34 @@ class chat_2_activity : AppCompatActivity() {
         message_recycle_view.scrollToPosition(message_adapter.itemCount - 1)
     }
 
-    private fun send_message_func(messageText: String) {
+    private fun send_message_func(messageText: String,mentor_name:String) {
         val userId = auth.currentUser?.uid
         if (userId != null) {
             val message = message_data(userId, messageText, System.currentTimeMillis(), null, null, null)
             messages_ref.push().setValue(message)
                 .addOnSuccessListener {
                     editTextMessage.text.clear()
+
+                    if(my_flag==0){
+
+                        FirebaseMessaging.getInstance().token.addOnCompleteListener { task ->
+                            if (!task.isSuccessful) {
+                                return@addOnCompleteListener
+                            }
+                            val token = task.result
+                            sendPushNotification(
+                                token,
+                                mentor_name.toString(),
+                                "Subtitle: Class",
+                                "I'll Get Back to You Soon",
+                                mapOf("key1" to "value1", "key2" to "value2")
+                            )
+
+                        }
+                        my_flag=1;
+
+                    }
+
                 }
                 .addOnFailureListener {
                     // Handle message sending failure
@@ -645,113 +720,77 @@ class chat_2_activity : AppCompatActivity() {
         }
     }
 
-    private fun sync_offline_messages() {
+    private fun sync_offline_messages(mentor_name:String) {
         for (message in offline_messages) {
-            send_message_func(message.messageText)
+            send_message_func(message.messageText,mentor_name.toString())
         }
         offline_messages.clear()
     }
+
+    private fun askNotificationPermission() {
+        // This is only necessary for API level >= 33 (TIRAMISU)
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            if (ContextCompat.checkSelfPermission(
+                    this,
+                    Manifest.permission.POST_NOTIFICATIONS
+                ) ==
+                PackageManager.PERMISSION_GRANTED
+            ) {
+                // FCM SDK (and your app) can post notifications.
+            } else if (shouldShowRequestPermissionRationale(Manifest.permission.POST_NOTIFICATIONS)) {
+                // TODO: display an educational UI explaining to the user the features that will be enabled
+                //       by them granting the POST_NOTIFICATION permission. This UI should provide the user
+                //       "OK" and "No thanks" buttons. If the user selects "OK," directly request the permission.
+                //       If the user selects "No thanks," allow the user to continue without notifications.
+            } else {
+                // Directly ask for the permission
+                requestPermissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
+            }
+        }
+    }
+
+    fun sendPushNotification(token: String, title: String, subtitle: String, body: String, data: Map<String, String> = emptyMap()) {
+        val url = "https://fcm.googleapis.com/fcm/send"
+        val bodyJson = JSONObject()
+        bodyJson.put("to", token)
+        bodyJson.put("notification",
+            JSONObject().also {
+                it.put("title", title)
+                it.put("subtitle", subtitle)
+                it.put("body", body)
+                it.put("sound", "social_notification_sound.wav")
+            }
+        )
+        Log.d("TAG", "sendPushNotification: ${JSONObject(data)}")
+        if (data.isNotEmpty()) {
+            bodyJson.put("data", JSONObject(data))
+        }
+
+        var key="AAAAhfqz-ls:APA91bEQFjo8C3YLtR6V0AsR6m52hVMniNYzBC8GTWMkU6gyx8YzP5wPxFhieeyQPYcoQFmPEx0bXmMumzk3cYj3jiQ4uMm-NvlP5YOYeabErgHvFqF5Rwac8NwLeg3_005xdofYV0l6"
+        val request = Request.Builder()
+            .url(url)
+            .addHeader("Content-Type", "application/json")
+            .addHeader("Authorization", "key=$key")
+            .post(
+                bodyJson.toString().toRequestBody("application/json; charset=utf-8".toMediaType())
+            )
+            .build()
+
+        val client = OkHttpClient()
+
+        client.newCall(request).enqueue(
+            object : Callback {
+                override fun onResponse(call: Call, response: Response) {
+                    println("Received data: ${response.body?.string()}")
+                    Log.d("TAG", "onResponse: ${response}   ")
+                    Log.d("TAG", "onResponse Message: ${response.message}   ")
+                }
+
+                override fun onFailure(call: Call, e: IOException) {
+                    println(e.message.toString())
+                    Log.d("TAG", "onFailure: ${e.message.toString()}")
+                }
+            }
+        )
+    }
 }
-
-
-
-//    override fun onCreate(savedInstanceState: Bundle?) {
-//        super.onCreate(savedInstanceState)
-//
-//        setContentView(R.layout.chat_2)
-//
-//
-//        val home_btn: ImageButton =findViewById(R.id.home_btn)
-//        val home_txt: TextView =findViewById(R.id.home_txt)
-//        val search_btn: ImageButton =findViewById(R.id.search_btn)
-//        val search_txt: TextView =findViewById(R.id.search_txt)
-//        val chat_btn: ImageButton =findViewById(R.id.chat_btn)
-//        val chat_txt: TextView =findViewById(R.id.chat_txt)
-//        val profile_btn: ImageButton =findViewById(R.id.profile_btn)
-//        val profile_txt: TextView =findViewById(R.id.profile_txt)
-//        val plus_btn: ImageButton =findViewById(R.id.plus_btn)
-//        val back_btn_letsfind: ImageButton =findViewById(R.id.back_btn)
-//
-//
-//
-//        val audiocall_btn: ImageButton =findViewById(R.id.audiocall_btn)
-//        val videocall_btn: ImageButton =findViewById(R.id.call_btn_1)
-//        val photo_btn: ImageButton =findViewById(R.id.photo_btn)
-//
-//        photo_btn.setOnClickListener{
-//            val nextActivityIntent = Intent(this, camera_photo_activity::class.java)
-//            startActivity(nextActivityIntent)
-//        }
-//
-//        audiocall_btn.setOnClickListener{
-//            val nextActivityIntent = Intent(this, call_1_activity::class.java)
-//            startActivity(nextActivityIntent)
-//        }
-//
-//        videocall_btn.setOnClickListener{
-//            val nextActivityIntent = Intent(this, call_2_activity::class.java)
-//            startActivity(nextActivityIntent)
-//        }
-//
-//
-//        home_btn.setOnClickListener{
-//            val nextActivityIntent = Intent(this, home_page_activity::class.java)
-//            startActivity(nextActivityIntent)
-//            finish()
-//        }
-//
-//        home_txt.setOnClickListener{
-//            val nextActivityIntent = Intent(this, home_page_activity::class.java)
-//            startActivity(nextActivityIntent)
-//            finish()
-//        }
-//
-//        search_btn.setOnClickListener{
-//            val nextActivityIntent = Intent(this, lets_find_activity::class.java)
-//            startActivity(nextActivityIntent)
-//        }
-//
-//        search_txt.setOnClickListener{
-//            val nextActivityIntent = Intent(this, lets_find_activity::class.java)
-//            startActivity(nextActivityIntent)
-//        }
-//
-//        chat_btn.setOnClickListener{
-//            val nextActivityIntent = Intent(this, chats_activity::class.java)
-//            startActivity(nextActivityIntent)
-//        }
-//
-//        chat_txt.setOnClickListener{
-//            val nextActivityIntent = Intent(this, chats_activity::class.java)
-//            startActivity(nextActivityIntent)
-//        }
-//
-//        profile_btn.setOnClickListener{
-//            val nextActivityIntent = Intent(this, my_profile_activity::class.java)
-//            startActivity(nextActivityIntent)
-//        }
-//
-//        profile_txt.setOnClickListener{
-//            val nextActivityIntent = Intent(this, my_profile_activity::class.java)
-//            startActivity(nextActivityIntent)
-//        }
-//
-//        plus_btn.setOnClickListener{
-//            val nextActivityIntent = Intent(this, add_new_mentor_activity::class.java)
-//            startActivity(nextActivityIntent)
-//        }
-//
-//        plus_btn.setOnClickListener{
-//            val nextActivityIntent = Intent(this, add_new_mentor_activity::class.java)
-//            startActivity(nextActivityIntent)
-//        }
-//
-//        back_btn_letsfind.setOnClickListener{
-////            val nextActivityIntent = Intent(this, home_page_activity::class.java)
-////            startActivity(nextActivityIntent)
-//            onBackPressed()
-//            finish()
-//        }
-//    }
-//
-//}

@@ -1,31 +1,87 @@
 package com.umairkhalid.i210455
 
+import android.Manifest
 import android.content.Intent
+import android.content.pm.PackageManager
 import android.graphics.Color
+import android.os.Build
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
+import android.util.Log
 import android.widget.Button
 import android.widget.CalendarView
 import android.widget.ImageButton
 import android.widget.ImageView
 import android.widget.TextView
 import android.widget.Toast
+import androidx.core.content.ContextCompat
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.database.DataSnapshot
 import com.google.firebase.database.DatabaseError
 import com.google.firebase.database.FirebaseDatabase
 import com.google.firebase.database.ValueEventListener
 import com.squareup.picasso.Picasso
+import okhttp3.OkHttpClient
+import okhttp3.Request
+import org.json.JSONObject
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
+import android.annotation.SuppressLint
+import android.app.Notification
+import androidx.activity.result.contract.ActivityResultContracts
+import com.google.android.gms.tasks.OnCompleteListener
+import com.google.firebase.FirebaseApp
+import com.google.firebase.messaging.FirebaseMessaging
+import okhttp3.Call
+import okhttp3.Callback
+import okhttp3.Response
+import java.io.IOException
+import okhttp3.MediaType.Companion.toMediaType
+import okhttp3.RequestBody.Companion.toRequestBody
+
 
 class book_session_activity : AppCompatActivity() {
+    @SuppressLint("MissingInflatedId")
     private var  mAuth = FirebaseAuth.getInstance();
+
+    private val requestPermissionLauncher = registerForActivityResult(
+        ActivityResultContracts.RequestPermission()
+    ) { isGranted: Boolean ->
+        if (isGranted) {
+            // Permission is granted, you can proceed with sending notifications
+        } else {
+            // Permission is not granted, handle accordingly
+        }
+    }
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
         setContentView(R.layout.book_your_session)
+
+        FirebaseApp.initializeApp(this)
+        //firebase token
+        FirebaseMessaging.getInstance().token.addOnCompleteListener(OnCompleteListener { task ->
+            if (!task.isSuccessful) {
+                Log.w("TAG", "Fetching FCM registration token failed", task.exception)
+                return@OnCompleteListener
+            }
+            // Get new FCM registration token
+            val token = task.result
+            Log.d("MyToken", token)
+        })
+
+        askNotificationPermission()
+
+    var requestPermissionLauncher = registerForActivityResult(
+        ActivityResultContracts.RequestPermission(),)
+    { isGranted: Boolean ->
+        if (isGranted) {
+            // FCM SDK (and your app) can post notifications.
+        } else {
+            askNotificationPermission()
+        }
+    }
 
         val back_btn: ImageButton =findViewById(R.id.back_arrow)
         val book_appoint_btn: Button =findViewById(R.id.book_appoint_btn)
@@ -156,6 +212,22 @@ class book_session_activity : AppCompatActivity() {
                     my_ref.child(id).child("booked_sessions").child(input_txt).child("date").setValue(selectedDate)
                     my_ref.child(id).child("booked_sessions").child(input_txt).child("time").setValue(selected_time)
                     my_ref.child(id).child("booked_sessions").child(input_txt).child("img_url").setValue(profilePicUrl)
+
+                    FirebaseMessaging.getInstance().token.addOnCompleteListener { task ->
+                        if (!task.isSuccessful) {
+                            return@addOnCompleteListener
+                        }
+                        val token = task.result
+                        sendPushNotification(
+                            token,
+                            input_txt.toString(),
+                            "Subtitle: Class",
+                            "Hi! There",
+                            mapOf("key1" to "value1", "key2" to "value2")
+                        )
+
+                    }
+
                     Toast.makeText(this,"Session Booked Successfully", Toast.LENGTH_LONG).show()
                 }
                 else{
@@ -197,4 +269,72 @@ class book_session_activity : AppCompatActivity() {
 
 
     }
+
+    private fun askNotificationPermission() {
+        // This is only necessary for API level >= 33 (TIRAMISU)
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            if (ContextCompat.checkSelfPermission(
+                    this,
+                    Manifest.permission.POST_NOTIFICATIONS
+                ) ==
+                PackageManager.PERMISSION_GRANTED
+            ) {
+                // FCM SDK (and your app) can post notifications.
+            } else if (shouldShowRequestPermissionRationale(Manifest.permission.POST_NOTIFICATIONS)) {
+                // TODO: display an educational UI explaining to the user the features that will be enabled
+                //       by them granting the POST_NOTIFICATION permission. This UI should provide the user
+                //       "OK" and "No thanks" buttons. If the user selects "OK," directly request the permission.
+                //       If the user selects "No thanks," allow the user to continue without notifications.
+            } else {
+                // Directly ask for the permission
+                requestPermissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
+            }
+        }
+    }
+
+    fun sendPushNotification(token: String, title: String, subtitle: String, body: String, data: Map<String, String> = emptyMap()) {
+        val url = "https://fcm.googleapis.com/fcm/send"
+        val bodyJson = JSONObject()
+        bodyJson.put("to", token)
+        bodyJson.put("notification",
+            JSONObject().also {
+                it.put("title", title)
+                it.put("subtitle", subtitle)
+                it.put("body", body)
+                it.put("sound", "social_notification_sound.wav")
+            }
+        )
+        Log.d("TAG", "sendPushNotification: ${JSONObject(data)}")
+        if (data.isNotEmpty()) {
+            bodyJson.put("data", JSONObject(data))
+        }
+
+        var key="AAAAhfqz-ls:APA91bEQFjo8C3YLtR6V0AsR6m52hVMniNYzBC8GTWMkU6gyx8YzP5wPxFhieeyQPYcoQFmPEx0bXmMumzk3cYj3jiQ4uMm-NvlP5YOYeabErgHvFqF5Rwac8NwLeg3_005xdofYV0l6"
+        val request = Request.Builder()
+            .url(url)
+            .addHeader("Content-Type", "application/json")
+            .addHeader("Authorization", "key=$key")
+            .post(
+                bodyJson.toString().toRequestBody("application/json; charset=utf-8".toMediaType())
+            )
+            .build()
+
+        val client = OkHttpClient()
+
+        client.newCall(request).enqueue(
+            object : Callback {
+                override fun onResponse(call: Call, response: Response) {
+                    println("Received data: ${response.body?.string()}")
+                    Log.d("TAG", "onResponse: ${response}   ")
+                    Log.d("TAG", "onResponse Message: ${response.message}   ")
+                }
+
+                override fun onFailure(call: Call, e: IOException) {
+                    println(e.message.toString())
+                    Log.d("TAG", "onFailure: ${e.message.toString()}")
+                }
+            }
+        )
+    }
+
 }

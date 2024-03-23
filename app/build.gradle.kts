@@ -61,6 +61,8 @@ dependencies {
     annotationProcessor("com.github.bumptech.glide:compiler:4.12.0")
     implementation ("io.agora.rtc:voice-sdk:4.2.6")
     implementation ("com.google.code.gson:gson:2.10")
+    implementation ("com.squareup.okhttp3:okhttp:4.9.1")
+    implementation ("com.squareup.okhttp3:logging-interceptor:4.9.1")
 
 
 

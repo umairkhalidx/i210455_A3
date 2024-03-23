@@ -1,7 +1,9 @@
 package com.umairkhalid.i210455
 
 import android.Manifest
+import android.annotation.SuppressLint
 import android.app.Activity
+import android.content.BroadcastReceiver
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.graphics.Bitmap
@@ -17,20 +19,38 @@ import android.widget.EditText
 import android.widget.ImageButton
 import android.widget.TextView
 import android.widget.Toast
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
+import androidx.core.content.ContextCompat
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
+import com.google.android.gms.tasks.OnCompleteListener
+import com.google.firebase.FirebaseApp
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.database.*
+import com.google.firebase.messaging.FirebaseMessaging
 import com.google.firebase.storage.FirebaseStorage
 import com.google.firebase.storage.StorageReference
-import com.squareup.picasso.Picasso
+import okhttp3.Call
+import okhttp3.Callback
+import okhttp3.MediaType.Companion.toMediaType
+import okhttp3.OkHttpClient
+import okhttp3.Request
+import okhttp3.RequestBody.Companion.toRequestBody
+import okhttp3.Response
+import org.json.JSONObject
 import java.io.ByteArrayOutputStream
+import java.io.IOException
 import java.util.*
+import android.content.Context
+import android.content.IntentFilter
+import android.os.IBinder
 
 class chat_1_activity : AppCompatActivity() {
+
+    @SuppressLint("MissingInflatedId")
 
     private lateinit var message_recycle_view: RecyclerView
     private lateinit var message_adapter: message_adapter
@@ -58,9 +78,59 @@ class chat_1_activity : AppCompatActivity() {
 
     private val offline_messages = mutableListOf<message_data>()
 
+    private val requestPermissionLauncher = registerForActivityResult(
+        ActivityResultContracts.RequestPermission()
+    ) { isGranted: Boolean ->
+        if (isGranted) {
+            // Permission is granted, you can proceed with sending notifications
+        } else {
+            // Permission is not granted, handle accordingly
+        }
+    }
+
+    var my_flag:Int=0
+
+
+    private val screenshotReceiver = object : BroadcastReceiver() {
+        override fun onReceive(context: Context?, intent: Intent?) {
+            // Handle screenshot event
+            Toast.makeText(this@chat_1_activity,"Screen",Toast.LENGTH_LONG).show()
+        }
+    }
+
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.chat_1)
+
+
+        FirebaseApp.initializeApp(this)
+
+        registerScreenshotReceiver()
+
+
+        //firebase token
+        FirebaseMessaging.getInstance().token.addOnCompleteListener(OnCompleteListener { task ->
+            if (!task.isSuccessful) {
+                Log.w("TAG", "Fetching FCM registration token failed", task.exception)
+                return@OnCompleteListener
+            }
+            // Get new FCM registration token
+            val token = task.result
+            Log.d("MyToken", token)
+        })
+
+        askNotificationPermission()
+
+        var requestPermissionLauncher = registerForActivityResult(
+            ActivityResultContracts.RequestPermission(),)
+        { isGranted: Boolean ->
+            if (isGranted) {
+                // FCM SDK (and your app) can post notifications.
+            } else {
+                askNotificationPermission()
+            }
+        }
 
         val home_btn: ImageButton =findViewById(R.id.home_btn)
         val home_txt: TextView =findViewById(R.id.home_txt)
@@ -72,6 +142,7 @@ class chat_1_activity : AppCompatActivity() {
         val profile_txt: TextView =findViewById(R.id.profile_txt)
         val plus_btn: ImageButton =findViewById(R.id.plus_btn)
         val back_btn_letsfind: ImageButton =findViewById(R.id.back_btn)
+
 
         home_btn.setOnClickListener{
             val nextActivityIntent = Intent(this, home_page_activity::class.java)
@@ -218,7 +289,7 @@ class chat_1_activity : AppCompatActivity() {
         send_btn.setOnClickListener {
             val messageText = editTextMessage.text.toString().trim()
             if (messageText.isNotEmpty()) {
-                send_message_func(messageText)
+                send_message_func(messageText,mentorName.toString())
             }
         }
 
@@ -313,7 +384,7 @@ class chat_1_activity : AppCompatActivity() {
 
         // Check for internet connectivity and sync offline messages
         if (check_network()) {
-            sync_offline_messages()
+            sync_offline_messages(mentorName.toString())
         } else {
             Toast.makeText(this, "No internet connection. Offline mode.", Toast.LENGTH_SHORT).show()
         }
@@ -323,13 +394,35 @@ class chat_1_activity : AppCompatActivity() {
         message_recycle_view.scrollToPosition(message_adapter.itemCount - 1)
     }
 
-    private fun send_message_func(messageText: String) {
+    private fun send_message_func(messageText: String,mentor_name:String) {
+
         val userId = auth.currentUser?.uid
         if (userId != null) {
             val message = message_data(userId, messageText, System.currentTimeMillis(), null, null, null)
             messages_ref.push().setValue(message)
                 .addOnSuccessListener {
                     editTextMessage.text.clear()
+
+                    if(my_flag==0){
+
+                        FirebaseMessaging.getInstance().token.addOnCompleteListener { task ->
+                            if (!task.isSuccessful) {
+                                return@addOnCompleteListener
+                            }
+                            val token = task.result
+                            sendPushNotification(
+                                token,
+                                mentor_name.toString(),
+                                "Subtitle: Class",
+                                "I'll Get Back to You Soon",
+                                mapOf("key1" to "value1", "key2" to "value2")
+                            )
+
+                        }
+                        my_flag=1;
+
+                    }
+
                 }
                 .addOnFailureListener {
                     // Handle message sending failure
@@ -339,6 +432,8 @@ class chat_1_activity : AppCompatActivity() {
                 }
         }
     }
+
+
 
     private fun pickImageFromGallery() {
         val intent = Intent(Intent.ACTION_PICK, MediaStore.Images.Media.EXTERNAL_CONTENT_URI)
@@ -595,6 +690,17 @@ class chat_1_activity : AppCompatActivity() {
     override fun onDestroy() {
         super.onDestroy()
         audio_recorder.cancelRecording()
+        unregisterReceiver(screenshotReceiver)
+    }
+
+    fun onBind(intent: Intent?): IBinder? {
+        return null
+    }
+
+    private fun registerScreenshotReceiver() {
+        val intentFilter = IntentFilter()
+        intentFilter.addAction("com.android.systemui.screenshot") // Action for screenshot event
+        registerReceiver(screenshotReceiver, intentFilter)
     }
 
     private fun check_network(): Boolean {
@@ -610,821 +716,78 @@ class chat_1_activity : AppCompatActivity() {
         }
     }
 
-    private fun sync_offline_messages() {
+    private fun sync_offline_messages(mentor_name: String) {
         for (message in offline_messages) {
-            send_message_func(message.messageText)
+            send_message_func(message.messageText,mentor_name)
         }
         offline_messages.clear()
     }
 
+    private fun askNotificationPermission() {
+        // This is only necessary for API level >= 33 (TIRAMISU)
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            if (ContextCompat.checkSelfPermission(
+                    this,
+                    Manifest.permission.POST_NOTIFICATIONS
+                ) ==
+                PackageManager.PERMISSION_GRANTED
+            ) {
+                // FCM SDK (and your app) can post notifications.
+            } else if (shouldShowRequestPermissionRationale(Manifest.permission.POST_NOTIFICATIONS)) {
+                // TODO: display an educational UI explaining to the user the features that will be enabled
+                //       by them granting the POST_NOTIFICATION permission. This UI should provide the user
+                //       "OK" and "No thanks" buttons. If the user selects "OK," directly request the permission.
+                //       If the user selects "No thanks," allow the user to continue without notifications.
+            } else {
+                // Directly ask for the permission
+                requestPermissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
+            }
+        }
+    }
 
-//
-//    override fun onCreate(savedInstanceState: Bundle?) {
-//        super.onCreate(savedInstanceState)
-//
-//        setContentView(R.layout.chat_1)
-//
-//        val home_btn: ImageButton =findViewById(R.id.home_btn)
-//        val home_txt: TextView =findViewById(R.id.home_txt)
-//        val search_btn: ImageButton =findViewById(R.id.search_btn)
-//        val search_txt: TextView =findViewById(R.id.search_txt)
-//        val chat_btn: ImageButton =findViewById(R.id.chat_btn)
-//        val chat_txt: TextView =findViewById(R.id.chat_txt)
-//        val profile_btn: ImageButton =findViewById(R.id.profile_btn)
-//        val profile_txt: TextView =findViewById(R.id.profile_txt)
-//        val plus_btn: ImageButton =findViewById(R.id.plus_btn)
-//        val back_btn_letsfind: ImageButton =findViewById(R.id.back_btn)
-//
-//        val mentorName = intent.getStringExtra("MENTOR_NAME")
-//        Toast.makeText(this,mentorName.toString(),Toast.LENGTH_LONG).show()
-//
-//        val audiocall_btn: ImageButton =findViewById(R.id.audiocall_button)
-//        val videocall_btn: ImageButton =findViewById(R.id.videocall_btn)
-//        val photo_btn: ImageButton =findViewById(R.id.photo_btn)
-//
-//        photo_btn.setOnClickListener{
-//            val nextActivityIntent = Intent(this, camera_photo_activity::class.java)
-//            startActivity(nextActivityIntent)
-//        }
-//
-//        audiocall_btn.setOnClickListener{
-//            val nextActivityIntent = Intent(this, call_1_activity::class.java)
-//            startActivity(nextActivityIntent)
-//        }
-//
-//        videocall_btn.setOnClickListener{
-//            val nextActivityIntent = Intent(this, call_2_activity::class.java)
-//            startActivity(nextActivityIntent)
-//        }
-//
-//
-//        home_btn.setOnClickListener{
-//            val nextActivityIntent = Intent(this, home_page_activity::class.java)
-//            startActivity(nextActivityIntent)
-//            finish()
-//        }
-//
-//        home_txt.setOnClickListener{
-//            val nextActivityIntent = Intent(this, home_page_activity::class.java)
-//            startActivity(nextActivityIntent)
-//            finish()
-//        }
-//
-//        search_btn.setOnClickListener{
-//            val nextActivityIntent = Intent(this, lets_find_activity::class.java)
-//            startActivity(nextActivityIntent)
-//        }
-//
-//        search_txt.setOnClickListener{
-//            val nextActivityIntent = Intent(this, lets_find_activity::class.java)
-//            startActivity(nextActivityIntent)
-//        }
-//
-//        chat_btn.setOnClickListener{
-//            val nextActivityIntent = Intent(this, chats_activity::class.java)
-//            startActivity(nextActivityIntent)
-//        }
-//
-//        chat_txt.setOnClickListener{
-//            val nextActivityIntent = Intent(this, chats_activity::class.java)
-//            startActivity(nextActivityIntent)
-//        }
-//
-//        profile_btn.setOnClickListener{
-//            val nextActivityIntent = Intent(this, my_profile_activity::class.java)
-//            startActivity(nextActivityIntent)
-//        }
-//
-//        profile_txt.setOnClickListener{
-//            val nextActivityIntent = Intent(this, my_profile_activity::class.java)
-//            startActivity(nextActivityIntent)
-//        }
-//
-//        plus_btn.setOnClickListener{
-//            val nextActivityIntent = Intent(this, add_new_mentor_activity::class.java)
-//            startActivity(nextActivityIntent)
-//        }
-//
-//        plus_btn.setOnClickListener{
-//            val nextActivityIntent = Intent(this, add_new_mentor_activity::class.java)
-//            startActivity(nextActivityIntent)
-//        }
-//
-//        back_btn_letsfind.setOnClickListener{
-////            val nextActivityIntent = Intent(this, home_page_activity::class.java)
-////            startActivity(nextActivityIntent)
-//            onBackPressed()
-//            finish()
-//        }
-//
-//
-//    }
+    fun sendPushNotification(token: String, title: String, subtitle: String, body: String, data: Map<String, String> = emptyMap()) {
+        val url = "https://fcm.googleapis.com/fcm/send"
+        val bodyJson = JSONObject()
+        bodyJson.put("to", token)
+        bodyJson.put("notification",
+            JSONObject().also {
+                it.put("title", title)
+                it.put("subtitle", subtitle)
+                it.put("body", body)
+                it.put("sound", "social_notification_sound.wav")
+            }
+        )
+        Log.d("TAG", "sendPushNotification: ${JSONObject(data)}")
+        if (data.isNotEmpty()) {
+            bodyJson.put("data", JSONObject(data))
+        }
 
+        var key="AAAAhfqz-ls:APA91bEQFjo8C3YLtR6V0AsR6m52hVMniNYzBC8GTWMkU6gyx8YzP5wPxFhieeyQPYcoQFmPEx0bXmMumzk3cYj3jiQ4uMm-NvlP5YOYeabErgHvFqF5Rwac8NwLeg3_005xdofYV0l6"
+        val request = Request.Builder()
+            .url(url)
+            .addHeader("Content-Type", "application/json")
+            .addHeader("Authorization", "key=$key")
+            .post(
+                bodyJson.toString().toRequestBody("application/json; charset=utf-8".toMediaType())
+            )
+            .build()
 
+        val client = OkHttpClient()
+
+        client.newCall(request).enqueue(
+            object : Callback {
+                override fun onResponse(call: Call, response: Response) {
+                    println("Received data: ${response.body?.string()}")
+                    Log.d("TAG", "onResponse: ${response}   ")
+                    Log.d("TAG", "onResponse Message: ${response.message}   ")
+                }
+
+                override fun onFailure(call: Call, e: IOException) {
+                    println(e.message.toString())
+                    Log.d("TAG", "onFailure: ${e.message.toString()}")
+                }
+            }
+        )
+    }
 
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-//class chat_1_activity : AppCompatActivity() {
-//
-//    private lateinit var messageRecyclerView: RecyclerView
-//    private lateinit var messageAdapter: MessageAdapter
-//    private lateinit var editTextMessage: EditText
-//    private lateinit var sendButton: ImageButton
-//    private lateinit var fileButton: ImageButton
-//    private lateinit var imageUpload: ImageButton
-//    private lateinit var voicemessage: ImageButton
-//    private lateinit var camerabutton: ImageButton
-//    private lateinit var callbutton: ImageButton
-//    private lateinit var videocallbutton: ImageButton
-//
-//    private lateinit var auth: FirebaseAuth
-//    private lateinit var database: FirebaseDatabase
-//    private lateinit var messagesReference: DatabaseReference
-//    private lateinit var storageRef: StorageReference
-//
-//    private val IMAGE_PICK_CODE = 1000
-//    private val FILE_PICK_CODE = 1001
-//    private val CAMERA_REQUEST_CODE = 1002
-//    private val messagesList = mutableListOf<Message>()
-//    private var selectedMessagePosition: Int = -1
-//
-//    private lateinit var audioRecorder: AudioRecorder
-//
-//    private val offlineMessages = mutableListOf<Message>()
-//
-//    override fun onCreate(savedInstanceState: Bundle?) {
-//        super.onCreate(savedInstanceState)
-//        setContentView(R.layout.chat_1)
-//
-//        val home_btn: ImageButton =findViewById(R.id.home_btn)
-//        val home_txt: TextView =findViewById(R.id.home_txt)
-//        val search_btn: ImageButton =findViewById(R.id.search_btn)
-//        val search_txt: TextView =findViewById(R.id.search_txt)
-//        val chat_btn: ImageButton =findViewById(R.id.chat_btn)
-//        val chat_txt: TextView =findViewById(R.id.chat_txt)
-//        val profile_btn: ImageButton =findViewById(R.id.profile_btn)
-//        val profile_txt: TextView =findViewById(R.id.profile_txt)
-//        val plus_btn: ImageButton =findViewById(R.id.plus_btn)
-//        val back_btn_letsfind: ImageButton =findViewById(R.id.back_btn)
-//
-//        home_btn.setOnClickListener{
-//            val nextActivityIntent = Intent(this, home_page_activity::class.java)
-//            startActivity(nextActivityIntent)
-//            finish()
-//        }
-//
-//        home_txt.setOnClickListener{
-//            val nextActivityIntent = Intent(this, home_page_activity::class.java)
-//            startActivity(nextActivityIntent)
-//            finish()
-//        }
-//
-//        search_btn.setOnClickListener{
-//            val nextActivityIntent = Intent(this, lets_find_activity::class.java)
-//            startActivity(nextActivityIntent)
-//        }
-//
-//        search_txt.setOnClickListener{
-//            val nextActivityIntent = Intent(this, lets_find_activity::class.java)
-//            startActivity(nextActivityIntent)
-//        }
-//
-//        chat_btn.setOnClickListener{
-//            val nextActivityIntent = Intent(this, chats_activity::class.java)
-//            startActivity(nextActivityIntent)
-//        }
-//
-//        chat_txt.setOnClickListener{
-//            val nextActivityIntent = Intent(this, chats_activity::class.java)
-//            startActivity(nextActivityIntent)
-//        }
-//
-//        profile_btn.setOnClickListener{
-//            val nextActivityIntent = Intent(this, my_profile_activity::class.java)
-//            startActivity(nextActivityIntent)
-//        }
-//
-//        profile_txt.setOnClickListener{
-//            val nextActivityIntent = Intent(this, my_profile_activity::class.java)
-//            startActivity(nextActivityIntent)
-//        }
-//
-//        plus_btn.setOnClickListener{
-//            val nextActivityIntent = Intent(this, add_new_mentor_activity::class.java)
-//            startActivity(nextActivityIntent)
-//        }
-//
-//        plus_btn.setOnClickListener{
-//            val nextActivityIntent = Intent(this, add_new_mentor_activity::class.java)
-//            startActivity(nextActivityIntent)
-//        }
-//
-//        back_btn_letsfind.setOnClickListener{
-////            val nextActivityIntent = Intent(this, home_page_activity::class.java)
-////            startActivity(nextActivityIntent)
-//            onBackPressed()
-//            finish()
-//        }
-//
-//        val audiocall_btn: ImageButton =findViewById(R.id.audiocall_button)
-//        val videocall_btn: ImageButton =findViewById(R.id.videocall_btn)
-//
-//        audiocall_btn.setOnClickListener{
-//            val nextActivityIntent = Intent(this, call_1_activity::class.java)
-//            startActivity(nextActivityIntent)
-//        }
-//
-//        videocall_btn.setOnClickListener{
-//            val nextActivityIntent = Intent(this, call_2_activity::class.java)
-//            startActivity(nextActivityIntent)
-//        }
-//
-//        auth = FirebaseAuth.getInstance()
-//        database = FirebaseDatabase.getInstance()
-//
-//        val currentUser = FirebaseAuth.getInstance().currentUser
-//        val userId = currentUser?.uid.toString()
-//
-//        messagesReference = database.reference.child("users").child(userId).child("messages")
-//        storageRef = FirebaseStorage.getInstance().reference
-//
-//        audioRecorder = AudioRecorder()
-//
-//        // Initialize views
-//        val mentorNameTextView = findViewById<TextView>(R.id.mentor_name)
-//
-//        messageRecyclerView = findViewById(R.id.recyclerview_messages)
-//        editTextMessage = findViewById(R.id.message_txt)
-//        sendButton = findViewById(R.id.message_send)
-//        fileButton = findViewById(R.id.message_attach)
-//        imageUpload = findViewById(R.id.message_img)
-//        voicemessage = findViewById(R.id.message_audio)
-//        camerabutton = findViewById(R.id.photo_btn)
-////        callbutton = findViewById(R.id.audiocall_button)
-////        videocallbutton = findViewById(R.id.videocall_btn)
-//
-//
-//        val mentorName = intent.getStringExtra("MENTOR_NAME")
-//        mentorName?.let {
-//            mentorNameTextView.text = it
-//            messagesReference = database.reference.child("users").child(userId).child("messages").child("messages_$it") // Use mentor's name in the database path
-//        }
-//
-//        // Setup RecyclerView and Adapter
-//        messageAdapter = MessageAdapter(messagesList, object : MessageAdapter.OnMessageClickListener {
-//            override fun onMessageClick(position: Int) {
-//                selectedMessagePosition = position
-//                val message = messagesList[position]
-//                if (message.audioUrl != null) {
-//                    // Play audio
-//                    playAudioFromFirebase(message.audioUrl)
-//                } else {
-//                    // Handle other message types
-//                    showEditDialog(message)
-//                }
-//            }
-//
-//            override fun onMessageLongClick(position: Int) {
-//                selectedMessagePosition = position
-//                showDeleteConfirmationDialog()
-//            }
-//        })
-//
-////        messageRecyclerView.apply {
-////            layoutManager = LinearLayoutManager(this@chat_1_activity)
-////            adapter = messageAdapter
-////            addItemDecoration(ItemOffsetDecoration(8)) // Adding item decoration with 16dp offset
-////        }
-//        messageRecyclerView.apply {
-//            val layoutManager = LinearLayoutManager(this@chat_1_activity)
-//            layoutManager.orientation = LinearLayoutManager.VERTICAL
-////            layoutManager.reverseLayout = true // Display items from bottom
-//            layoutManager.stackFromEnd = true
-//            this.layoutManager = layoutManager
-//            adapter = messageAdapter
-////            addItemDecoration(ItemOffsetDecoration(-8)) // Adding item decoration with 8dp offset
-//        }
-//
-//        // Send message button click listener
-//        sendButton.setOnClickListener {
-//            val messageText = editTextMessage.text.toString().trim()
-//            if (messageText.isNotEmpty()) {
-//                sendMessage(messageText)
-//            }
-//        }
-//
-//        // File button click listener
-//        fileButton.setOnClickListener {
-//            pickFileFromDevice()
-//        }
-//
-//        // Image upload button click listener
-//        imageUpload.setOnClickListener {
-//            pickImageFromGallery()
-//        }
-//
-//        // Camera button click listener
-//        camerabutton.setOnClickListener {
-//            if (ActivityCompat.checkSelfPermission(
-//                    this,
-//                    Manifest.permission.CAMERA
-//                ) == PackageManager.PERMISSION_GRANTED
-//            ) {
-//                openCamera()
-//            } else {
-//                ActivityCompat.requestPermissions(
-//                    this,
-//                    arrayOf(Manifest.permission.CAMERA),
-//                    CAMERA_REQUEST_CODE
-//                )
-//            }
-//        }
-//
-//        // Voice message button click listener
-//        voicemessage.setOnClickListener {
-//
-//            //Ask for audio permission here
-//
-//            if (audioRecorder.isRecording) {
-//                audioRecorder.stopRecording { audioUri ->
-//                    if (audioUri != null) {
-//                        uploadAudioToFirebase(audioUri)
-//                    } else {
-//                        // Handle audio recording failure
-//                        Toast.makeText(this, "Failed to record audio", Toast.LENGTH_SHORT).show()
-//                    }
-//                }
-//            } else {
-//                audioRecorder.startRecording()
-//                Toast.makeText(this, "Recording started", Toast.LENGTH_SHORT).show()
-//            }
-//        }
-//
-//        // Listen for new messages
-//        messagesReference.addChildEventListener(object : ChildEventListener {
-//            override fun onChildAdded(snapshot: DataSnapshot, previousChildName: String?) {
-//                val message = snapshot.getValue(Message::class.java)
-//                if (message != null) {
-//                    messagesList.add(message)
-//                    messageAdapter.notifyItemInserted(messagesList.size - 1)
-//                    scrollToBottom()
-//                }
-//            }
-//
-//            override fun onChildChanged(snapshot: DataSnapshot, previousChildName: String?) {
-//                val updatedMessage = snapshot.getValue(Message::class.java)
-//                if (updatedMessage != null) {
-//                    val existingMessage = messagesList.find { it.userId == updatedMessage.userId }
-//                    if (existingMessage != null) {
-//                        val index = messagesList.indexOf(existingMessage)
-//                        messagesList[index] = updatedMessage
-//                        messageAdapter.notifyItemChanged(index)
-//                    }
-//                }
-//            }
-//
-//            override fun onChildRemoved(snapshot: DataSnapshot) {
-//                val removedMessage = snapshot.getValue(Message::class.java)
-//                if (removedMessage != null) {
-//                    val existingMessage = messagesList.find { it.userId == removedMessage.userId }
-//                    if (existingMessage != null) {
-//                        val index = messagesList.indexOf(existingMessage)
-//                        messagesList.removeAt(index)
-//                        messageAdapter.notifyItemRemoved(index)
-//                    }
-//                }
-//            }
-//
-//            override fun onChildMoved(snapshot: DataSnapshot, previousChildName: String?) {}
-//
-//            override fun onCancelled(error: DatabaseError) {}
-//        })
-//
-//        // Check for internet connectivity and sync offline messages
-//        if (isNetworkAvailable()) {
-//            syncOfflineMessages()
-//        } else {
-//            Toast.makeText(this, "No internet connection. Offline mode.", Toast.LENGTH_SHORT).show()
-//        }
-//    }
-//
-//    private fun scrollToBottom() {
-//        messageRecyclerView.scrollToPosition(messageAdapter.itemCount - 1)
-//    }
-//
-//    private fun sendMessage(messageText: String) {
-//        val userId = auth.currentUser?.uid
-//        if (userId != null) {
-//            val message = Message(userId, messageText, System.currentTimeMillis(), null, null, null)
-//            messagesReference.push().setValue(message)
-//                .addOnSuccessListener {
-//                    editTextMessage.text.clear()
-//                }
-//                .addOnFailureListener {
-//                    // Handle message sending failure
-//                    Toast.makeText(this, "Failed to send message", Toast.LENGTH_SHORT).show()
-//                    // Add message to offline list
-//                    offlineMessages.add(message)
-//                }
-//        }
-//    }
-//
-//    private fun pickImageFromGallery() {
-//        val intent = Intent(Intent.ACTION_PICK, MediaStore.Images.Media.EXTERNAL_CONTENT_URI)
-//        startActivityForResult(intent, IMAGE_PICK_CODE)
-//    }
-//
-//    private fun pickFileFromDevice() {
-//        val intent = Intent(Intent.ACTION_GET_CONTENT)
-////        intent.type = "/"
-//        intent.type ="*/*"
-//        startActivityForResult(intent, FILE_PICK_CODE)
-//    }
-//
-//    private fun openCamera() {
-//        val intent = Intent(MediaStore.ACTION_IMAGE_CAPTURE)
-//        startActivityForResult(intent, CAMERA_REQUEST_CODE)
-//    }
-//
-//    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
-//        super.onActivityResult(requestCode, resultCode, data)
-//        if (resultCode == Activity.RESULT_OK) {
-//            when (requestCode) {
-//                IMAGE_PICK_CODE -> {
-//                    data?.data?.let { imageUri ->
-//                        uploadImageToFirebase(imageUri)
-//                    }
-//                }
-//                FILE_PICK_CODE -> {
-//                    data?.data?.let { fileUri ->
-//                        uploadFileToFirebase(fileUri)
-//                    }
-//                }
-//                CAMERA_REQUEST_CODE -> {
-//                    val imageBitmap = data?.extras?.get("data") as? Bitmap
-//                    imageBitmap?.let {
-//                        val imageUri = getImageUriFromBitmap(it)
-//                        uploadImageToFirebase(imageUri)
-//                    }
-//                }
-//            }
-//        }
-//    }
-//
-//    private fun getImageUriFromBitmap(bitmap: Bitmap): Uri {
-//        val bytes = ByteArrayOutputStream()
-//        bitmap.compress(Bitmap.CompressFormat.JPEG, 100, bytes)
-//        val path = MediaStore.Images.Media.insertImage(
-//            contentResolver,
-//            bitmap,
-//            "Image Title",
-//            null
-//        )
-//        return Uri.parse(path)
-//    }
-//
-//    private fun uploadImageToFirebase(imageUri: Uri) {
-//        val userId = auth.currentUser?.uid
-//        if (userId != null) {
-//            val imageRef = storageRef.child("profile_images/${UUID.randomUUID()}")
-//            val uploadTask = imageRef.putFile(imageUri)
-//            uploadTask.continueWithTask { task ->
-//                if (!task.isSuccessful) {
-//                    task.exception?.let {
-//                        throw it
-//                    }
-//                }
-//                imageRef.downloadUrl
-//            }.addOnCompleteListener { task ->
-//                if (task.isSuccessful) {
-//                    val downloadUri = task.result
-//                    val message = Message(
-//                        userId,
-//                        "",
-//                        System.currentTimeMillis(),
-//                        null,
-//                        downloadUri.toString(),
-//                        null
-//                    )
-//                    messagesReference.push().setValue(message)
-//                } else {
-//                    // Handle unsuccessful upload
-//                    Toast.makeText(this, "Failed to upload image", Toast.LENGTH_SHORT).show()
-//                }
-//            }
-//        }
-//    }
-//
-//    private fun uploadFileToFirebase(fileUri: Uri) {
-//        val userId = auth.currentUser?.uid
-//        if (userId != null) {
-//            val fileRef = storageRef.child("files/${UUID.randomUUID()}")
-//            val uploadTask = fileRef.putFile(fileUri)
-//            uploadTask.continueWithTask { task ->
-//                if (!task.isSuccessful) {
-//                    task.exception?.let {
-//                        throw it
-//                    }
-//                }
-//                fileRef.downloadUrl
-//            }.addOnCompleteListener { task ->
-//                if (task.isSuccessful) {
-//                    val downloadUri = task.result
-//                    val message = Message(
-//                        userId,
-//                        "",
-//                        System.currentTimeMillis(),
-//                        null,
-//                        null,
-//                        downloadUri.toString()
-//                    )
-//                    messagesReference.push().setValue(message)
-//                } else {
-//                    // Handle unsuccessful upload
-//                    Toast.makeText(this, "Failed to upload file", Toast.LENGTH_SHORT).show()
-//                }
-//            }
-//        }
-//    }
-//
-//    private fun uploadAudioToFirebase(audioUri: Uri) {
-//
-//        val userId = auth.currentUser?.uid
-//        if (userId != null) {
-//            val audioRef = storageRef.child("audio/${UUID.randomUUID()}")
-//            val uploadTask = audioRef.putFile(audioUri)
-//            uploadTask.continueWithTask { task ->
-//                if (!task.isSuccessful) {
-//                    task.exception?.let {
-//                        throw it
-//                    }
-//                }
-//                audioRef.downloadUrl
-//            }.addOnCompleteListener { task ->
-//                if (task.isSuccessful) {
-//                    val downloadUri = task.result
-//                    val message = Message(
-//                        userId,
-//                        "",
-//                        System.currentTimeMillis(),
-//                        downloadUri.toString(),
-//                        null,
-//                        null
-//                    )
-//                    messagesReference.push().setValue(message)
-//                    Log.d("AudioUpload", "Audio uploaded successfully: $downloadUri")
-//                } else {
-//                    // Handle unsuccessful upload
-//                    Toast.makeText(this, "Failed to upload audio", Toast.LENGTH_SHORT).show()
-//                    Log.e("AudioUpload", "Failed to upload audio")
-//                }
-//            }
-//        }
-//    }
-//
-//
-//    private fun playAudioFromFirebase(audioUrl: String) {
-//        val mediaPlayer = MediaPlayer()
-//        mediaPlayer.setDataSource(audioUrl)
-//        mediaPlayer.prepare()
-//        mediaPlayer.start()
-//        mediaPlayer.setOnCompletionListener {
-//            mediaPlayer.release()
-//        }
-//    }
-//
-//    private fun showEditDialog(message: Message) {
-//        val builder = AlertDialog.Builder(this)
-//        builder.setTitle("Edit Message")
-//
-//        val input = EditText(this)
-//        input.setText(message.messageText)
-//        builder.setView(input)
-//
-//        builder.setPositiveButton("Save") { dialog, which ->
-//            val editedMessage = input.text.toString().trim()
-//            if (editedMessage.isNotEmpty()) {
-//                updateMessageInFirebase(message, editedMessage)
-//            } else {
-//                Toast.makeText(this, "Message cannot be empty", Toast.LENGTH_SHORT).show()
-//            }
-//        }
-//        builder.setNegativeButton("Cancel") { dialog, which -> dialog.cancel() }
-//
-//        builder.show()
-//    }
-//
-//    private fun showDeleteConfirmationDialog() {
-//        val builder = AlertDialog.Builder(this)
-//        builder.setTitle("Delete Message")
-//            .setMessage("Are you sure you want to delete this message?")
-//            .setPositiveButton("Delete") { dialog, which ->
-//                val message = messagesList[selectedMessagePosition]
-//                deleteMessageFromFirebase(message)
-//                selectedMessagePosition = -1
-//            }
-//            .setNegativeButton("Cancel") { dialog, which ->
-//                selectedMessagePosition = -1
-//                dialog.cancel()
-//            }
-//            .show()
-//    }
-//
-//    private fun updateMessageInFirebase(oldMessage: Message, newMessageText: String) {
-//        val messageRef = messagesReference.child(oldMessage.userId ?: "")
-//        val updatedMessage = oldMessage.copy(messageText = newMessageText)
-//        messageRef.setValue(updatedMessage)
-//            .addOnSuccessListener {
-//                // Update local list and notify adapter
-//                val index = messagesList.indexOf(oldMessage)
-//                if (index != -1) {
-//                    messagesList[index] = updatedMessage
-//                    messageAdapter.notifyItemChanged(index)
-//                }
-//            }
-//            .addOnFailureListener {
-//                Toast.makeText(this, "Failed to update message", Toast.LENGTH_SHORT).show()
-//            }
-//    }
-//
-//    private fun deleteMessageFromFirebase(message: Message) {
-//        val messageRef = messagesReference.child(message.userId ?: "")
-//        messageRef.removeValue()
-//            .addOnSuccessListener {
-//                // Remove from local list and notify adapter
-//                val index = messagesList.indexOf(message)
-//                if (index != -1) {
-//                    messagesList.removeAt(index)
-//                    messageAdapter.notifyItemRemoved(index)
-//                } else {
-//                    // Message not found in the list
-//                    // Handle this case if needed
-//                }
-//            }
-//            .addOnFailureListener {
-//                Toast.makeText(this, "Failed to delete message", Toast.LENGTH_SHORT).show()
-//            }
-//    }
-//
-//    override fun onRequestPermissionsResult(requestCode: Int, permissions: Array<out String>, grantResults: IntArray) {
-//        super.onRequestPermissionsResult(requestCode, permissions, grantResults)
-//        when (requestCode) {
-//            CAMERA_REQUEST_CODE -> {
-//                if (grantResults.isNotEmpty() && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-//                    openCamera()
-//                } else {
-//                    Toast.makeText(this, "Camera permission denied", Toast.LENGTH_SHORT).show()
-//                }
-//            }
-//        }
-//    }
-//
-//    override fun onDestroy() {
-//        super.onDestroy()
-//        audioRecorder.cancelRecording()
-//    }
-//
-//    private fun isNetworkAvailable(): Boolean {
-//        val connectivityManager = getSystemService(CONNECTIVITY_SERVICE) as ConnectivityManager
-//        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-//            val networkCapabilities = connectivityManager.getNetworkCapabilities(connectivityManager.activeNetwork)
-//            return networkCapabilities != null &&
-//                    (networkCapabilities.hasTransport(NetworkCapabilities.TRANSPORT_WIFI) ||
-//                            networkCapabilities.hasTransport(NetworkCapabilities.TRANSPORT_CELLULAR))
-//        } else {
-//            val networkInfo = connectivityManager.activeNetworkInfo
-//            return networkInfo != null && networkInfo.isConnected
-//        }
-//    }
-//
-//    private fun syncOfflineMessages() {
-//        for (message in offlineMessages) {
-//            sendMessage(message.messageText)
-//        }
-//        offlineMessages.clear()
-//    }
-//
-//
-////
-////    override fun onCreate(savedInstanceState: Bundle?) {
-////        super.onCreate(savedInstanceState)
-////
-////        setContentView(R.layout.chat_1)
-////
-////        val home_btn: ImageButton =findViewById(R.id.home_btn)
-////        val home_txt: TextView =findViewById(R.id.home_txt)
-////        val search_btn: ImageButton =findViewById(R.id.search_btn)
-////        val search_txt: TextView =findViewById(R.id.search_txt)
-////        val chat_btn: ImageButton =findViewById(R.id.chat_btn)
-////        val chat_txt: TextView =findViewById(R.id.chat_txt)
-////        val profile_btn: ImageButton =findViewById(R.id.profile_btn)
-////        val profile_txt: TextView =findViewById(R.id.profile_txt)
-////        val plus_btn: ImageButton =findViewById(R.id.plus_btn)
-////        val back_btn_letsfind: ImageButton =findViewById(R.id.back_btn)
-////
-////        val mentorName = intent.getStringExtra("MENTOR_NAME")
-////        Toast.makeText(this,mentorName.toString(),Toast.LENGTH_LONG).show()
-////
-////        val audiocall_btn: ImageButton =findViewById(R.id.audiocall_button)
-////        val videocall_btn: ImageButton =findViewById(R.id.videocall_btn)
-////        val photo_btn: ImageButton =findViewById(R.id.photo_btn)
-////
-////        photo_btn.setOnClickListener{
-////            val nextActivityIntent = Intent(this, camera_photo_activity::class.java)
-////            startActivity(nextActivityIntent)
-////        }
-////
-////        audiocall_btn.setOnClickListener{
-////            val nextActivityIntent = Intent(this, call_1_activity::class.java)
-////            startActivity(nextActivityIntent)
-////        }
-////
-////        videocall_btn.setOnClickListener{
-////            val nextActivityIntent = Intent(this, call_2_activity::class.java)
-////            startActivity(nextActivityIntent)
-////        }
-////
-////
-////        home_btn.setOnClickListener{
-////            val nextActivityIntent = Intent(this, home_page_activity::class.java)
-////            startActivity(nextActivityIntent)
-////            finish()
-////        }
-////
-////        home_txt.setOnClickListener{
-////            val nextActivityIntent = Intent(this, home_page_activity::class.java)
-////            startActivity(nextActivityIntent)
-////            finish()
-////        }
-////
-////        search_btn.setOnClickListener{
-////            val nextActivityIntent = Intent(this, lets_find_activity::class.java)
-////            startActivity(nextActivityIntent)
-////        }
-////
-////        search_txt.setOnClickListener{
-////            val nextActivityIntent = Intent(this, lets_find_activity::class.java)
-////            startActivity(nextActivityIntent)
-////        }
-////
-////        chat_btn.setOnClickListener{
-////            val nextActivityIntent = Intent(this, chats_activity::class.java)
-////            startActivity(nextActivityIntent)
-////        }
-////
-////        chat_txt.setOnClickListener{
-////            val nextActivityIntent = Intent(this, chats_activity::class.java)
-////            startActivity(nextActivityIntent)
-////        }
-////
-////        profile_btn.setOnClickListener{
-////            val nextActivityIntent = Intent(this, my_profile_activity::class.java)
-////            startActivity(nextActivityIntent)
-////        }
-////
-////        profile_txt.setOnClickListener{
-////            val nextActivityIntent = Intent(this, my_profile_activity::class.java)
-////            startActivity(nextActivityIntent)
-////        }
-////
-////        plus_btn.setOnClickListener{
-////            val nextActivityIntent = Intent(this, add_new_mentor_activity::class.java)
-////            startActivity(nextActivityIntent)
-////        }
-////
-////        plus_btn.setOnClickListener{
-////            val nextActivityIntent = Intent(this, add_new_mentor_activity::class.java)
-////            startActivity(nextActivityIntent)
-////        }
-////
-////        back_btn_letsfind.setOnClickListener{
-//////            val nextActivityIntent = Intent(this, home_page_activity::class.java)
-//////            startActivity(nextActivityIntent)
-////            onBackPressed()
-////            finish()
-////        }
-////
-////
-////    }
-//
-//
-//
-//}
