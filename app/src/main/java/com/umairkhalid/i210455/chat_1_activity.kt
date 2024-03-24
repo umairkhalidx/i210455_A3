@@ -47,9 +47,11 @@ import java.util.*
 import android.content.Context
 import android.content.IntentFilter
 import android.os.IBinder
+import android.view.WindowManager
+import com.akexorcist.screenshotdetection.ScreenshotDetectionDelegate
 
+//class chat_1_activity : AppCompatActivity(), ScreenshotDetectionDelegate.ScreenshotDetectionListener {
 class chat_1_activity : AppCompatActivity() {
-
     @SuppressLint("MissingInflatedId")
 
     private lateinit var message_recycle_view: RecyclerView
@@ -90,24 +92,59 @@ class chat_1_activity : AppCompatActivity() {
 
     var my_flag:Int=0
 
+//    val screenCaptureCallback = Activity.ScreenCaptureCallback {
+//        Toast.makeText(this@chat_1_activity,"Screenshot Detected",Toast.LENGTH_LONG).show()
+//    }
+//    @SuppressLint("NewApi")
+//    override fun onStart() {
+//        super.onStart()
+//            registerScreenCaptureCallback(mainExecutor, screenCaptureCallback)
+//    }
+//    @SuppressLint("NewApi")
+//    override fun onStop() {
+//        super.onStop()
+//            unregisterScreenCaptureCallback(screenCaptureCallback)
+//    }
 
-    private val screenshotReceiver = object : BroadcastReceiver() {
-        override fun onReceive(context: Context?, intent: Intent?) {
-            // Handle screenshot event
-            Toast.makeText(this@chat_1_activity,"Screen",Toast.LENGTH_LONG).show()
-        }
-    }
+
+
+
+
+
+//    private val screenshotDetectionDelegate = ScreenshotDetectionDelegate(this, this)
+//    override fun onStart() {
+//        super.onStart()
+//        screenshotDetectionDelegate.startScreenshotDetection()
+//    }
+
+//    override fun onStop() {
+//        super.onStop()
+//        screenshotDetectionDelegate.stopScreenshotDetection()
+//    }
+//
+//    override fun onScreenCaptured(path: String) {
+//        Toast.makeText(this@chat_1_activity,"Screenshot Detected",Toast.LENGTH_LONG).show()
+//    }
+//
+//    override fun onScreenCapturedWithDeniedPermission() {
+//        // Do something when screen was captured but read external storage permission has denied
+//    }
+//
+//    companion object {
+//        private const val REQUEST_CODE_READ_EXTERNAL_STORAGE_PERMISSION = 3009
+//    }
 
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+
+        window.setFlags(WindowManager.LayoutParams.FLAG_SECURE, WindowManager.LayoutParams.FLAG_SECURE)
+
         setContentView(R.layout.chat_1)
 
+//        checkReadExternalStoragePermission()
 
         FirebaseApp.initializeApp(this)
-
-        registerScreenshotReceiver()
-
 
         //firebase token
         FirebaseMessaging.getInstance().token.addOnCompleteListener(OnCompleteListener { task ->
@@ -226,8 +263,6 @@ class chat_1_activity : AppCompatActivity() {
         image_upload_btn = findViewById(R.id.message_img)
         voice_message_btn = findViewById(R.id.message_audio)
         camera_btn = findViewById(R.id.photo_btn)
-//        callbutton = findViewById(R.id.audiocall_button)
-//        videocallbutton = findViewById(R.id.videocall_btn)
 
 
         val mentorName = intent.getStringExtra("MENTOR_NAME")
@@ -684,23 +719,32 @@ class chat_1_activity : AppCompatActivity() {
                     Toast.makeText(this, "Camera permission denied", Toast.LENGTH_SHORT).show()
                 }
             }
+//            REQUEST_CODE_READ_EXTERNAL_STORAGE_PERMISSION -> {
+//            if (grantResults.getOrNull(0) == PackageManager.PERMISSION_DENIED) {
+//                showReadExternalStoragePermissionDeniedMessage()
+//            }
+//            }
+//            else -> super.onRequestPermissionsResult(requestCode, permissions, grantResults)
         }
     }
+//    private fun checkReadExternalStoragePermission() {
+//        if (ContextCompat.checkSelfPermission(this, Manifest.permission.READ_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED) {
+//            requestReadExternalStoragePermission()
+//        }
+//    }
+//
+//    private fun requestReadExternalStoragePermission() {
+//        ActivityCompat.requestPermissions(this, arrayOf(Manifest.permission.READ_EXTERNAL_STORAGE), REQUEST_CODE_READ_EXTERNAL_STORAGE_PERMISSION)
+//    }
+//
+//    private fun showReadExternalStoragePermissionDeniedMessage() {
+//        Toast.makeText(this, "Unable to Request External Storage for Screenshot Detection", Toast.LENGTH_SHORT).show()
+//    }
+
 
     override fun onDestroy() {
         super.onDestroy()
         audio_recorder.cancelRecording()
-        unregisterReceiver(screenshotReceiver)
-    }
-
-    fun onBind(intent: Intent?): IBinder? {
-        return null
-    }
-
-    private fun registerScreenshotReceiver() {
-        val intentFilter = IntentFilter()
-        intentFilter.addAction("com.android.systemui.screenshot") // Action for screenshot event
-        registerReceiver(screenshotReceiver, intentFilter)
     }
 
     private fun check_network(): Boolean {

@@ -63,6 +63,7 @@ dependencies {
     implementation ("com.google.code.gson:gson:2.10")
     implementation ("com.squareup.okhttp3:okhttp:4.9.1")
     implementation ("com.squareup.okhttp3:logging-interceptor:4.9.1")
+    implementation ("com.akexorcist:screenshot-detection:1.0.2")
 
 
 
