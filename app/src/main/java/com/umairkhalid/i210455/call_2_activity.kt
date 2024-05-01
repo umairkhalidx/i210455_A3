@@ -10,7 +10,6 @@ import android.widget.ImageButton
 import android.widget.Toast
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
-import com.umairkhalid.i210455.databinding.ActivityMainBinding
 import com.umairkhalid.i210455.databinding.Call2Binding
 import io.agora.rtc2.ChannelMediaOptions
 import io.agora.rtc2.Constants
@@ -22,6 +21,9 @@ import io.agora.rtc2.video.VideoCanvas
 
 class call_2_activity : AppCompatActivity() {
 
+    lateinit var userID: String
+    lateinit var url: String
+    lateinit var mentorID: String
 
     private lateinit var binding: Call2Binding
 
@@ -97,6 +99,11 @@ class call_2_activity : AppCompatActivity() {
         binding = Call2Binding.inflate(layoutInflater)
         setContentView(binding.root)
 
+        userID = intent.getStringExtra("userID").toString()
+        mentorID = intent.getStringExtra("mentorID").toString()
+        url = getString(R.string.url)
+
+
 
 //        val tokenBuilder = RtcTokenBuilder2()
 //        val timestamp = (System.currentTimeMillis() / 1000 + expirationTimeInSeconds).toInt()
@@ -157,6 +164,8 @@ class call_2_activity : AppCompatActivity() {
         joinChannel();
 
     }
+
+
     private val mRtcEventHandler: IRtcEngineEventHandler = object : IRtcEngineEventHandler() {
         override fun onUserJoined(uid: Int, elapsed: Int) {
             showMessage("Remote user joined $uid")
@@ -232,20 +241,3 @@ class call_2_activity : AppCompatActivity() {
         }
     }
 }
-
-
-//    override fun onCreate(savedInstanceState: Bundle?) {
-//        super.onCreate(savedInstanceState)
-//
-//        setContentView(R.layout.call_2)
-//
-//        val endcall_btn: ImageButton =findViewById(R.id.endcall_btn)
-//
-//        endcall_btn.setOnClickListener{
-////            val nextActivityIntent = Intent(this, john_cooper_1_activity::class.java)
-////            startActivity(nextActivityIntent)
-//            onBackPressed()
-//            finish()
-//        }
-//    }
-//}

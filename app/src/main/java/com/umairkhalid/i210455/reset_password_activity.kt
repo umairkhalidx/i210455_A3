@@ -11,6 +11,10 @@ import android.widget.ImageButton
 import android.widget.TextView
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
+import com.android.volley.Request
+import com.android.volley.Response
+import com.android.volley.toolbox.StringRequest
+import com.android.volley.toolbox.Volley
 import com.google.firebase.auth.AuthCredential
 import com.google.firebase.auth.EmailAuthProvider
 import com.google.firebase.auth.FirebaseAuth
@@ -19,14 +23,13 @@ import com.google.firebase.database.FirebaseDatabase
 
 
 class reset_password_activity : AppCompatActivity() {
-    private var  mAuth = FirebaseAuth.getInstance();
-    var flag:Boolean=false
+    lateinit var url :String
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-
         setContentView(R.layout.reset_password)
+
+        url = getString(R.string.url)
         val userEmail = intent.getStringExtra("user_email")
-        val oldpass = intent.getStringExtra("user_pass")
 
         val reset_btn: TextView =findViewById(R.id.reset_btn)
         val login_btn: TextView =findViewById(R.id.login_btn)
@@ -56,8 +59,7 @@ class reset_password_activity : AppCompatActivity() {
                 }
                 else{
                     val email=userEmail.toString()
-                    val oldpassword=oldpass.toString()
-                    resetPassword(email,new_txt,oldpassword)
+                    resetPassword(email,new_txt)
                 }
 
             }else{
@@ -78,151 +80,33 @@ class reset_password_activity : AppCompatActivity() {
             finish()
         }
 
-
-////////////////////////////////////////////////////////////////////////////
-        sign_in_fun(userEmail.toString(),oldpass.toString());       //Important Step
-///////////////////////////////////////////////////////////////////////////
-
-
     }
-    fun resetPassword(email: String, newPassword: String,oldpassword:String) {
-
-        if(flag==false){
-            Toast.makeText(this, "Unable to Change Passsword Try Again", Toast.LENGTH_SHORT).show()
-            val nextActivityIntent = Intent(this, login_activity::class.java)
-            startActivity(nextActivityIntent)
-            finish()
-        }
-
-        val credential: AuthCredential = EmailAuthProvider.getCredential(email, oldpassword)
-        val user: FirebaseUser? = FirebaseAuth.getInstance().currentUser
-
-        user?.reauthenticate(credential)?.addOnCompleteListener { task ->
-            when {
-                task.isSuccessful -> {
-                    user.updatePassword(newPassword).addOnCompleteListener {
-                        if (it.isSuccessful) {
-
-                            val database = FirebaseDatabase.getInstance()
-                            val my_ref = database.getReference("credentials")
-                            val new_email = email.replace(".", ",")
-                            my_ref.child(new_email).child("password").setValue(newPassword)
-                            FirebaseAuth.getInstance().signOut()
-
-                            Toast.makeText(this, "Password Updated Successfully", Toast.LENGTH_LONG).show()
-                            val nextActivityIntent = Intent(this, login_activity::class.java)
-                            startActivity(nextActivityIntent)
-                            finish()
-                        } else
-                            Toast.makeText(this, "Please Try Again", Toast.LENGTH_LONG).show()
-                    }
-                }
-                else -> {
-                    Toast.makeText(this, "General Processing Error", Toast.LENGTH_LONG).show()
-                }
-
+    fun resetPassword(email: String, newPassword: String) {
+        // Make HTTP request to PHP script to reset password
+        val tempUrl = "${url}resetpassword.php"
+        val stringRequest = object : StringRequest(
+            Request.Method.POST, tempUrl,
+            Response.Listener { response ->
+                // Handle response
+                Toast.makeText(this, "Reset Successful", Toast.LENGTH_SHORT).show()
+                val nextActivityIntent = Intent(this, login_activity::class.java)
+                startActivity(nextActivityIntent)
+                finish()
+            },
+            Response.ErrorListener { error ->
+                // Handle error
+                Toast.makeText(this, "An error occurred", Toast.LENGTH_SHORT).show()
+                Log.e("API Error", "Error occurred: ${error.message}")
+            }) {
+            override fun getParams(): MutableMap<String, String> {
+                val params = HashMap<String, String>()
+                params["email"] = email
+                params["newPassword"] = newPassword
+                return params
             }
         }
-
-
-        //Sends a link on EMail to reset password
-
-//        mAuth.sendPasswordResetEmail(email)
-//            .addOnCompleteListener { task ->
-//                if (task.isSuccessful) {
-//                    mAuth.confirmPasswordReset("password_reset_code", newPassword)
-//                        .addOnCompleteListener { resetTask ->
-//                            if (resetTask.isSuccessful) {
-//                                Toast.makeText(this, "Password Updated Successfully", Toast.LENGTH_LONG).show()
-//                                val nextActivityIntent = Intent(this, login_activity::class.java)
-//                                startActivity(nextActivityIntent)
-//                                finish()
-//
-//                            } else {
-//                                Toast.makeText(this, "Please Try Again", Toast.LENGTH_LONG).show()
-//                            }
-//                        }
-//                } else {
-//                    Toast.makeText(this,"Please Try Again",Toast.LENGTH_LONG).show()
-//                }
-//            }
+        // Add the request to the RequestQueue
+        Volley.newRequestQueue(this).add(stringRequest)
     }
-    fun sign_in_fun(email:String,pass:String){
-        mAuth.signInWithEmailAndPassword(email, pass)
-            .addOnCompleteListener(this) { task ->
-                if (task.isSuccessful) {
-                    flag=true
-                    Log.d("TAG", "signInWithEmail:success")
-                } else {
-                    flag=false
-                    Log.d("TAG", "signInWithEmail:fail")
-                }
-            }
-    }
+
 }
-
-
-//fun resetPassword(email: String, newPassword: String,oldpassword:String) {
-//
-//    mAuth.signInWithEmailAndPassword(email, oldpassword)
-//        .addOnCompleteListener(this) { task ->
-//            if (task.isSuccessful) {
-//
-//                var credential: AuthCredential
-//                var user: FirebaseUser?
-//                while(true){
-//                    credential = EmailAuthProvider.getCredential(email, oldpassword)
-//                    user = FirebaseAuth.getInstance().currentUser
-//                    val temp= user?.uid?.toString()
-//
-//                    if(temp!=null){
-//                        break;
-//                    }
-//                }
-//                user?.reauthenticate(credential)?.addOnCompleteListener { task ->
-//                    when {
-//                        task.isSuccessful -> {
-//                            user.updatePassword(newPassword).addOnCompleteListener {
-//                                if (it.isSuccessful) {
-//
-//                                    val database = FirebaseDatabase.getInstance()
-//                                    val my_ref = database.getReference("credentials")
-//                                    val new_email = email.replace(".", ",")
-//                                    my_ref.child(new_email).child("password")
-//                                        .setValue(newPassword)
-//                                    FirebaseAuth.getInstance().signOut()
-//
-//                                    Toast.makeText(
-//                                        this,
-//                                        "Password Updated Successfully",
-//                                        Toast.LENGTH_LONG
-//                                    ).show()
-//
-//                                    val nextActivityIntent =
-//                                        Intent(this, login_activity::class.java)
-//                                    startActivity(nextActivityIntent)
-//                                    finish()
-//                                } else
-//                                    Toast.makeText(this, "Please Try Again", Toast.LENGTH_LONG)
-//                                        .show()
-//                            }
-//                        }
-//
-//                        else -> {
-//                            Toast.makeText(this, "General Processing Error", Toast.LENGTH_LONG)
-//                                .show()
-//                        }
-//
-//                    }
-//                }
-//
-//            } else {
-//                Toast.makeText(this, "Login Failed", Toast.LENGTH_SHORT).show()
-//                val nextActivityIntent = Intent(this, login_activity::class.java)
-//                startActivity(nextActivityIntent)
-//                finish()
-//            }
-//        }
-//
-//
-//}

@@ -5,10 +5,13 @@ import android.annotation.SuppressLint
 import android.app.Activity
 import android.content.Intent
 import android.content.pm.PackageManager
+import android.graphics.Bitmap
+import android.graphics.BitmapFactory
 import android.net.Uri
 import android.os.Build
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
+import android.util.Base64
 import android.util.Log
 import android.view.View
 import android.widget.AdapterView
@@ -22,6 +25,8 @@ import android.widget.TextView
 import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.core.content.ContextCompat
+import com.android.volley.toolbox.StringRequest
+import com.android.volley.toolbox.Volley
 import com.google.android.gms.tasks.OnCompleteListener
 import com.google.firebase.FirebaseApp
 import com.google.firebase.auth.FirebaseAuth
@@ -38,20 +43,25 @@ import okhttp3.Request
 import okhttp3.RequestBody.Companion.toRequestBody
 import okhttp3.Response
 import org.json.JSONObject
+import java.io.ByteArrayOutputStream
+import java.io.FileNotFoundException
 import java.io.IOException
+import java.io.InputStream
 
 class add_new_mentor_activity : AppCompatActivity() {
     @SuppressLint("MissingInflatedId")
-    private var  mAuth = FirebaseAuth.getInstance();
 
     private val PICK_VIDEO_REQUEST = 101
     private val PICK_IMAGE_REQUEST = 71
     private var img_path: Uri? = null
     private var vid_path: Uri? = null
-    private lateinit var storage_ref: StorageReference
-    private lateinit var database_ref: FirebaseDatabase
-    private lateinit var firebaseAuth: FirebaseAuth
     private var type:Int =0
+
+    lateinit var url :String
+    private lateinit var imgBitmap : Bitmap
+    private lateinit var selectedImageUri :String
+    private lateinit var encodedImage:String
+    private lateinit var uri:Uri
 
     private val requestPermissionLauncher = registerForActivityResult(
         ActivityResultContracts.RequestPermission()
@@ -67,6 +77,10 @@ class add_new_mentor_activity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
 
         setContentView(R.layout.add_new_mentor)
+
+        url = getString(R.string.url)
+        encodedImage=""
+
 
         FirebaseApp.initializeApp(this)
         //firebase token
@@ -140,140 +154,125 @@ class add_new_mentor_activity : AppCompatActivity() {
             if (name.isNotEmpty() && desc.isNotEmpty() && status.isNotEmpty() )
             {
                 if(type==1){
-                    if(img_path!=null){
+                    if(img_path!=null && encodedImage!=""){
 
-                        val database = FirebaseDatabase.getInstance()
-                        var my_ref = database.getReference("mentors")
-                        my_ref.child(name).setValue(null)
-                        my_ref.child(name).child("name").setValue(name)
-                        my_ref.child(name).child("description").setValue(desc)
-                        my_ref.child(name).child("status").setValue(status)
-                        my_ref.child(name).child("price").setValue("$100/Session")
-                        my_ref.child(name).child("occupation").setValue("App Developer")
-                        my_ref.child(name).child("favourite").setValue("False")
-                        my_ref.child(name).child("profile_pic").setValue(img_path.toString())
-                        my_ref.child(name).child("profile_vid").setValue(vid_path)
+                        var tempUrl=url
+                        tempUrl=tempUrl+"creatementor.php"
 
-                        val storageRef = FirebaseStorage.getInstance().reference
-                        val profileImageRef = storageRef.child("mentor_images/$name.jpg")
+                        val stringRequest = object : StringRequest(
+                            com.android.volley.Request.Method.POST, tempUrl,
+                            com.android.volley.Response.Listener { response ->
 
-                        val uploadTask = profileImageRef.putFile(img_path!!)
-
-                        uploadTask.addOnSuccessListener { taskSnapshot ->
-                            // Image uploaded successfully, now get the download URL
-                            profileImageRef.downloadUrl.addOnSuccessListener { uri ->
-                                // Save download URL to Firebase Realtime Database
-                                val image_url = uri.toString()
-                                val database = FirebaseDatabase.getInstance()
-                                val myRef = database.getReference("mentors/$name/profile_pic")
-
-                                myRef.setValue(image_url).addOnSuccessListener {
-
-                                    FirebaseMessaging.getInstance().token.addOnCompleteListener { task ->
-                                        if (!task.isSuccessful) {
-                                            return@addOnCompleteListener
-                                        }
-                                        val token = task.result
-                                        sendPushNotification(
-                                            token,
-                                            "MentorMe",
-                                            "Subtitle: Class",
-                                            "New Mentors Have been Added, Don't Forget To Check em Out",
-                                            mapOf("key1" to "value1", "key2" to "value2")
-                                        )
-
+                                FirebaseMessaging.getInstance().token.addOnCompleteListener { task ->
+                                    if (!task.isSuccessful) {
+                                        return@addOnCompleteListener
                                     }
-
-                                    Toast.makeText(this, "Mentor Added Successfully", Toast.LENGTH_SHORT).show()
-                                    val nextActivityIntent = Intent(this, home_page_activity::class.java)
-                                    startActivity(nextActivityIntent)
-                                    finish()
+                                    val token = task.result
+                                    sendPushNotification(
+                                        token,
+                                        "MentorMe",
+                                        "Subtitle: Class",
+                                        "New Mentors Have been Added, Don't Forget To Check em Out",
+                                        mapOf("key1" to "value1", "key2" to "value2")
+                                    )
                                 }
-                                    .addOnFailureListener { e ->
-//                            Toast.makeText(this, "Failed to update profile picture", Toast.LENGTH_SHORT).show()
-                                        Log.d("TAG", "Failed To Upload Profile Image")
+                                Toast.makeText(this, "Mentor Added Successfully", Toast.LENGTH_SHORT).show()
+                                val nextActivityIntent = Intent(this, home_page_activity::class.java)
+                                startActivity(nextActivityIntent)
+                                finish()
 
-                                    }
+                            },
+                            com.android.volley.Response.ErrorListener { error ->
+                                // Handle error
+
+                                Log.e("API Error", "Error occurred while fetching userID: ${error.message}")
+                            }) {
+                            override fun getParams(): MutableMap<String, String> {
+                                val params = HashMap<String, String>()
+                                params["name"] = name
+                                params["occupation"] = "App Developer"
+                                params["description"] = desc
+                                params["profileImg"] = encodedImage
+                                params["price"] = "$100/Session"
+                                params["status"] = status
+                                params["favourite"] = "False"
+                                return params
                             }
-                        }.addOnFailureListener { e ->
-//                Toast.makeText(this, "Failed To Upload", Toast.LENGTH_SHORT).show()
-                            Log.d("TAG", "Failed To Upload Profile Image")
-
                         }
-
+                        Volley.newRequestQueue(this).add(stringRequest)
 
                     }else{
                         Toast.makeText(this,"Image Content is still to be fetched", Toast.LENGTH_LONG).show()
                     }
 
                 }
-                else if(type==2){
-
-                    if(vid_path!=null){
-                        val database = FirebaseDatabase.getInstance()
-                        var my_ref = database.getReference("mentors")
-                        my_ref.child(name).setValue(null)
-                        my_ref.child(name).child("name").setValue(name)
-                        my_ref.child(name).child("description").setValue(desc)
-                        my_ref.child(name).child("status").setValue(status)
-                        my_ref.child(name).child("price").setValue("$100/Session")
-                        my_ref.child(name).child("occupation").setValue("App Developer")
-                        my_ref.child(name).child("favourite").setValue("False")
-                        my_ref.child(name).child("profile_pic").setValue(img_path)
-                        my_ref.child(name).child("profile_vid").setValue(vid_path.toString())
-
-                        val storageRef = FirebaseStorage.getInstance().reference
-                        val profileImageRef = storageRef.child("mentor_vids/$name.jpg")
-
-                        val uploadTask = profileImageRef.putFile(vid_path!!)
-
-                        uploadTask.addOnSuccessListener { taskSnapshot ->
-                            // Image uploaded successfully, now get the download URL
-                            profileImageRef.downloadUrl.addOnSuccessListener { uri ->
-                                // Save download URL to Firebase Realtime Database
-                                val image_url = uri.toString()
-                                val database = FirebaseDatabase.getInstance()
-                                val myRef = database.getReference("mentors/$name/profile_vid")
-
-                                myRef.setValue(image_url).addOnSuccessListener {
-
-                                    FirebaseMessaging.getInstance().token.addOnCompleteListener { task ->
-                                        if (!task.isSuccessful) {
-                                            return@addOnCompleteListener
-                                        }
-                                        val token = task.result
-                                        sendPushNotification(
-                                            token,
-                                            "MentorMe",
-                                            "Subtitle: Class",
-                                            "New Mentors Have been Added, Don't Forget To Check em Out",
-                                            mapOf("key1" to "value1", "key2" to "value2")
-                                        )
-
-                                    }
-
-                                    Toast.makeText(this, "Mentor Added Successfully", Toast.LENGTH_SHORT).show()
-                                    val nextActivityIntent = Intent(this, home_page_activity::class.java)
-                                    startActivity(nextActivityIntent)
-                                    finish()
-                                }
-                                    .addOnFailureListener { e ->
-//                            Toast.makeText(this, "Failed to update profile picture", Toast.LENGTH_SHORT).show()
-                                        Log.d("TAG", "Failed To Upload Profile Image")
-
-                                    }
-                            }
-                        }.addOnFailureListener { e ->
-//                Toast.makeText(this, "Failed To Upload", Toast.LENGTH_SHORT).show()
-                            Log.d("TAG", "Failed To Upload Profile Image")
-
-                        }
-
-                    }else{
-                        Toast.makeText(this,"Video Content is still to be fetched", Toast.LENGTH_LONG).show()
-                    }
-
-                }
+//                else if(type==2){
+//
+//                    if(vid_path!=null){
+//                        val database = FirebaseDatabase.getInstance()
+//                        var my_ref = database.getReference("mentors")
+//                        my_ref.child(name).setValue(null)
+//                        my_ref.child(name).child("name").setValue(name)
+//                        my_ref.child(name).child("description").setValue(desc)
+//                        my_ref.child(name).child("status").setValue(status)
+//                        my_ref.child(name).child("price").setValue("$100/Session")
+//                        my_ref.child(name).child("occupation").setValue("App Developer")
+//                        my_ref.child(name).child("favourite").setValue("False")
+//                        my_ref.child(name).child("profile_pic").setValue(img_path)
+//                        my_ref.child(name).child("profile_vid").setValue(vid_path.toString())
+//
+//                        val storageRef = FirebaseStorage.getInstance().reference
+//                        val profileImageRef = storageRef.child("mentor_vids/$name.jpg")
+//
+//                        val uploadTask = profileImageRef.putFile(vid_path!!)
+//
+//                        uploadTask.addOnSuccessListener { taskSnapshot ->
+//                            // Image uploaded successfully, now get the download URL
+//                            profileImageRef.downloadUrl.addOnSuccessListener { uri ->
+//                                // Save download URL to Firebase Realtime Database
+//                                val image_url = uri.toString()
+//                                val database = FirebaseDatabase.getInstance()
+//                                val myRef = database.getReference("mentors/$name/profile_vid")
+//
+//                                myRef.setValue(image_url).addOnSuccessListener {
+//
+//                                    FirebaseMessaging.getInstance().token.addOnCompleteListener { task ->
+//                                        if (!task.isSuccessful) {
+//                                            return@addOnCompleteListener
+//                                        }
+//                                        val token = task.result
+//                                        sendPushNotification(
+//                                            token,
+//                                            "MentorMe",
+//                                            "Subtitle: Class",
+//                                            "New Mentors Have been Added, Don't Forget To Check em Out",
+//                                            mapOf("key1" to "value1", "key2" to "value2")
+//                                        )
+//
+//                                    }
+//
+//                                    Toast.makeText(this, "Mentor Added Successfully", Toast.LENGTH_SHORT).show()
+//                                    val nextActivityIntent = Intent(this, home_page_activity::class.java)
+//                                    startActivity(nextActivityIntent)
+//                                    finish()
+//                                }
+//                                    .addOnFailureListener { e ->
+////                            Toast.makeText(this, "Failed to update profile picture", Toast.LENGTH_SHORT).show()
+//                                        Log.d("TAG", "Failed To Upload Profile Image")
+//
+//                                    }
+//                            }
+//                        }.addOnFailureListener { e ->
+////                Toast.makeText(this, "Failed To Upload", Toast.LENGTH_SHORT).show()
+//                            Log.d("TAG", "Failed To Upload Profile Image")
+//
+//                        }
+//
+//                    }else{
+//                        Toast.makeText(this,"Video Content is still to be fetched", Toast.LENGTH_LONG).show()
+//                    }
+//
+//                }
             }
             else{
                 Toast.makeText(this,"Please fill in all fields", Toast.LENGTH_LONG).show()
@@ -284,25 +283,25 @@ class add_new_mentor_activity : AppCompatActivity() {
 //            finish()
         }
 
-        video_text.setOnClickListener{
-            type=2
-            val intent = Intent(Intent.ACTION_GET_CONTENT)
-            intent.type = "video/*" // Set the MIME type to video/*
-            startActivityForResult(intent, PICK_VIDEO_REQUEST)
-//            val nextActivityIntent = Intent(this, camera_video_activity::class.java)
-//            startActivity(nextActivityIntent)
-//            finish()
-        }
+//        video_text.setOnClickListener{
+//            type=2
+//            val intent = Intent(Intent.ACTION_GET_CONTENT)
+//            intent.type = "video/*" // Set the MIME type to video/*
+//            startActivityForResult(intent, PICK_VIDEO_REQUEST)
+////            val nextActivityIntent = Intent(this, camera_video_activity::class.java)
+////            startActivity(nextActivityIntent)
+////            finish()
+//        }
 
-        video_btn.setOnClickListener{
-            type=2
-            val intent = Intent(Intent.ACTION_GET_CONTENT)
-            intent.type = "video/*" // Set the MIME type to video/*
-            startActivityForResult(intent, PICK_VIDEO_REQUEST)
-//            val nextActivityIntent = Intent(this, camera_video_activity::class.java)
-//            startActivity(nextActivityIntent)
-//            finish()
-        }
+//        video_btn.setOnClickListener{
+//            type=2
+//            val intent = Intent(Intent.ACTION_GET_CONTENT)
+//            intent.type = "video/*" // Set the MIME type to video/*
+//            startActivityForResult(intent, PICK_VIDEO_REQUEST)
+////            val nextActivityIntent = Intent(this, camera_video_activity::class.java)
+////            startActivity(nextActivityIntent)
+////            finish()
+//        }
 
         camera_btn.setOnClickListener{
             type=1
@@ -323,11 +322,6 @@ class add_new_mentor_activity : AppCompatActivity() {
 //            startActivity(nextActivityIntent)
 //            finish()
         }
-
-
-
-
-
 
 
         home_btn.setOnClickListener{
@@ -391,6 +385,42 @@ class add_new_mentor_activity : AppCompatActivity() {
 
     }
 
+    private fun imageStore(uri: Uri) {
+        var inputStream: InputStream? = null
+        try {
+            inputStream = contentResolver.openInputStream(uri)
+            imgBitmap = BitmapFactory.decodeStream(inputStream)
+            val stream = ByteArrayOutputStream()
+            imgBitmap.compress(Bitmap.CompressFormat.JPEG, 100, stream)
+            val imageByte: ByteArray = stream.toByteArray()
+            encodedImage = Base64.encodeToString(imageByte, Base64.DEFAULT)
+        } catch (e: FileNotFoundException) {
+            e.printStackTrace()
+        }
+    }
+
+//    private fun uploadMentorImg() {
+//        var tempUrl="${url}uploadmentorimg.php"
+//
+//        val request: StringRequest = object : StringRequest(
+//            com.android.volley.Request.Method.POST,
+//            tempUrl,
+//            com.android.volley.Response.Listener { response ->
+//
+//                Log.d("response", response)
+//            }, com.android.volley.Response.ErrorListener { error ->
+//                Log.d("error", error.toString())
+//            }) {
+//            override fun getParams(): Map<String, String> {
+//                val params: MutableMap<String, String> = HashMap()
+//                params["userID"] = userID
+//                params["image"] = encodedImage
+//                return params
+//            }
+//        }
+//        Volley.newRequestQueue(this).add(request)
+//    }
+
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
 
         super.onActivityResult(requestCode, resultCode, data)
@@ -399,13 +429,15 @@ class add_new_mentor_activity : AppCompatActivity() {
 //            img_path = data.data
             val selectedImageUri: Uri = data.data!!
             // Now you can use the selectedImageUri as needed, for example:
+            imageStore(selectedImageUri)
             img_path = selectedImageUri
+//            uploadProfileImg()
         }
-        else if (requestCode == PICK_VIDEO_REQUEST && resultCode == Activity.RESULT_OK && data != null && data.data != null) {
-                val selectedVideoUri: Uri = data.data!!
-                // Now you can use the selectedVideoUri as needed, for example:
-                vid_path = selectedVideoUri
-        }
+//        else if (requestCode == PICK_VIDEO_REQUEST && resultCode == Activity.RESULT_OK && data != null && data.data != null) {
+//                val selectedVideoUri: Uri = data.data!!
+//                // Now you can use the selectedVideoUri as needed, for example:
+//                vid_path = selectedVideoUri
+//        }
     }
 
     private fun askNotificationPermission() {

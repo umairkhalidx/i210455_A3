@@ -24,6 +24,7 @@ class recycler_booked_adapter(val itemslist: ArrayList<recycler_booked_data>, pr
         lateinit var occupation: TextView
         lateinit var date : TextView
         lateinit var time: TextView
+        lateinit var mentorID : String
 
         init {
             display_pic= itemView.findViewById(R.id.mentor_image)
@@ -51,16 +52,19 @@ class recycler_booked_adapter(val itemslist: ArrayList<recycler_booked_data>, pr
 
         holder.rootView.setOnClickListener{
             val txt:String =itemslist[position].title.toString()
-            listener.click_function(txt)
+            listener.click_function(txt,holder.mentorID)
 //            Toast.makeText(holder.itemView.context,"Clicked on a Row",Toast.LENGTH_SHORT).show()
 
         }
 
 //        holder.display_pic.setImageResource(itemslist[position].img)
+        val url = holder.itemView.context.getString(R.string.url)
+        val imageURL = "${url}MentorImages/${itemslist[position].img}"
         Glide.with(holder.itemView.context)
-            .load(itemslist[position].img)
+            .load(imageURL)
             .into(holder.display_pic)
 
+        holder.mentorID= itemslist[position].mentorID.toString()
         holder.title.setText(itemslist[position].title)
         holder.occupation.setText(itemslist[position].occu)
         holder.date.setText(itemslist[position].date)

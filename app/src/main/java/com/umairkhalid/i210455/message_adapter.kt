@@ -1,6 +1,7 @@
 package com.umairkhalid.i210455
 
 import android.net.Uri
+import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -38,9 +39,30 @@ class message_adapter(private val messages: List<message_data>, private val onMe
             if (message.imageUrl != null) {
                 audioIcon.visibility = View.GONE
                 imageView.visibility = View.VISIBLE
-                Glide.with(itemView.context)
-                    .load(message.imageUrl)
+
+//                val url = R.string.url
+//                val imageURL = "${url}MessageImages/${message.imageUrl}"
+                if(message.imageUrl!!.length>50){
+                    val base64Image = message.imageUrl
+                    val decodedBytes = android.util.Base64.decode(base64Image, android.util.Base64.DEFAULT)
+                    val bitmap = android.graphics.BitmapFactory.decodeByteArray(decodedBytes, 0, decodedBytes.size)
+                    imageView.setImageBitmap(bitmap)
+                }else{
+                    val url =  itemView.context.getString(R.string.url)
+                    val imageURL = "${url}MessageImages/${message.imageUrl}"
+                    Glide.with(itemView.context)
+                    .load(imageURL)
                     .into(imageView)
+                }
+
+
+//                Glide.with(itemView.context)
+//                    .load(imageURL)
+//                    .into(imageView)
+
+//                Glide.with(itemView.context)
+//                    .load(message.imageUrl)
+//                    .into(imageView)
 
 //                Glide.with(itemView.context)
 //                    .load(message.img)
@@ -49,17 +71,18 @@ class message_adapter(private val messages: List<message_data>, private val onMe
             } else if (message.fileUrl != null) {
                 audioIcon.visibility = View.GONE
                 imageView.visibility = View.GONE
-                val fileName = getFileNameFromUrl(message.fileUrl)
-                messageTextView.text = fileName
-                messageTextView.setOnClickListener {
-                    onMessageClickListener.onMessageClick(adapterPosition)
-                }
+                messageTextView.text = message.fileUrl
+//                val fileName = getFileNameFromUrl(message.fileUrl!!)
+//                messageTextView.text = fileName
+//                messageTextView.setOnClickListener {
+//                    onMessageClickListener.onMessageClick(adapterPosition)
+//                }
             } else if (message.audioUrl != null) {
                 audioIcon.visibility = View.VISIBLE
                 imageView.visibility = View.GONE
-                audioIcon.setOnClickListener {
-                    onMessageClickListener.onMessageClick(adapterPosition)
-                }
+//                audioIcon.setOnClickListener {
+//                    onMessageClickListener.onMessageClick(adapterPosition)
+//                }
             } else {
                 audioIcon.visibility = View.GONE
                 imageView.visibility = View.GONE

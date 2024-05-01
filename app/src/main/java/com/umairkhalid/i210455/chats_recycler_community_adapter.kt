@@ -17,6 +17,7 @@ class chats_recycler_community_adapter (val itemslist: ArrayList<chats_recycler_
         val rootView: View = itemView
         lateinit var display_pic : ImageView
         lateinit var title : TextView
+        lateinit var mentorID : String
 
         init {
             display_pic= itemView.findViewById(R.id.community_mentor_img)
@@ -41,15 +42,18 @@ class chats_recycler_community_adapter (val itemslist: ArrayList<chats_recycler_
 
 //        holder.display_pic.setImageResource(itemslist[position].img)
 
+        val url = holder.itemView.context.getString(R.string.url)
+        val imageURL = "${url}MentorImages/${itemslist[position].img}"
         Glide.with(holder.itemView.context)
-            .load(itemslist[position].img)
+            .load(imageURL)
             .into(holder.display_pic)
 
         holder.title.setText(itemslist[position].title)
+        holder.mentorID= itemslist[position].mentorID.toString()
 
         holder.rootView.setOnClickListener{
             val txt:String =itemslist[position].title.toString()
-            listener.chat_community_click_function(txt)
+            listener.chat_community_click_function(txt,holder.mentorID)
         }
 
     }

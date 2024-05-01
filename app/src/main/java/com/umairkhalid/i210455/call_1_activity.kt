@@ -17,10 +17,21 @@ import io.agora.rtc2.IRtcEngineEventHandler
 import io.agora.rtc2.RtcEngine
 import io.agora.rtc2.RtcEngineConfig
 import androidx.core.app.ActivityCompat
+import com.android.volley.Request
+import com.android.volley.Response
+import com.android.volley.toolbox.StringRequest
+import com.android.volley.toolbox.Volley
 import com.google.firebase.auth.FirebaseAuth
 import com.umairkhalid.i210455.databinding.Call1Binding
 import com.umairkhalid.i210455.databinding.Call2Binding
 class call_1_activity : AppCompatActivity() {
+
+    lateinit var userID: String
+    lateinit var url: String
+    lateinit var mentorID: String
+    lateinit var mentorImg: String
+    lateinit var userImg: String
+
 
     private lateinit var binding: Call1Binding
     private val appId = "a643363f4acc4cb693dfac855ba9b2ed"
@@ -70,8 +81,14 @@ class call_1_activity : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+
+
         binding = Call1Binding.inflate(layoutInflater)
         setContentView(binding.root)
+
+        userID = intent.getStringExtra("userID").toString()
+        mentorID = intent.getStringExtra("mentorID").toString()
+        url = getString(R.string.url)
 
         if (!checkSelfPermission()) {
             ActivityCompat.requestPermissions(this, REQUESTED_PERMISSIONS, PERMISSION_REQ_ID);
@@ -113,60 +130,122 @@ class call_1_activity : AppCompatActivity() {
         }
 
         val input_txt = intent.getStringExtra("MENTOR_NAME")
-        val database = FirebaseDatabase.getInstance()
-        val mentorsRef = database.getReference("mentors")
-        val query = mentorsRef.orderByChild("name").equalTo(input_txt.toString())
-
-        query.addListenerForSingleValueEvent(object : ValueEventListener {
-            override fun onDataChange(dataSnapshot: DataSnapshot) {
-                for (mentorSnapshot in dataSnapshot.children) {
-                    val name = mentorSnapshot.child("name").getValue(String::class.java)
-                    val profilePicUrl = mentorSnapshot.child("profile_pic").getValue(String::class.java)
-
-                    // Check if all required fields are present
-                    if (name != null && profilePicUrl != null) {
-                        binding.userNameTxt.text = name
-                        Picasso.get().load(profilePicUrl).into(binding.userImage)
-                    }
+        getUserImg(userID){
+            getMentorImg(mentorID){
+                if(userImg!=""){
+                    val imageURL = "${url}ProfileImages/${userImg}"
+                    Picasso.get().load(imageURL).into(binding.userImageView)
                 }
+                binding.userNameTxt.text = input_txt
+                val imageURL = "${url}MentorImages/${mentorImg}"
+                Picasso.get().load(imageURL).into(binding.userImage)
             }
-
-            override fun onCancelled(databaseError: DatabaseError) {
-                // Handle error
-                Toast.makeText(this@call_1_activity, "Unable to Fetch Mentor Data", Toast.LENGTH_LONG).show()
-            }
-        })
-
-
-        var database_2 = FirebaseDatabase.getInstance()
-        val my_ref_2 = database_2.getReference("users")
-        var currentUser_2 = FirebaseAuth.getInstance().currentUser
-        val userId_2 = currentUser_2?.uid
-
-        if(userId_2!=null){
-
-            my_ref_2.addValueEventListener(object : ValueEventListener {
-                override fun onDataChange(dataSnapshot: DataSnapshot) {
-                    val pic_url= dataSnapshot.child(userId_2).child("picture").value.toString()
-
-                    if(pic_url!=null){
-                        Picasso.get().load(pic_url).into(binding.userImageView)
-                    }
-
-                }
-                override fun onCancelled(databaseError: DatabaseError) {
-                    // Handle error
-                    Log.d("TAG", "Unable to retrieve Data")
-
-                }
-            })
         }
+
+
+//        val database = FirebaseDatabase.getInstance()
+//        val mentorsRef = database.getReference("mentors")
+//        val query = mentorsRef.orderByChild("name").equalTo(input_txt.toString())
+//
+//        query.addListenerForSingleValueEvent(object : ValueEventListener {
+//            override fun onDataChange(dataSnapshot: DataSnapshot) {
+//                for (mentorSnapshot in dataSnapshot.children) {
+//                    val name = mentorSnapshot.child("name").getValue(String::class.java)
+//                    val profilePicUrl = mentorSnapshot.child("profile_pic").getValue(String::class.java)
+//
+//                    // Check if all required fields are present
+//                    if (name != null && profilePicUrl != null) {
+//                        binding.userNameTxt.text = name
+//                        Picasso.get().load(profilePicUrl).into(binding.userImage)
+//                    }
+//                }
+//            }
+//
+//            override fun onCancelled(databaseError: DatabaseError) {
+//                // Handle error
+//                Toast.makeText(this@call_1_activity, "Unable to Fetch Mentor Data", Toast.LENGTH_LONG).show()
+//            }
+//        })
+//
+//
+//        var database_2 = FirebaseDatabase.getInstance()
+//        val my_ref_2 = database_2.getReference("users")
+//        var currentUser_2 = FirebaseAuth.getInstance().currentUser
+//        val userId_2 = currentUser_2?.uid
+//
+//        if(userId_2!=null){
+//
+//            my_ref_2.addValueEventListener(object : ValueEventListener {
+//                override fun onDataChange(dataSnapshot: DataSnapshot) {
+//                    val pic_url= dataSnapshot.child(userId_2).child("picture").value.toString()
+//
+//                    if(pic_url!=null){
+//                        Picasso.get().load(pic_url).into(binding.userImageView)
+//                    }
+//
+//                }
+//                override fun onCancelled(databaseError: DatabaseError) {
+//                    // Handle error
+//                    Log.d("TAG", "Unable to retrieve Data")
+//
+//                }
+//            })
+//        }
 
 
 
         setupAudioSDKEngine()
         joinChannel()
     }
+
+    fun getUserImg(userID: String, callback: () -> Unit) {
+        val tempUrl = "${url}getuserimg.php"
+
+        val stringRequest = object : StringRequest(
+            Request.Method.POST, tempUrl,
+            Response.Listener { response ->
+                userImg=response
+                callback()
+            },
+            Response.ErrorListener { error ->
+                // Handle error
+                error.printStackTrace()
+            }) {
+            override fun getParams(): Map<String, String> {
+                val params = HashMap<String, String>()
+                params["userID"] = userID
+                return params
+            }
+        }
+
+        // Add the request to the RequestQueue
+        Volley.newRequestQueue(this).add(stringRequest)
+    }
+
+    fun getMentorImg(mentorID: String, callback: () -> Unit) {
+        val tempUrl = "${url}getmentorimg.php"
+
+        val stringRequest = object : StringRequest(
+            Request.Method.POST, tempUrl,
+            Response.Listener { response ->
+                mentorImg=response
+                callback()
+            },
+            Response.ErrorListener { error ->
+                // Handle error
+                error.printStackTrace()
+            }) {
+            override fun getParams(): Map<String, String> {
+                val params = HashMap<String, String>()
+                params["mentorID"] = mentorID
+                return params
+            }
+        }
+
+        // Add the request to the RequestQueue
+        Volley.newRequestQueue(this).add(stringRequest)
+    }
+
 
     private val mRtcEventHandler: IRtcEngineEventHandler = object : IRtcEngineEventHandler() {
         override fun onUserJoined(uid: Int, elapsed: Int) {
@@ -203,59 +282,3 @@ class call_1_activity : AppCompatActivity() {
         }
     }
 }
-//
-
-
-
-
-//class call_1_activity : AppCompatActivity() {
-//    override fun onCreate(savedInstanceState: Bundle?) {
-//        super.onCreate(savedInstanceState)
-//
-//        setContentView(R.layout.call_1)
-////        setContentView(binding.root)
-//
-//        val user_img: ImageView =findViewById(R.id.user_image)
-//        val user_name: TextView =findViewById(R.id.user_name_txt)
-//
-//        val input_txt = intent.getStringExtra("MENTOR_NAME")
-//
-//        val database = FirebaseDatabase.getInstance()
-//        val mentorsRef = database.getReference("mentors")
-//
-//        val query = mentorsRef.orderByChild("name").equalTo(input_txt.toString())
-//
-//        query.addListenerForSingleValueEvent(object : ValueEventListener {
-//            override fun onDataChange(dataSnapshot: DataSnapshot) {
-//                for (mentorSnapshot in dataSnapshot.children) {
-//
-//                    val name = mentorSnapshot.child("name").getValue(String::class.java)
-//                    val profilePicUrl = mentorSnapshot.child("profile_pic").getValue(String::class.java)
-//
-//                    // Check if all required fields are present
-//                    if (name != null && profilePicUrl != null) {
-//                        user_name.text=name.toString()
-//                        Picasso.get().load(profilePicUrl).into(user_img)
-//
-//                    }
-//                }
-//            }
-//
-//            override fun onCancelled(databaseError: DatabaseError) {
-//                // Handle error
-//                Toast.makeText(this@call_1_activity,"Unable to Fetch Mentor Data", Toast.LENGTH_LONG).show()
-//            }
-//        })
-//
-//
-//        val endcall_btn: ImageButton =findViewById(R.id.endcall_btn)
-//
-//        endcall_btn.setOnClickListener{
-////            val nextActivityIntent = Intent(this, john_cooper_1_activity::class.java)
-////            startActivity(nextActivityIntent)
-//            onBackPressed()
-//            finish()
-//        }
-//
-//    }
-//}

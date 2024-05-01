@@ -3,9 +3,12 @@ package com.umairkhalid.i210455
 import android.app.Activity
 import android.content.Context
 import android.content.Intent
+import android.graphics.Bitmap
+import android.graphics.BitmapFactory
 import android.net.ConnectivityManager
 import android.net.Uri
 import android.os.Bundle
+import android.util.Base64
 import android.util.Log
 import android.widget.Button
 import android.widget.ImageButton
@@ -15,6 +18,10 @@ import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
+import com.android.volley.Request
+import com.android.volley.Response
+import com.android.volley.toolbox.StringRequest
+import com.android.volley.toolbox.Volley
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.database.DataSnapshot
 import com.google.firebase.database.DatabaseError
@@ -25,10 +32,23 @@ import com.google.firebase.storage.StorageReference
 import com.google.gson.Gson
 import com.google.gson.reflect.TypeToken
 import com.squareup.picasso.Picasso
+import org.json.JSONArray
+import org.json.JSONException
+import org.json.JSONObject
+import java.io.ByteArrayOutputStream
+import java.io.FileNotFoundException
+import java.io.InputStream
 
 
 class my_profile_activity : AppCompatActivity()  , click_listner{
-    private var  mAuth = FirebaseAuth.getInstance();
+    lateinit var url :String
+    lateinit var userID : String
+    lateinit var User : userObject
+    var favList = ArrayList<String>()
+    var mentorListFav = mutableListOf<mentorData>()
+    val reviewsList = ArrayList<reviewData>()
+
+
 
     private lateinit var profile_pic :ImageView
     private lateinit var cover_page:ImageView
@@ -38,31 +58,18 @@ class my_profile_activity : AppCompatActivity()  , click_listner{
     private lateinit var database_ref: FirebaseDatabase
     private lateinit var firebaseAuth: FirebaseAuth
     private var type:Int =0
+
+    private lateinit var imgBitmap : Bitmap
+    private lateinit var selectedImageUri :String
+    private lateinit var encodedImage:String
+    private lateinit var uri:Uri
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.my_profile)
 
-//        val toolbar = findViewById<Toolbar>(R.id.profile_toolbar)
-//        setSupportActionBar(toolbar)
-
-        // Customize the action bar as needed
-//        supportActionBar?.apply {
-//            // Set title
-//            title = "Custom Action Bar"
-//            // Set subtitle
-//            subtitle = "Subtitle"
-//            // Set whether to display the home/up button
-//            setDisplayHomeAsUpEnabled(true)
-//            // Set whether to display the title
-//            setDisplayShowTitleEnabled(true)
-//            // Set whether to display the logo
-//            setDisplayUseLogoEnabled(false)
-//            // Set whether to show custom view
-//            setDisplayShowCustomEnabled(false)
-//        }
-//
-//        // Set the title of the toolbar
-//        supportActionBar?.title = "New Title"
+        url = getString(R.string.url)
+        userID= intent.getStringExtra("userID").toString()
 
         val home_btn: ImageButton =findViewById(R.id.home_btn)
         val home_txt: TextView =findViewById(R.id.home_txt)
@@ -87,164 +94,156 @@ class my_profile_activity : AppCompatActivity()  , click_listner{
         var pic_url:String=""
         var cover_url:String=""
 
-        if (!isNetworkAvailable()) {
-            Toast.makeText(this,"No Internet Connection",Toast.LENGTH_LONG).show()
+//        if (!isNetworkAvailable()) {
+//            Toast.makeText(this,"No Internet Connection",Toast.LENGTH_LONG).show()
+//
+//            val sharedPref_1 = getSharedPreferences("profile_page_prefs", Context.MODE_PRIVATE)
+//            val storedUsername = sharedPref_1.getString("username", "")
+//            val storedcity = sharedPref_1.getString("city", "")
+//            pic_url = sharedPref_1.getString("profile_pic", "").toString()
+//            cover_url = sharedPref_1.getString("cover_pic", "").toString()
+//            username.text=storedUsername
+//            user_city.text=storedcity
+//
+//            Picasso.get().load(pic_url).into(profile_pic)
+//            Picasso.get().load(cover_url).into(cover_page)
+//
+//
+//            val recyclerView_fav : RecyclerView = findViewById(R.id.recyclerview_favmentor)
+//            recyclerView_fav.layoutManager = LinearLayoutManager(this,
+//                LinearLayoutManager.HORIZONTAL,
+//                false
+//            )
+//
+//            val sharedPref_2 = getSharedPreferences("profile_adapter_fav_prefs", Context.MODE_PRIVATE)
+//            val json = sharedPref_2.getString("profile_adapter_fav", "")
+//
+//            val gson = Gson()
+//            val type = object : TypeToken<ArrayList<recycler_educator_data>>() {}.type
+//            val adapter_data_list_fav: ArrayList<recycler_educator_data> = gson.fromJson(json, type)
+//
+//            val adapter_top = recycler_educator_adapter(adapter_data_list_fav,this@my_profile_activity)
+//            recyclerView_fav.adapter = adapter_top
+//
+//            // Notify your adapter that the data has changed
+//            adapter_top.notifyDataSetChanged()
+//
+//
+//            // 1- AdapterView: RecyclerView
+//            val recyclerView : RecyclerView = findViewById(R.id.recyclerview_myreview)
+//            recyclerView.layoutManager = LinearLayoutManager(this,
+//                LinearLayoutManager.HORIZONTAL,
+//                false
+//            )
+//
+//            val sharedPref_3 = getSharedPreferences("profile_adapter_rev_prefs", Context.MODE_PRIVATE)
+//            val json_3 = sharedPref_3.getString("profile_adapter_rev", "")
+//
+//            val gson_3 = Gson()
+//            val type_3 = object : TypeToken<ArrayList<recycler_review_data>>() {}.type
+//            val adapter_data_list_rev: ArrayList<recycler_review_data> = gson_3.fromJson(json_3, type_3)
+//
+//            val adapter_rev = recycler_review_adapter(adapter_data_list_rev)
+//            recyclerView.adapter = adapter_rev
+//
+//            // Notify your adapter that the data has changed
+//            adapter_rev.notifyDataSetChanged()
+//
+//        }
 
-            val sharedPref_1 = getSharedPreferences("profile_page_prefs", Context.MODE_PRIVATE)
-            val storedUsername = sharedPref_1.getString("username", "")
-            val storedcity = sharedPref_1.getString("city", "")
-            pic_url = sharedPref_1.getString("profile_pic", "").toString()
-            cover_url = sharedPref_1.getString("cover_pic", "").toString()
-            username.text=storedUsername
-            user_city.text=storedcity
+        User = userObject(userID,"","","","","","","")
+        getUserData(userID) {
+            username.text=User.name
+            user_city.text=User.city
 
-            Picasso.get().load(pic_url).into(profile_pic)
-            Picasso.get().load(cover_url).into(cover_page)
+            if(User.profileImg!=null){
+                val imageURL = "${url}ProfileImages/${User.profileImg}"
+                Picasso.get().load(imageURL).into(profile_pic)
+            }
+            if(User.coverImg!=null){
+                val coverURL = "${url}CoverImages/${User.coverImg}"
+                Picasso.get().load(coverURL).into(cover_page)
+            }
 
-
-            val recyclerView_fav : RecyclerView = findViewById(R.id.recyclerview_favmentor)
-            recyclerView_fav.layoutManager = LinearLayoutManager(this,
-                LinearLayoutManager.HORIZONTAL,
-                false
-            )
-
-            val sharedPref_2 = getSharedPreferences("profile_adapter_fav_prefs", Context.MODE_PRIVATE)
-            val json = sharedPref_2.getString("profile_adapter_fav", "")
-
-            val gson = Gson()
-            val type = object : TypeToken<ArrayList<recycler_educator_data>>() {}.type
-            val adapter_data_list_fav: ArrayList<recycler_educator_data> = gson.fromJson(json, type)
-
-            val adapter_top = recycler_educator_adapter(adapter_data_list_fav,this@my_profile_activity)
-            recyclerView_fav.adapter = adapter_top
-
-            // Notify your adapter that the data has changed
-            adapter_top.notifyDataSetChanged()
-
-
-            // 1- AdapterView: RecyclerView
-            val recyclerView : RecyclerView = findViewById(R.id.recyclerview_myreview)
-            recyclerView.layoutManager = LinearLayoutManager(this,
-                LinearLayoutManager.HORIZONTAL,
-                false
-            )
-
-            val sharedPref_3 = getSharedPreferences("profile_adapter_rev_prefs", Context.MODE_PRIVATE)
-            val json_3 = sharedPref_3.getString("profile_adapter_rev", "")
-
-            val gson_3 = Gson()
-            val type_3 = object : TypeToken<ArrayList<recycler_review_data>>() {}.type
-            val adapter_data_list_rev: ArrayList<recycler_review_data> = gson_3.fromJson(json_3, type_3)
-
-            val adapter_rev = recycler_review_adapter(adapter_data_list_rev)
-            recyclerView.adapter = adapter_rev
-
-            // Notify your adapter that the data has changed
-            adapter_rev.notifyDataSetChanged()
 
         }
 
         var database = FirebaseDatabase.getInstance()
-        val my_ref = database.getReference("users")
         var currentUser = FirebaseAuth.getInstance().currentUser
-        val userId = currentUser?.uid
-
-        if(userId!=null){
-
-            my_ref.addValueEventListener(object : ValueEventListener {
-                override fun onDataChange(dataSnapshot: DataSnapshot) {
-                    val name = dataSnapshot.child(userId).child("name").value.toString()
-                    val city = dataSnapshot.child(userId).child("city").value.toString()
-                    pic_url= dataSnapshot.child(userId).child("picture").value.toString()
-                    cover_url = dataSnapshot.child(userId).child("cover").value.toString()
-                    username.text=name
-                    user_city.text=city
-
-                    val sharedPref = getSharedPreferences("profile_page_prefs", Context.MODE_PRIVATE)
-                    val editor = sharedPref.edit()
-                    editor.putString("username", name)
-                    editor.putString("city",city)
-                    editor.putString("profile_pic",pic_url)
-                    editor.putString("cover_pic",cover_url)
-                    editor.apply()
-
-                    if(pic_url!=null){
-                        Picasso.get().load(pic_url).into(profile_pic)
-                    }
-                    if(cover_url!=null){
-                        Picasso.get().load(cover_url).into(cover_page)
-                    }
-
-                }
-                override fun onCancelled(databaseError: DatabaseError) {
-                    // Handle error
-                    Log.d("TAG", "Unable to retrieve Data")
-
-                }
-            })
-        }
 
 
         booked_session_btn.setOnClickListener{
             val nextActivityIntent = Intent(this, booked_sessions_activity::class.java)
+            nextActivityIntent.putExtra("userID", User.userID)
             startActivity(nextActivityIntent)
         }
 
         editprofile_btn.setOnClickListener{
             val nextActivityIntent = Intent(this, editprofile_activity::class.java)
+            nextActivityIntent.putExtra("userID", User.userID)
             startActivity(nextActivityIntent)
         }
 
 
         home_btn.setOnClickListener{
             val nextActivityIntent = Intent(this, home_page_activity::class.java)
+            nextActivityIntent.putExtra("userID", User.userID)
             startActivity(nextActivityIntent)
             finish()
         }
 
         home_txt.setOnClickListener{
             val nextActivityIntent = Intent(this, home_page_activity::class.java)
+            nextActivityIntent.putExtra("userID", User.userID)
             startActivity(nextActivityIntent)
             finish()
         }
 
         search_btn.setOnClickListener{
             val nextActivityIntent = Intent(this, lets_find_activity::class.java)
+            nextActivityIntent.putExtra("userID", User.userID)
             startActivity(nextActivityIntent)
         }
 
         search_txt.setOnClickListener{
             val nextActivityIntent = Intent(this, lets_find_activity::class.java)
+            nextActivityIntent.putExtra("userID", User.userID)
             startActivity(nextActivityIntent)
         }
 
         chat_btn.setOnClickListener{
             val nextActivityIntent = Intent(this, chats_activity::class.java)
+            nextActivityIntent.putExtra("userID", User.userID)
             startActivity(nextActivityIntent)
         }
 
         chat_txt.setOnClickListener{
             val nextActivityIntent = Intent(this, chats_activity::class.java)
+            nextActivityIntent.putExtra("userID", User.userID)
             startActivity(nextActivityIntent)
         }
 
         profile_btn.setOnClickListener{
             val nextActivityIntent = Intent(this, my_profile_activity::class.java)
+            nextActivityIntent.putExtra("userID", User.userID)
             startActivity(nextActivityIntent)
         }
 
         profile_txt.setOnClickListener{
             val nextActivityIntent = Intent(this, my_profile_activity::class.java)
+            nextActivityIntent.putExtra("userID", User.userID)
             startActivity(nextActivityIntent)
         }
 
         plus_btn.setOnClickListener{
             val nextActivityIntent = Intent(this, add_new_mentor_activity::class.java)
+            nextActivityIntent.putExtra("userID", User.userID)
             startActivity(nextActivityIntent)
         }
 
         plus_btn.setOnClickListener{
             val nextActivityIntent = Intent(this, add_new_mentor_activity::class.java)
+            nextActivityIntent.putExtra("userID", User.userID)
             startActivity(nextActivityIntent)
         }
 
@@ -256,233 +255,70 @@ class my_profile_activity : AppCompatActivity()  , click_listner{
         }
 
         log_out.setOnClickListener{
-            mAuth.signOut()
+            val sharedPreferences = getSharedPreferences("LoginPref", Context.MODE_PRIVATE)
+            val editor = sharedPreferences.edit()
+            editor.putString("user", "-1")
+            editor.apply()
             finish()
             finishAffinity();
             val nextActivityIntent = Intent(this, login_activity::class.java)
             startActivity(nextActivityIntent)
         }
 
-        // 1- AdapterView: RecyclerView
-        val recyclerView_fav : RecyclerView = findViewById(R.id.recyclerview_favmentor)
-        recyclerView_fav.layoutManager = LinearLayoutManager(this,
-            LinearLayoutManager.HORIZONTAL,
-            false
-        )
+        getFavouriteMentor(userID) {
+            getFavData(favList){
+                // 1- AdapterView: RecyclerView
+                val recyclerView_fav : RecyclerView = findViewById(R.id.recyclerview_favmentor)
+                recyclerView_fav.layoutManager = LinearLayoutManager(this,
+                    LinearLayoutManager.HORIZONTAL,
+                    false
+                )
 
-        // 2- Data Source: List of  Objects
-        var adapter_data_list_fav : ArrayList<recycler_educator_data> = ArrayList()
+                // 2- Data Source: List of  Objects
+                var adapter_data_list_fav : ArrayList<recycler_educator_data> = ArrayList()
+                for (mentor in mentorListFav){
+                    val mentorData = recycler_educator_data(
+                        mentor.mentorID,
+                        mentor.profileImg,
+                        mentor.name,
+                        mentor.occupation,
+                        mentor.status,
+                        mentor.price, R.drawable.red_heart_btn, 1
+                    )
 
-        database = FirebaseDatabase.getInstance()
-        val mentorsRef = database.getReference("mentors")
-
-        var cur = FirebaseAuth.getInstance().currentUser
-        val user_Id = cur?.uid.toString()
-        val currentUserFavoritesRef = FirebaseDatabase.getInstance().getReference("users").child(user_Id).child("favourite")
-
-        currentUserFavoritesRef.addListenerForSingleValueEvent(object : ValueEventListener {
-            override fun onDataChange(dataSnapshot: DataSnapshot) {
-                val favoriteMentors = mutableListOf<String>()
-
-                // Iterate through the favorite list and collect mentor names
-                for (favoriteSnapshot in dataSnapshot.children) {
-                    val mentorName = favoriteSnapshot.key
-                    mentorName?.let { favoriteMentors.add(it) }
+                    adapter_data_list_fav.add(mentorData)
                 }
 
-                // Query the mentors node for mentors whose names are in the favorite list
-                val mentorsRef = FirebaseDatabase.getInstance().getReference("mentors")
-                mentorsRef.addListenerForSingleValueEvent(object : ValueEventListener {
-                    override fun onDataChange(mentorsDataSnapshot: DataSnapshot) {
-                        for (mentorSnapshot in mentorsDataSnapshot.children) {
-                            val mentorName = mentorSnapshot.child("name").getValue(String::class.java).toString()
+                val adapter_top = recycler_educator_adapter(adapter_data_list_fav,this)
+                recyclerView_fav.adapter = adapter_top
 
-                            // Check if the mentor is in the favorite list
-                            if (mentorName in favoriteMentors) {
-                                val occupation = mentorSnapshot.child("occupation").getValue(String::class.java).toString()
-                                val price = mentorSnapshot.child("price").getValue(String::class.java).toString()
-                                val status = mentorSnapshot.child("status").getValue(String::class.java).toString()
-                                val profilePicUrl = mentorSnapshot.child("profile_pic").getValue(String::class.java).toString()
-                                val mentorData = recycler_educator_data(
-                                    profilePicUrl,
-                                    mentorName,
-                                    occupation,
-                                    status,
-                                    price,R.drawable.red_heart_btn,1
-                                )
-
-                                adapter_data_list_fav.add(mentorData)
-                                val adapter_top = recycler_educator_adapter(adapter_data_list_fav,this@my_profile_activity)
-                                recyclerView_fav.adapter = adapter_top
-
-                                // Notify your adapter that the data has changed
-                                adapter_top.notifyDataSetChanged()
-
-                                val gson = Gson()
-                                val json = gson.toJson(adapter_data_list_fav)
-                                val sharedPref = getSharedPreferences("profile_adapter_fav_prefs", Context.MODE_PRIVATE)
-                                val editor = sharedPref.edit()
-                                editor.putString("profile_adapter_fav", json)
-                                editor.apply()
-
-                            }
-
-                        }
-                    }
-
-                    override fun onCancelled(databaseError: DatabaseError) {
-                        // Handle error
-                        Toast.makeText(this@my_profile_activity, "Unable to Fetch Mentor Data", Toast.LENGTH_LONG).show()
-                    }
-                })
             }
-
-            override fun onCancelled(databaseError: DatabaseError) {
-                // Handle error
-                Toast.makeText(this@my_profile_activity, "Unable to Fetch Favorite Mentors", Toast.LENGTH_LONG).show()
-            }
-        })
-
-//        database = FirebaseDatabase.getInstance()
-//        val mentorsRef = database.getReference("mentors")
-//
-//        val query = mentorsRef.orderByChild("favourite").equalTo("True")
-//
-//        query.addListenerForSingleValueEvent(object : ValueEventListener {
-//            override fun onDataChange(dataSnapshot: DataSnapshot) {
-//                for (mentorSnapshot in dataSnapshot.children) {
-//
-//                    val name = mentorSnapshot.child("name").getValue(String::class.java)
-//                    val occupation = mentorSnapshot.child("occupation").getValue(String::class.java)
-//                    val price = mentorSnapshot.child("price").getValue(String::class.java)
-//                    val status = mentorSnapshot.child("status").getValue(String::class.java)
-//                    val profilePicUrl = mentorSnapshot.child("profile_pic").getValue(String::class.java)
-//
-//                    // Check if all required fields are present
-//                    if (name != null && occupation != null && price != null && status != null) {
-//                        val mentorData = recycler_educator_data(
-//                            profilePicUrl,
-//                            name,
-//                            occupation,
-//                            status,
-//                            price,R.drawable.heart_unfilled,0
-//                        )
-//                        adapter_data_list_fav.add(mentorData)
-//                    }
-//                }
-//
-//                val adapter_top = recycler_educator_adapter(adapter_data_list_fav,this@my_profile_activity)
-//                recyclerView_fav.adapter = adapter_top
-//
-//                // Notify your adapter that the data has changed
-//                adapter_top.notifyDataSetChanged()
-//            }
-//
-//            override fun onCancelled(databaseError: DatabaseError) {
-//                // Handle error
-//                Toast.makeText(this@my_profile_activity, "Unable to Fetch Mentor Data", Toast.LENGTH_LONG).show()
-//
-//            }
-//        })
-
-
-
-
-//        val v1  = recycler_educator_data(R.drawable.rectangle_blank,"Sample 1","Lead - Technology Officer","Available")
-//        val v2  = recycler_educator_data(R.drawable.rectangle_blank,"Sample 2","Lead - Technology Officer"," Not Available")
-//        val v3  = recycler_educator_data(R.drawable.rectangle_blank,"Sample 3","Lead - Technology Officer","Not Available")
-//        val v4  = recycler_educator_data(R.drawable.rectangle_blank,"Sample 4","Lead - Technology Officer","Available")
-//        val v5  = recycler_educator_data(R.drawable.rectangle_blank,"Sample 5","Lead - Technology Officer","Available")
-//        val v6  = recycler_educator_data(R.drawable.rectangle_blank,"Sample 6","Lead - Technology Officer","Not Available")
-//        val v7  = recycler_educator_data(R.drawable.rectangle_blank,"Sample 7","Lead - Technology Officer","Available")
-//
-//        adapter_data_list_fav.add(v1)
-//        adapter_data_list_fav.add(v2)
-//        adapter_data_list_fav.add(v3)
-//        adapter_data_list_fav.add(v4)
-//        adapter_data_list_fav.add(v5)
-//        adapter_data_list_fav.add(v6)
-//        adapter_data_list_fav.add(v7)
-//
-//        // 3- Adapter
-//        val adapter_fav = recycler_educator_adapter(adapter_data_list_fav)
-//        recyclerView_fav.adapter = adapter_fav
-
-
-
-
-        // 1- AdapterView: RecyclerView
-        val recyclerView : RecyclerView = findViewById(R.id.recyclerview_myreview)
-        recyclerView.layoutManager = LinearLayoutManager(this,
-            LinearLayoutManager.HORIZONTAL,
-            false
-        )
-
-
-        // 2- Data Source: List of  Objects
-        var adapter_data_list_rev : ArrayList<recycler_review_data> = ArrayList()
-
-        currentUser = FirebaseAuth.getInstance().currentUser
-        val id = currentUser?.uid
-
-        if(id!=null){
-
-            database = FirebaseDatabase.getInstance()
-            val mentorsRef = database.getReference("users").child(id).child("reviews") // Replace with your actual reference
-
-            mentorsRef.addListenerForSingleValueEvent(object : ValueEventListener {
-                override fun onDataChange(dataSnapshot: DataSnapshot) {
-
-                    for (mentorSnapshot in dataSnapshot.children) {
-                        val name = mentorSnapshot.child("mentor_name").getValue(String::class.java)
-                        val rev = mentorSnapshot.child("mentor_review").getValue(String::class.java)
-
-                        // Check if all required fields are present
-                        if (name != null && rev != null ) {
-                            val mentorData = recycler_review_data(
-                                name,
-                                rev
-                            )
-                            adapter_data_list_rev.add(mentorData)
-                        }
-                    }
-
-                    val adapter_rev = recycler_review_adapter(adapter_data_list_rev)
-                     recyclerView.adapter = adapter_rev
-
-                    // Notify your adapter that the data has changed
-                    adapter_rev.notifyDataSetChanged()
-
-                    val gson = Gson()
-                    val json = gson.toJson(adapter_data_list_rev)
-                    val sharedPref = getSharedPreferences("profile_adapter_rev_prefs", Context.MODE_PRIVATE)
-                    val editor = sharedPref.edit()
-                    editor.putString("profile_adapter_rev", json)
-                    editor.apply()
-
-                }
-
-                override fun onCancelled(databaseError: DatabaseError) {
-                    // Handle error
-                }
-            })
-
 
         }
 
-//        val v8  = recycler_review_data("John Cooper","John provided excellent Prototyping Techniques and insights. I highly recommend him!")
-//        val v9  = recycler_review_data("Emma Phillips","Her tips were valuable. Would love to connect again.")
-//        val v10  = recycler_review_data("Jane","Impressive Session")
-//        val v11  = recycler_review_data("Umair","SUIII")
-//
-//        adapter_data_list_rev.add(v8)
-//        adapter_data_list_rev.add(v9)
-//        adapter_data_list_rev.add(v10)
-//        adapter_data_list_rev.add(v11)
-//
-//        // 3- Adapter
-//        val adapter_rev = recycler_review_adapter(adapter_data_list_rev)
-//        recyclerView.adapter = adapter_rev
+        getReviews(userID){
+            // 1- AdapterView: RecyclerView
+            val recyclerView : RecyclerView = findViewById(R.id.recyclerview_myreview)
+            recyclerView.layoutManager = LinearLayoutManager(this,
+                LinearLayoutManager.HORIZONTAL,
+                false
+            )
+
+            // 2- Data Source: List of  Objects
+            var adapter_data_list_rev : ArrayList<recycler_review_data> = ArrayList()
+
+            for (item in reviewsList){
+                val mentorData = recycler_review_data(
+                    item.name,
+                    item.review
+                )
+                adapter_data_list_rev.add(mentorData)
+
+            }
+            val adapter_rev = recycler_review_adapter(adapter_data_list_rev)
+            recyclerView.adapter = adapter_rev
+
+        }
 
         storage_ref = FirebaseStorage.getInstance().reference
         database_ref = FirebaseDatabase.getInstance()
@@ -502,110 +338,251 @@ class my_profile_activity : AppCompatActivity()  , click_listner{
 
         }
 
+    }
 
+    private fun getReviews(userID: String,callback: () -> Unit) {
+        val tempUrl = "${url}getreviews.php"
+
+        val stringRequest = object : StringRequest(
+            Request.Method.POST, tempUrl,
+            Response.Listener { response ->
+                // Handle response
+                try {
+                    val jsonArray = JSONArray(response)
+                    for (i in 0 until jsonArray.length()) {
+                        val reviewObject = jsonArray.getJSONObject(i)
+                        val review = reviewData(
+                            reviewObject.getString("userID"),
+                            reviewObject.getString("name"),
+                            reviewObject.getString("review")
+                        )
+                        // Add review to the list
+                        reviewsList.add(review)
+                    }
+                    callback()
+                } catch (e: JSONException) {
+                    e.printStackTrace()
+                }
+            },
+            Response.ErrorListener { error ->
+                // Handle error
+                error.printStackTrace()
+            }) {
+            override fun getParams(): Map<String, String> {
+                val params = HashMap<String, String>()
+                params["userID"] = userID
+                return params
+            }
+        }
+        // Add the request to the RequestQueue
+        Volley.newRequestQueue(this).add(stringRequest)
+    }
+
+
+    private fun getFavouriteMentor(userID: String, callback: () -> Unit) {
+        val tempURL = "${url}getfavourite.php"
+
+        // Create a StringRequest to send a POST request
+        val request = object : StringRequest(com.android.volley.Request.Method.POST, tempURL,
+            com.android.volley.Response.Listener { response ->
+                // Handle response
+                Log.d("Response", response)
+
+                // Parse JSON response
+                val jsonArray = JSONArray(response)
+
+                for (i in 0 until jsonArray.length()) {
+                    val mentorID = jsonArray.getString(i)
+                    favList.add(mentorID)
+                }
+                callback()
+            },
+            com.android.volley.Response.ErrorListener { error ->
+                // Handle error
+                Log.e("Error", "Error occurred: ${error.message}")
+            }) {
+            override fun getParams(): Map<String, String> {
+                // Set POST parameters
+                val params = HashMap<String, String>()
+                params["userID"] = userID
+                return params
+            }
+        }
+        Volley.newRequestQueue(this).add(request)
+    }
+
+    private fun getFavData(favList : ArrayList<String>,callback: () -> Unit ){
+
+        val tempUrl = "${url}getfavmentordata.php"
+
+// Create a StringRequest to send a POST request
+        val request = object : StringRequest(Method.POST, tempUrl,
+            Response.Listener { response ->
+                // Handle response
+                try {
+                    Log.d("Response", response)
+
+                    // Parse JSON response
+                    val jsonObject = JSONObject(response)
+                    val mentorsArray = jsonObject.getJSONArray("mentors")
+
+                    // Loop through each mentor object
+                    for (i in 0 until mentorsArray.length()) {
+                        val mentorObject = mentorsArray.getJSONObject(i)
+                        val mentorID = mentorObject.getString("mentorID")
+                        if (mentorID in favList) {
+                            // If mentorID is in favList, create Mentor object and add it to mentors list
+                            val mentor = mentorData(
+                                mentorID,
+                                mentorObject.getString("name"),
+                                mentorObject.getString("occupation"),
+                                mentorObject.getString("description"),
+                                mentorObject.getString("price"),
+                                mentorObject.getString("profileImg"),
+                                mentorObject.getString("status"),
+                                mentorObject.getString("favourite")
+                            )
+                            mentorListFav.add(mentor)
+                        }
+                    }
+                    callback()
+                } catch (e: JSONException) {
+                    e.printStackTrace()
+                    Toast.makeText(this, "Error Parsing Data", Toast.LENGTH_SHORT).show()
+                }
+            },
+            Response.ErrorListener { error ->
+                // Handle error
+                Log.e("Error", "Error occurred: ${error.message}")
+            }) {
+            override fun getParams(): Map<String, String> {
+                val params = HashMap<String, String>()
+                val favListJson = Gson().toJson(favList)
+                params["favList"] = favListJson
+                return params
+            }
+        }
+        Volley.newRequestQueue(this).add(request)
+    }
+
+    private fun getUserData(userID:String,callback: () -> Unit){
+        val tempUrl = "${url}getuserdata.php" // Assuming the PHP file to retrieve user data is named getUserData.php
+
+        val stringRequest = object : StringRequest(
+            Request.Method.POST, tempUrl,
+            Response.Listener { response ->
+                // Handle response
+                if (response.startsWith("User not found")) {
+                    // User not found, handle accordingly
+                    Toast.makeText(this, "User not found", Toast.LENGTH_SHORT).show()
+                } else {
+                    // Parse JSON response
+                    try {
+                        val jsonObject = JSONObject(response)
+                        User.name = jsonObject.getString("name")
+                        User.email = jsonObject.getString("email")
+                        User.city = jsonObject.getString("city")
+                        User.country = jsonObject.getString("country")
+                        User.contact = jsonObject.getString("contact")
+                        User.profileImg = jsonObject.getString("profileImg")
+                        User.coverImg = jsonObject.getString("coverImg")
+                        callback()
+                    } catch (e: JSONException) {
+                        e.printStackTrace()
+                        Toast.makeText(this, "Error Fetching Data", Toast.LENGTH_SHORT).show()
+                    }
+                }
+            },
+            Response.ErrorListener { error ->
+                // Handle error
+                Toast.makeText(this, "Error Fetching Data", Toast.LENGTH_SHORT).show()
+                Log.e("API Error", "Error occurred: ${error.message}")
+            }) {
+            override fun getParams(): MutableMap<String, String> {
+                val params = HashMap<String, String>()
+                params["userID"] = userID
+                return params
+            }
+        }
+
+        // Add the request to the RequestQueue
+        Volley.newRequestQueue(this).add(stringRequest)
+
+    }
+
+
+    private fun imageStore(uri: Uri) {
+        var inputStream: InputStream? = null
+        try {
+            inputStream = contentResolver.openInputStream(uri)
+            imgBitmap = BitmapFactory.decodeStream(inputStream)
+            val stream = ByteArrayOutputStream()
+            imgBitmap.compress(Bitmap.CompressFormat.JPEG, 100, stream)
+            val imageByte: ByteArray = stream.toByteArray()
+            encodedImage = Base64.encodeToString(imageByte, Base64.DEFAULT)
+        } catch (e: FileNotFoundException) {
+            e.printStackTrace()
+        }
+    }
+
+    private fun uploadProfileImg(operation:Int) {
+        var tempUrl=""
+        if(operation==1){
+            tempUrl = "${url}uploadprofileimg.php"
+        }else{
+            tempUrl = "${url}uploadcoverimg.php"
+        }
+        val request: StringRequest = object : StringRequest(
+            Request.Method.POST,
+            tempUrl,
+            Response.Listener { response ->
+
+                Log.d("response", response)
+            }, Response.ErrorListener { error ->
+                Log.d("error", error.toString())
+            }) {
+            override fun getParams(): Map<String, String> {
+                val params: MutableMap<String, String> = HashMap()
+                params["userID"] = userID
+                params["image"] = encodedImage
+                return params
+            }
+        }
+        Volley.newRequestQueue(this).add(request)
     }
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
 
         super.onActivityResult(requestCode, resultCode, data)
 
         if (requestCode == PICK_IMAGE_REQUEST && resultCode == Activity.RESULT_OK && data != null && data.data != null) {
-            file_path = data.data
+            uri = data.data!!
+
             // Set the selected image to the profileImageView
             if(type==1){
 
-                Picasso.get().load(file_path).into(profile_pic)
-
-                val my_database = FirebaseDatabase.getInstance()
-                var my_ref = my_database.getReference("users")
-                val currUser = mAuth.currentUser
-                val userId= currUser?.uid.toString()
-
-                val imageURL = file_path.toString()
-                my_ref.child(userId).child("picture").setValue(imageURL)
-                my_ref.child(userId).child("picture_gal").setValue(imageURL)
-
-
-                val storageRef = FirebaseStorage.getInstance().reference
-
-                val profileImageRef = storageRef.child("profile_images/$userId.jpg")
-                val uploadTask = profileImageRef.putFile(file_path!!)
-
-                uploadTask.addOnSuccessListener { taskSnapshot ->
-                    // Image uploaded successfully, now get the download URL
-                    profileImageRef.downloadUrl.addOnSuccessListener { uri ->
-                        // Save download URL to Firebase Realtime Database
-                        val image_url = uri.toString()
-                        val database = FirebaseDatabase.getInstance()
-                        val myRef = database.getReference("users/$userId/picture")
-
-                        myRef.setValue(image_url).addOnSuccessListener {
-                            Toast.makeText(this, "Profile picture updated!", Toast.LENGTH_SHORT).show()
-                        }
-                            .addOnFailureListener { e ->
-//                            Toast.makeText(this, "Failed to update profile picture", Toast.LENGTH_SHORT).show()
-                                Log.d("TAG", "Failed To Upload Profile Image")
-
-                            }
-                    }
-                }.addOnFailureListener { e ->
-//                Toast.makeText(this, "Failed To Upload", Toast.LENGTH_SHORT).show()
-                    Log.d("TAG", "Failed To Upload Profile Image")
-
-                }
+                Picasso.get().load(uri).into(profile_pic)
+                imageStore(uri)
+                uploadProfileImg(1)
 
             }
-            else if(type==2){
+            else if(type==2) {
 
-                Picasso.get().load(file_path).into(cover_page)
-
-                val my_database = FirebaseDatabase.getInstance()
-                var my_ref = my_database.getReference("users")
-                val currUser = mAuth.currentUser
-                val userId= currUser?.uid.toString()
-
-                val imageURL = file_path.toString()
-                my_ref.child(userId).child("cover").setValue(imageURL)
-                my_ref.child(userId).child("cover_gal").setValue(imageURL)
-
-
-                val storageRef = FirebaseStorage.getInstance().reference
-
-                val profileImageRef = storageRef.child("cover_images/$userId.jpg")
-                val uploadTask = profileImageRef.putFile(file_path!!)
-
-                uploadTask.addOnSuccessListener { taskSnapshot ->
-                    // Image uploaded successfully, now get the download URL
-                    profileImageRef.downloadUrl.addOnSuccessListener { uri ->
-                        // Save download URL to Firebase Realtime Database
-                        val image_url = uri.toString()
-                        val database = FirebaseDatabase.getInstance()
-                        val myRef = database.getReference("users/$userId/cover")
-
-                        myRef.setValue(image_url).addOnSuccessListener {
-                            Toast.makeText(this, "Cover updated!", Toast.LENGTH_SHORT).show()
-                        }
-                            .addOnFailureListener { e ->
-//                            Toast.makeText(this, "Failed to update profile picture", Toast.LENGTH_SHORT).show()
-                                Log.d("TAG", "Failed To Upload Cover Image")
-
-                            }
-                    }
-                }.addOnFailureListener { e ->
-//                Toast.makeText(this, "Failed To Upload", Toast.LENGTH_SHORT).show()
-                    Log.d("TAG", "Failed To Upload Cover Image")
-
-                }
+                Picasso.get().load(uri).into(cover_page)
+                imageStore(uri)
+                uploadProfileImg(2)
 
             }
         }
     }
-    override fun click_function(txt:String){
+    override fun click_function(txt:String,mentorID: String){
         val nextActivityIntent = Intent(this, john_cooper_1_activity::class.java)
+        nextActivityIntent.putExtra("mentorID", mentorID)
+        nextActivityIntent.putExtra("userID", userID)
         nextActivityIntent.putExtra("user_name", txt)
         startActivity(nextActivityIntent)
 
     }
-    override fun change_heart(flag:Int,txt:String){
+    override fun change_heart(flag:Int,txt:String,mentorID:String){
 TODO()
     }
 
@@ -617,28 +594,3 @@ TODO()
     }
 
 }
-
-
-
-//
-//    override fun onCreateOptionsMenu(menu: Menu): Boolean {
-//        menuInflater.inflate(R.menu.profile_actionbar_menu, menu)
-//        return true
-//    }
-//    override fun onOptionsItemSelected(item: MenuItem): Boolean {
-//        when (item.itemId) {
-//            R.id.action_logout -> {
-//                Toast.makeText(this,"Logout", Toast.LENGTH_LONG).show()
-//                // Handle logout action
-//                return true
-//            }
-////            R.id.action_back_btn -> {
-////                Toast.makeText(this,"Back Btn",Toast.LENGTH_LONG).show()
-////
-////                // Handle back arrow click (if needed)
-//////                onBackPressed() // Or perform any other action you desire
-////                return true
-////            }
-//            else -> return super.onOptionsItemSelected(item)
-//        }
-//    }

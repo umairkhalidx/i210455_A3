@@ -27,6 +27,7 @@ RecyclerView.Adapter<recycler_searchresults_adapter.searchresult_viewholder>()
             lateinit var status : TextView
             lateinit var price:TextView
             lateinit var heart:ImageView
+            lateinit var mentorID : String
             var my_flag:Int=0
 
             init {
@@ -56,7 +57,7 @@ RecyclerView.Adapter<recycler_searchresults_adapter.searchresult_viewholder>()
 
         holder.rootView.setOnClickListener{
             val txt:String =itemslist[position].title.toString()
-            listener.click_function(txt)
+            listener.click_function(txt,holder.mentorID)
 //            Toast.makeText(holder.itemView.context,"Clicked on a Row",Toast.LENGTH_SHORT).show()
 
         }
@@ -65,22 +66,27 @@ RecyclerView.Adapter<recycler_searchresults_adapter.searchresult_viewholder>()
             if(holder.my_flag==0){
                 holder.heart.setImageResource(R.drawable.red_heart_btn)
                 val txt:String =itemslist[position].title.toString()
-                listener.change_heart(holder.my_flag,txt)
+                listener.change_heart(holder.my_flag,txt,holder.mentorID)
                 holder.my_flag=1
 
             }else{
                 holder.heart.setImageResource(R.drawable.heart_unfilled)
                 val txt:String =itemslist[position].title.toString()
-                listener.change_heart(holder.my_flag,txt)
+                listener.change_heart(holder.my_flag,txt,holder.mentorID)
                 holder.my_flag=0
             }
         }
 
 //        holder.display_pic.setImageResource(itemslist[position].img)
+
+        val url = holder.itemView.context.getString(R.string.url)
+        val imageURL = "${url}MentorImages/${itemslist[position].img}"
+
         Glide.with(holder.itemView.context)
-            .load(itemslist[position].img)
+            .load(imageURL)
             .into(holder.display_pic)
 
+        holder.mentorID= itemslist[position].mentorID.toString()
         holder.title.setText(itemslist[position].title)
         holder.designation.setText(itemslist[position].desig)
         holder.status.setText(itemslist[position].status)

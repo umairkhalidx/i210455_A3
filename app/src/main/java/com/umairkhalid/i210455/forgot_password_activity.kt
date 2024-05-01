@@ -10,6 +10,10 @@ import android.util.Log
 import android.widget.ImageButton
 import android.widget.TextView
 import android.widget.Toast
+import com.android.volley.Request
+import com.android.volley.Response
+import com.android.volley.toolbox.StringRequest
+import com.android.volley.toolbox.Volley
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.FirebaseUser
 import com.google.firebase.database.DataSnapshot
@@ -18,11 +22,12 @@ import com.google.firebase.database.FirebaseDatabase
 import com.google.firebase.database.ValueEventListener
 
 class forgot_password_activity : AppCompatActivity() {
-    private var  mAuth = FirebaseAuth.getInstance();
+    lateinit var url :String
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-
         setContentView(R.layout.forgot_password)
+
+        url = getString(R.string.url)
 
         val send_btn: TextView =findViewById(R.id.send_btn)
         val login_btn: TextView =findViewById(R.id.login_btn)
@@ -36,65 +41,45 @@ class forgot_password_activity : AppCompatActivity() {
         login_btn.text = spannableString
 
         send_btn.setOnClickListener {
-            val database = FirebaseDatabase.getInstance()
-            val my_ref = database.getReference("credentials")
-            val email = email_txt.text.toString()
-//            val new_email = email.replace(".", ",")
+            val givenEmail = email_txt.text.toString()
+            if(givenEmail.isNotEmpty()){
+                // Make HTTP request to PHP script to retrieve email and password
+                val tempUrl = "${url}getusercredentials.php" // Assuming the PHP file to retrieve user details is named getUserDetails.php
+                val stringRequest = object : StringRequest(
+                    Request.Method.POST, tempUrl,
+                    Response.Listener { response ->
+                        if (response.startsWith("Email")) {
+                            // User found, response contains email and password
+                            val parts = response.split(", ")
+                            val email = parts[0].split(": ")[1]
+//                        val password = parts[1].split(": ")[1]
 
-
-            my_ref.orderByChild("email").equalTo(email)
-                .addListenerForSingleValueEvent(object : ValueEventListener {
-                    override fun onDataChange(dataSnapshot: DataSnapshot) {
-                        if (dataSnapshot.exists()) {
-                            // Email exists in the database
-                            val password = dataSnapshot.children.firstOrNull()?.child("password")?.value.toString()
-                            newactivity_call(email,password)
-//                        Toast.makeText(this@forgot_password_activity, "Email found.", Toast.LENGTH_SHORT).show()
-
+                            // Call newactivity_call function with retrieved email and password
+                            newactivity_call(email)
                         } else {
-                            // Email does not exist in the database
-                            Toast.makeText(this@forgot_password_activity, "Email not found.", Toast.LENGTH_SHORT).show()
-
+                            // User not found or error occurred
+                            Toast.makeText(this, response, Toast.LENGTH_SHORT).show()
                         }
+                    },
+                    Response.ErrorListener { error ->
+                        // Handle error
+                        Toast.makeText(this, "An error occurred", Toast.LENGTH_SHORT).show()
+                        Log.e("API Error", "Error occurred: ${error.message}")
+                    }) {
+                    override fun getParams(): MutableMap<String, String> {
+                        val params = HashMap<String, String>()
+                        params["email"] = givenEmail
+                        return params
                     }
+                }
+                // Add the request to the RequestQueue
+                Volley.newRequestQueue(this).add(stringRequest)
 
-                    override fun onCancelled(databaseError: DatabaseError) {
-                        // Error occurred while fetching data
-                        Toast.makeText(
-                            this@forgot_password_activity,
-                            "General Processing Error",
-                            Toast.LENGTH_SHORT
-                        ).show()
-
-                    }
-                })
-
+            }
+            else{
+                Toast.makeText(this,"Please Enter an Email",Toast.LENGTH_LONG).show()
+            }
         }
-
-
-//            mAuth.fetchSignInMethodsForEmail(email).addOnCompleteListener { task ->
-//                if (task.isSuccessful) {
-//                    val result = task.result?.signInMethods
-//                    Toast.makeText(this, result.toString(), Toast.LENGTH_SHORT).show()
-//
-//                    if (result.isNullOrEmpty()) {
-//                        Toast.makeText(this, "Email not found.", Toast.LENGTH_SHORT).show()
-//                    }
-//                    else {
-//                        val user: FirebaseUser? = mAuth.currentUser
-//                        val userId = user?.uid
-//                        if (userId != null) {
-//                            Toast.makeText(this, "User ID: $userId", Toast.LENGTH_SHORT).show()
-//                        } else {
-//                            Toast.makeText(this, "Invalid Email", Toast.LENGTH_SHORT).show()
-//                        }
-//                    }
-//                }
-//                else {
-//                    Toast.makeText(this, "Try Again", Toast.LENGTH_SHORT).show()
-//
-//                }
-//            }
 
         login_btn.setOnClickListener{
             val nextActivityIntent = Intent(this, login_activity::class.java)
@@ -109,11 +94,10 @@ class forgot_password_activity : AppCompatActivity() {
         }
     }
 
-    fun newactivity_call(email:String,password:String){
+    fun newactivity_call(email:String){
 
         val nextActivityIntent = Intent(this, reset_password_activity::class.java)
         nextActivityIntent.putExtra("user_email", email)
-        nextActivityIntent.putExtra("user_pass", password)
         startActivity(nextActivityIntent)
         finish()
     }

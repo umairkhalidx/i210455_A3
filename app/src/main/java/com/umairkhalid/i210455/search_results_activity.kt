@@ -15,6 +15,9 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.core.content.ContextCompat
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
+import com.android.volley.toolbox.JsonArrayRequest
+import com.android.volley.toolbox.StringRequest
+import com.android.volley.toolbox.Volley
 import com.google.android.gms.tasks.OnCompleteListener
 import com.google.firebase.FirebaseApp
 import com.google.firebase.auth.FirebaseAuth
@@ -30,12 +33,20 @@ import okhttp3.OkHttpClient
 import okhttp3.Request
 import okhttp3.RequestBody.Companion.toRequestBody
 import okhttp3.Response
+import org.json.JSONArray
+import org.json.JSONException
 import org.json.JSONObject
 import java.io.IOException
 
 class search_results_activity : AppCompatActivity(), click_listner {
     @SuppressLint("MissingInflatedId")
     private var  mAuth = FirebaseAuth.getInstance();
+    lateinit var userID: String
+    lateinit var url: String
+    var mentorListTop = mutableListOf<mentorData>()
+    var mentorList = mutableListOf<mentorData>()
+    val favList = ArrayList<String>()
+
 
     private val requestPermissionLauncher = registerForActivityResult(
         ActivityResultContracts.RequestPermission()
@@ -50,6 +61,10 @@ class search_results_activity : AppCompatActivity(), click_listner {
         super.onCreate(savedInstanceState)
 
         setContentView(R.layout.search_results)
+
+        userID = intent.getStringExtra("userID").toString()
+        url = getString(R.string.url)
+
 
         FirebaseApp.initializeApp(this)
         //firebase token
@@ -89,53 +104,63 @@ class search_results_activity : AppCompatActivity(), click_listner {
 
         home_btn.setOnClickListener{
             val nextActivityIntent = Intent(this, home_page_activity::class.java)
+            nextActivityIntent.putExtra("userID", userID)
             startActivity(nextActivityIntent)
             finish()
         }
 
         home_txt.setOnClickListener{
             val nextActivityIntent = Intent(this, home_page_activity::class.java)
+            nextActivityIntent.putExtra("userID", userID)
             startActivity(nextActivityIntent)
             finish()
         }
 
         search_btn.setOnClickListener{
             val nextActivityIntent = Intent(this, lets_find_activity::class.java)
+            nextActivityIntent.putExtra("userID", userID)
             startActivity(nextActivityIntent)
         }
 
         search_txt.setOnClickListener{
             val nextActivityIntent = Intent(this, lets_find_activity::class.java)
+            nextActivityIntent.putExtra("userID", userID)
             startActivity(nextActivityIntent)
         }
 
         chat_btn.setOnClickListener{
             val nextActivityIntent = Intent(this, chats_activity::class.java)
+            nextActivityIntent.putExtra("userID", userID)
             startActivity(nextActivityIntent)
         }
 
         chat_txt.setOnClickListener{
             val nextActivityIntent = Intent(this, chats_activity::class.java)
+            nextActivityIntent.putExtra("userID", userID)
             startActivity(nextActivityIntent)
         }
 
         profile_btn.setOnClickListener{
             val nextActivityIntent = Intent(this, my_profile_activity::class.java)
+            nextActivityIntent.putExtra("userID", userID)
             startActivity(nextActivityIntent)
         }
 
         profile_txt.setOnClickListener{
             val nextActivityIntent = Intent(this, my_profile_activity::class.java)
+            nextActivityIntent.putExtra("userID", userID)
             startActivity(nextActivityIntent)
         }
 
         plus_btn.setOnClickListener{
             val nextActivityIntent = Intent(this, add_new_mentor_activity::class.java)
+            nextActivityIntent.putExtra("userID", userID)
             startActivity(nextActivityIntent)
         }
 
         plus_btn.setOnClickListener{
             val nextActivityIntent = Intent(this, add_new_mentor_activity::class.java)
+            nextActivityIntent.putExtra("userID", userID)
             startActivity(nextActivityIntent)
         }
 
@@ -146,6 +171,8 @@ class search_results_activity : AppCompatActivity(), click_listner {
             finish()
         }
 
+        val input_txt = intent.getStringExtra("search_txt")
+
         // 1- AdapterView: RecyclerView
         val recyclerView : RecyclerView = findViewById(R.id.recycleview_searched_results)
         recyclerView.layoutManager = LinearLayoutManager(this,
@@ -153,232 +180,311 @@ class search_results_activity : AppCompatActivity(), click_listner {
             false
         )
 
-
         // 2- Data Source: List of  Objects
         var adapter_data_list : ArrayList<recycler_searchresults_data> = ArrayList()
 
-        val input_txt = intent.getStringExtra("search_txt")
 
         if(input_txt=="Entrepreneurship" || input_txt=="Personal" || input_txt=="Education" ){
-            val database = FirebaseDatabase.getInstance()
-            val mentorsRef = database.getReference("mentors")
 
-            val query = mentorsRef.limitToFirst(7) // Limit the query to the first 4 mentors
+            getFavouriteMentor(userID) {
+                getTopMentors() {
+                    for (mentor in mentorListTop) {
+                        if (mentor.mentorID in favList) {
+                            val mentorData = recycler_searchresults_data(
+                                mentor.mentorID,
+                                mentor.profileImg,
+                                mentor.name,
+                                mentor.occupation,
+                                mentor.status,
+                                mentor.price, R.drawable.red_heart_btn, 1
+                            )
+                            adapter_data_list.add(mentorData)
 
-            query.addListenerForSingleValueEvent(object : ValueEventListener {
-                override fun onDataChange(dataSnapshot: DataSnapshot) {
+                        } else {
 
-                    for (mentorSnapshot in dataSnapshot.children) {
-                        val name = mentorSnapshot.child("name").getValue(String::class.java)
-                        val occupation = mentorSnapshot.child("occupation").getValue(String::class.java)
-                        val price = mentorSnapshot.child("price").getValue(String::class.java)
-                        val status = mentorSnapshot.child("status").getValue(String::class.java)
-                        val profilePicUrl = mentorSnapshot.child("profile_pic").getValue(String::class.java)
-
-                        // Check if all required fields are present
-                        if (name != null && occupation != null && price != null && status != null) {
-                            val curr_usr = mAuth.currentUser
-                            val user_id = curr_usr?.uid.toString()
-                            val userRef = database.getReference("users").child(user_id)
-
-                            userRef.addListenerForSingleValueEvent(object : ValueEventListener {
-                                override fun onDataChange(dataSnapshot: DataSnapshot) {
-                                    if (dataSnapshot.hasChild("favourite")) {
-                                        val fav_ref = userRef.child("favourite")
-                                        fav_ref.addListenerForSingleValueEvent(object : ValueEventListener {
-                                            override fun onDataChange(dataSnapshot: DataSnapshot) {
-                                                if (dataSnapshot.exists()) {
-                                                    if (dataSnapshot.hasChild(name)) {
-                                                        val mentorData = recycler_searchresults_data(
-                                                            profilePicUrl,
-                                                            name,
-                                                            occupation,
-                                                            status,
-                                                            price,R.drawable.red_heart_btn,1
-                                                        )
-                                                        adapter_data_list.add(mentorData)
-                                                        val adapter = recycler_searchresults_adapter(adapter_data_list,this@search_results_activity)
-                                                        recyclerView.adapter = adapter
-
-                                                        // Notify your adapter that the data has changed
-                                                        adapter.notifyDataSetChanged()
-
-                                                    } else {
-                                                        val mentorData = recycler_searchresults_data(
-                                                            profilePicUrl,
-                                                            name,
-                                                            occupation,
-                                                            status,
-                                                            price,R.drawable.heart_unfilled,0
-                                                        )
-                                                        adapter_data_list.add(mentorData)
-                                                        val adapter = recycler_searchresults_adapter(adapter_data_list,this@search_results_activity)
-                                                        recyclerView.adapter = adapter
-
-                                                        // Notify your adapter that the data has changed
-                                                        adapter.notifyDataSetChanged()
-
-                                                    }
-                                                }
-                                            }
-
-                                            override fun onCancelled(databaseError: DatabaseError) {
-                                                // Handle error
-                                            }
-                                        })
-                                    } else {
-
-                                        val mentorData = recycler_searchresults_data(
-                                            profilePicUrl,
-                                            name,
-                                            occupation,
-                                            status,
-                                            price,R.drawable.heart_unfilled,0
-                                        )
-                                        adapter_data_list.add(mentorData)
-                                        val adapter = recycler_searchresults_adapter(adapter_data_list,this@search_results_activity)
-                                        recyclerView.adapter = adapter
-
-                                        // Notify your adapter that the data has changed
-                                        adapter.notifyDataSetChanged()
-
-                                    }
-                                }
-
-                                override fun onCancelled(databaseError: DatabaseError) {
-                                    // Handle error
-                                }
-                            })
+                            val mentorData = recycler_searchresults_data(
+                                mentor.mentorID,
+                                mentor.profileImg,
+                                mentor.name,
+                                mentor.occupation,
+                                mentor.status,
+                                mentor.price,R.drawable.heart_unfilled,0
+                            )
+                            adapter_data_list.add(mentorData)
                         }
+
                     }
+                    val adapter = recycler_searchresults_adapter(adapter_data_list,this)
+                    recyclerView.adapter = adapter
 
-//                    val adapter = recycler_searchresults_adapter(adapter_data_list,this@search_results_activity)
-//                    recyclerView.adapter = adapter
-//
-//                    // Notify your adapter that the data has changed
-//                    adapter.notifyDataSetChanged()
+
                 }
 
-                override fun onCancelled(databaseError: DatabaseError) {
-                    // Handle error
-                    Toast.makeText(this@search_results_activity, "Unable to Fetch Mentor Data", Toast.LENGTH_LONG).show()
-                }
-            })
-        }
-        else{
+            }
 
-            val database = FirebaseDatabase.getInstance()
-            val mentorsRef = database.getReference("mentors")
+        }else{
+            val mentorName=input_txt.toString().trim()
 
-            val query = mentorsRef.orderByChild("name").equalTo(input_txt.toString())
+            getFavouriteMentor(userID) {
+                getMentors(mentorName) {
+                    for (mentor in mentorList) {
+                        if (mentor.mentorID in favList) {
+                            val mentorData = recycler_searchresults_data(
+                                mentor.mentorID,
+                                mentor.profileImg,
+                                mentor.name,
+                                mentor.occupation,
+                                mentor.status,
+                                mentor.price, R.drawable.red_heart_btn, 1
+                            )
+                            adapter_data_list.add(mentorData)
 
-            query.addListenerForSingleValueEvent(object : ValueEventListener {
-                override fun onDataChange(dataSnapshot: DataSnapshot) {
-                    for (mentorSnapshot in dataSnapshot.children) {
-                        val name = mentorSnapshot.child("name").getValue(String::class.java)
-                        val occupation = mentorSnapshot.child("occupation").getValue(String::class.java)
-                        val price = mentorSnapshot.child("price").getValue(String::class.java)
-                        val status = mentorSnapshot.child("status").getValue(String::class.java)
-                        val profilePicUrl = mentorSnapshot.child("profile_pic").getValue(String::class.java)
+                        } else {
 
-
-                        // Check if all required fields are present
-                        if (name != null && occupation != null && price != null && status != null) {
-                            val curr_usr = mAuth.currentUser
-                            val user_id = curr_usr?.uid.toString()
-                            val userRef = database.getReference("users").child(user_id)
-
-                            userRef.addListenerForSingleValueEvent(object : ValueEventListener {
-                                override fun onDataChange(dataSnapshot: DataSnapshot) {
-                                    if (dataSnapshot.hasChild("favourite")) {
-                                        val fav_ref = userRef.child("favourite")
-                                        fav_ref.addListenerForSingleValueEvent(object : ValueEventListener {
-                                            override fun onDataChange(dataSnapshot: DataSnapshot) {
-                                                if (dataSnapshot.exists()) {
-                                                    if (dataSnapshot.hasChild(name)) {
-                                                        val mentorData = recycler_searchresults_data(
-                                                            profilePicUrl,
-                                                            name,
-                                                            occupation,
-                                                            status,
-                                                            price,R.drawable.red_heart_btn,1
-                                                        )
-                                                        adapter_data_list.add(mentorData)
-                                                        val adapter = recycler_searchresults_adapter(adapter_data_list,this@search_results_activity)
-                                                        recyclerView.adapter = adapter
-                                                        Toast.makeText(this@search_results_activity,"SUII1",Toast.LENGTH_SHORT).show()
-
-
-                                                        // Notify your adapter that the data has changed
-                                                        adapter.notifyDataSetChanged()
-
-                                                    } else {
-                                                        val mentorData = recycler_searchresults_data(
-                                                            profilePicUrl,
-                                                            name,
-                                                            occupation,
-                                                            status,
-                                                            price,R.drawable.heart_unfilled,0
-                                                        )
-                                                        adapter_data_list.add(mentorData)
-                                                        val adapter = recycler_searchresults_adapter(adapter_data_list,this@search_results_activity)
-                                                        recyclerView.adapter = adapter
-
-                                                        Toast.makeText(this@search_results_activity,"SUII2",Toast.LENGTH_SHORT).show()
-
-                                                        // Notify your adapter that the data has changed
-                                                        adapter.notifyDataSetChanged()
-
-                                                    }
-                                                }
-                                            }
-
-                                            override fun onCancelled(databaseError: DatabaseError) {
-                                                // Handle error
-                                            }
-                                        })
-                                    } else {
-
-                                        val mentorData = recycler_searchresults_data(
-                                            profilePicUrl,
-                                            name,
-                                            occupation,
-                                            status,
-                                            price,R.drawable.heart_unfilled,0
-                                        )
-                                        adapter_data_list.add(mentorData)
-                                        val adapter = recycler_searchresults_adapter(adapter_data_list,this@search_results_activity)
-                                        recyclerView.adapter = adapter
-                                        Toast.makeText(this@search_results_activity,"SUII3",Toast.LENGTH_SHORT).show()
-
-
-                                        // Notify your adapter that the data has changed
-                                        adapter.notifyDataSetChanged()
-
-                                    }
-                                }
-
-                                override fun onCancelled(databaseError: DatabaseError) {
-                                    // Handle error
-                                }
-                            })
+                            val mentorData = recycler_searchresults_data(
+                                mentor.mentorID,
+                                mentor.profileImg,
+                                mentor.name,
+                                mentor.occupation,
+                                mentor.status,
+                                mentor.price,R.drawable.heart_unfilled,0
+                            )
+                            adapter_data_list.add(mentorData)
                         }
+
                     }
-//                    val adapter = recycler_searchresults_adapter(adapter_data_list,this@search_results_activity)
-//                    recyclerView.adapter = adapter
-//
-//
-//                    // Notify your adapter that the data has changed
-//                     adapter.notifyDataSetChanged()
+                    val adapter = recycler_searchresults_adapter(adapter_data_list,this)
+                    recyclerView.adapter = adapter
                 }
 
-                override fun onCancelled(databaseError: DatabaseError) {
-                    // Handle error
-                    Toast.makeText(this@search_results_activity,"Unable to Fetch Mentor Data",Toast.LENGTH_LONG).show()
-                }
-            })
+            }
 
         }
+
+
+
+//
+//        if(input_txt=="Entrepreneurship" || input_txt=="Personal" || input_txt=="Education" ){
+//            val database = FirebaseDatabase.getInstance()
+//            val mentorsRef = database.getReference("mentors")
+//
+//            val query = mentorsRef.limitToFirst(7) // Limit the query to the first 4 mentors
+//
+//            query.addListenerForSingleValueEvent(object : ValueEventListener {
+//                override fun onDataChange(dataSnapshot: DataSnapshot) {
+//
+//                    for (mentorSnapshot in dataSnapshot.children) {
+//                        val name = mentorSnapshot.child("name").getValue(String::class.java)
+//                        val occupation = mentorSnapshot.child("occupation").getValue(String::class.java)
+//                        val price = mentorSnapshot.child("price").getValue(String::class.java)
+//                        val status = mentorSnapshot.child("status").getValue(String::class.java)
+//                        val profilePicUrl = mentorSnapshot.child("profile_pic").getValue(String::class.java)
+//
+//                        // Check if all required fields are present
+//                        if (name != null && occupation != null && price != null && status != null) {
+//                            val curr_usr = mAuth.currentUser
+//                            val user_id = curr_usr?.uid.toString()
+//                            val userRef = database.getReference("users").child(user_id)
+//
+//                            userRef.addListenerForSingleValueEvent(object : ValueEventListener {
+//                                override fun onDataChange(dataSnapshot: DataSnapshot) {
+//                                    if (dataSnapshot.hasChild("favourite")) {
+//                                        val fav_ref = userRef.child("favourite")
+//                                        fav_ref.addListenerForSingleValueEvent(object : ValueEventListener {
+//                                            override fun onDataChange(dataSnapshot: DataSnapshot) {
+//                                                if (dataSnapshot.exists()) {
+//                                                    if (dataSnapshot.hasChild(name)) {
+//                                                        val mentorData = recycler_searchresults_data(
+//                                                            profilePicUrl,
+//                                                            name,
+//                                                            occupation,
+//                                                            status,
+//                                                            price,R.drawable.red_heart_btn,1
+//                                                        )
+//                                                        adapter_data_list.add(mentorData)
+//                                                        val adapter = recycler_searchresults_adapter(adapter_data_list,this@search_results_activity)
+//                                                        recyclerView.adapter = adapter
+//
+//                                                        // Notify your adapter that the data has changed
+//                                                        adapter.notifyDataSetChanged()
+//
+//                                                    } else {
+//                                                        val mentorData = recycler_searchresults_data(
+//                                                            profilePicUrl,
+//                                                            name,
+//                                                            occupation,
+//                                                            status,
+//                                                            price,R.drawable.heart_unfilled,0
+//                                                        )
+//                                                        adapter_data_list.add(mentorData)
+//                                                        val adapter = recycler_searchresults_adapter(adapter_data_list,this@search_results_activity)
+//                                                        recyclerView.adapter = adapter
+//
+//                                                        // Notify your adapter that the data has changed
+//                                                        adapter.notifyDataSetChanged()
+//
+//                                                    }
+//                                                }
+//                                            }
+//
+//                                            override fun onCancelled(databaseError: DatabaseError) {
+//                                                // Handle error
+//                                            }
+//                                        })
+//                                    } else {
+//
+//                                        val mentorData = recycler_searchresults_data(
+//                                            profilePicUrl,
+//                                            name,
+//                                            occupation,
+//                                            status,
+//                                            price,R.drawable.heart_unfilled,0
+//                                        )
+//                                        adapter_data_list.add(mentorData)
+//                                        val adapter = recycler_searchresults_adapter(adapter_data_list,this@search_results_activity)
+//                                        recyclerView.adapter = adapter
+//
+//                                        // Notify your adapter that the data has changed
+//                                        adapter.notifyDataSetChanged()
+//
+//                                    }
+//                                }
+//
+//                                override fun onCancelled(databaseError: DatabaseError) {
+//                                    // Handle error
+//                                }
+//                            })
+//                        }
+//                    }
+//
+////                    val adapter = recycler_searchresults_adapter(adapter_data_list,this@search_results_activity)
+////                    recyclerView.adapter = adapter
+////
+////                    // Notify your adapter that the data has changed
+////                    adapter.notifyDataSetChanged()
+//                }
+//
+//                override fun onCancelled(databaseError: DatabaseError) {
+//                    // Handle error
+//                    Toast.makeText(this@search_results_activity, "Unable to Fetch Mentor Data", Toast.LENGTH_LONG).show()
+//                }
+//            })
+//        }
+//        else{
+//
+//            val database = FirebaseDatabase.getInstance()
+//            val mentorsRef = database.getReference("mentors")
+//
+//            val query = mentorsRef.orderByChild("name").equalTo(input_txt.toString())
+//
+//            query.addListenerForSingleValueEvent(object : ValueEventListener {
+//                override fun onDataChange(dataSnapshot: DataSnapshot) {
+//                    for (mentorSnapshot in dataSnapshot.children) {
+//                        val name = mentorSnapshot.child("name").getValue(String::class.java)
+//                        val occupation = mentorSnapshot.child("occupation").getValue(String::class.java)
+//                        val price = mentorSnapshot.child("price").getValue(String::class.java)
+//                        val status = mentorSnapshot.child("status").getValue(String::class.java)
+//                        val profilePicUrl = mentorSnapshot.child("profile_pic").getValue(String::class.java)
+//
+//
+//                        // Check if all required fields are present
+//                        if (name != null && occupation != null && price != null && status != null) {
+//                            val curr_usr = mAuth.currentUser
+//                            val user_id = curr_usr?.uid.toString()
+//                            val userRef = database.getReference("users").child(user_id)
+//
+//                            userRef.addListenerForSingleValueEvent(object : ValueEventListener {
+//                                override fun onDataChange(dataSnapshot: DataSnapshot) {
+//                                    if (dataSnapshot.hasChild("favourite")) {
+//                                        val fav_ref = userRef.child("favourite")
+//                                        fav_ref.addListenerForSingleValueEvent(object : ValueEventListener {
+//                                            override fun onDataChange(dataSnapshot: DataSnapshot) {
+//                                                if (dataSnapshot.exists()) {
+//                                                    if (dataSnapshot.hasChild(name)) {
+//                                                        val mentorData = recycler_searchresults_data(
+//                                                            profilePicUrl,
+//                                                            name,
+//                                                            occupation,
+//                                                            status,
+//                                                            price,R.drawable.red_heart_btn,1
+//                                                        )
+//                                                        adapter_data_list.add(mentorData)
+//                                                        val adapter = recycler_searchresults_adapter(adapter_data_list,this@search_results_activity)
+//                                                        recyclerView.adapter = adapter
+//                                                        Toast.makeText(this@search_results_activity,"SUII1",Toast.LENGTH_SHORT).show()
+//
+//
+//                                                        // Notify your adapter that the data has changed
+//                                                        adapter.notifyDataSetChanged()
+//
+//                                                    } else {
+//                                                        val mentorData = recycler_searchresults_data(
+//                                                            profilePicUrl,
+//                                                            name,
+//                                                            occupation,
+//                                                            status,
+//                                                            price,R.drawable.heart_unfilled,0
+//                                                        )
+//                                                        adapter_data_list.add(mentorData)
+//                                                        val adapter = recycler_searchresults_adapter(adapter_data_list,this@search_results_activity)
+//                                                        recyclerView.adapter = adapter
+//
+//                                                        Toast.makeText(this@search_results_activity,"SUII2",Toast.LENGTH_SHORT).show()
+//
+//                                                        // Notify your adapter that the data has changed
+//                                                        adapter.notifyDataSetChanged()
+//
+//                                                    }
+//                                                }
+//                                            }
+//
+//                                            override fun onCancelled(databaseError: DatabaseError) {
+//                                                // Handle error
+//                                            }
+//                                        })
+//                                    } else {
+//
+//                                        val mentorData = recycler_searchresults_data(
+//                                            profilePicUrl,
+//                                            name,
+//                                            occupation,
+//                                            status,
+//                                            price,R.drawable.heart_unfilled,0
+//                                        )
+//                                        adapter_data_list.add(mentorData)
+//                                        val adapter = recycler_searchresults_adapter(adapter_data_list,this@search_results_activity)
+//                                        recyclerView.adapter = adapter
+//                                        Toast.makeText(this@search_results_activity,"SUII3",Toast.LENGTH_SHORT).show()
+//
+//
+//                                        // Notify your adapter that the data has changed
+//                                        adapter.notifyDataSetChanged()
+//
+//                                    }
+//                                }
+//
+//                                override fun onCancelled(databaseError: DatabaseError) {
+//                                    // Handle error
+//                                }
+//                            })
+//                        }
+//                    }
+////                    val adapter = recycler_searchresults_adapter(adapter_data_list,this@search_results_activity)
+////                    recyclerView.adapter = adapter
+////
+////
+////                    // Notify your adapter that the data has changed
+////                     adapter.notifyDataSetChanged()
+//                }
+//
+//                override fun onCancelled(databaseError: DatabaseError) {
+//                    // Handle error
+//                    Toast.makeText(this@search_results_activity,"Unable to Fetch Mentor Data",Toast.LENGTH_LONG).show()
+//                }
+//            })
+//
+//        }
+//
 
 
 
@@ -469,62 +575,261 @@ class search_results_activity : AppCompatActivity(), click_listner {
 //        recyclerView.adapter = adapter
 
     }
-    override fun click_function(txt:String){
+
+    fun getMentors(mentorName: String, callback: () -> Unit) {
+        val tempURL = "${url}getmentordata.php"
+
+        // Create a StringRequest to send a POST request
+        val request = object : StringRequest(
+            com.android.volley.Request.Method.POST, tempURL,
+            com.android.volley.Response.Listener { response ->
+                // Handle response
+                try {
+                    val jsonArray = JSONArray(response)
+
+                    // Parse mentor data from JSON response
+                    for (i in 0 until jsonArray.length()) {
+                        val mentorObject = jsonArray.getJSONObject(i)
+                        val mentor = mentorData(
+                            mentorObject.getString("mentorID"),
+                            mentorObject.getString("name"),
+                            mentorObject.getString("occupation"),
+                            mentorObject.getString("description"),
+                            mentorObject.getString("price"),
+                            mentorObject.getString("profileImg"),
+                            mentorObject.getString("status"),
+                            mentorObject.getString("favourite")
+                        )
+                        mentorList.add(mentor)
+                    }
+
+                    // Invoke the callback with mentor data
+                    callback()
+                } catch (e: JSONException) {
+                    // Handle JSON parsing error
+                    Log.e("JSON Parse Error", e.message ?: "Unknown error")
+                }
+            },
+            com.android.volley.Response.ErrorListener { error ->
+                // Handle error
+                Log.e("Error", "Error occurred: ${error.message}")
+            }
+        ) {
+            override fun getParams(): Map<String, String> {
+                val params = HashMap<String, String>()
+                params["mentorName"] = mentorName
+                return params
+            }
+        }
+
+        // Add the request to the Volley request queue
+        Volley.newRequestQueue(this).add(request)
+    }
+
+    private fun getFavouriteMentor(userID: String, callback: () -> Unit) {
+        val tempURL = "${url}getfavourite.php"
+
+        // Create a StringRequest to send a POST request
+        val request = object : StringRequest(com.android.volley.Request.Method.POST, tempURL,
+            com.android.volley.Response.Listener { response ->
+                // Handle response
+                Log.d("Response", response)
+
+                // Parse JSON response
+                val jsonArray = JSONArray(response)
+
+                for (i in 0 until jsonArray.length()) {
+                    val mentorID = jsonArray.getString(i)
+                    favList.add(mentorID)
+                }
+                callback()
+            },
+            com.android.volley.Response.ErrorListener { error ->
+                // Handle error
+                Log.e("Error", "Error occurred: ${error.message}")
+            }) {
+            override fun getParams(): Map<String, String> {
+                // Set POST parameters
+                val params = HashMap<String, String>()
+                params["userID"] = userID
+                return params
+            }
+        }
+        Volley.newRequestQueue(this).add(request)
+    }
+
+
+    private fun getTopMentors(callback: () -> Unit) {
+
+        val tempURL = "${url}getfirst7mentors.php" // Replace "your_domain" with your actual domain
+        val request = JsonArrayRequest(
+            com.android.volley.Request.Method.GET,
+            tempURL,
+            null,
+            com.android.volley.Response.Listener { response ->
+
+                for (i in 0 until response.length()) {
+                    val mentorObject = response.getJSONObject(i)
+                    val mentor = mentorData(
+                        mentorObject.getString("mentorID"),
+                        mentorObject.getString("name"),
+                        mentorObject.getString("occupation"),
+                        mentorObject.getString("description"),
+                        mentorObject.getString("price"),
+                        mentorObject.getString("profileImg"),
+                        mentorObject.getString("status"),
+                        mentorObject.getString("favourite")
+                    )
+                    mentorListTop.add(mentor)
+                }
+                callback()
+            },
+            com.android.volley.Response.ErrorListener { error ->
+                Log.e("Error", "Error fetching mentors: ${error.message}")
+            }
+        )
+        Volley.newRequestQueue(this).add(request)
+    }
+
+    override fun click_function(txt:String,mentorID: String){
         val nextActivityIntent = Intent(this, john_cooper_1_activity::class.java)
+        nextActivityIntent.putExtra("mentorID", mentorID)
+        nextActivityIntent.putExtra("userID", userID)
         nextActivityIntent.putExtra("user_name", txt)
         startActivity(nextActivityIntent)
 
     }
 
-    override fun change_heart(flag:Int,txt:String) {
-        val database = FirebaseDatabase.getInstance()
-        var my_ref = database.getReference("users")
+    override fun change_heart(flag:Int,txt:String,mentorID:String) {
 
-        val curr = mAuth.currentUser
-        val id= curr?.uid.toString()
+        if (flag == 0) {
 
-        if(flag==0){
+            val tempURL = "${url}setfavourite.php"
 
-            my_ref = database.reference.child("users").child(id)
-            my_ref.child("favourite").child(txt).setValue("true")
+            // Create a StringRequest to send a POST request
+            val request = object : StringRequest(com.android.volley.Request.Method.POST, tempURL,
+                com.android.volley.Response.Listener { response ->
 
-            FirebaseMessaging.getInstance().token.addOnCompleteListener { task ->
-                if (!task.isSuccessful) {
-                    return@addOnCompleteListener
+                    FirebaseMessaging.getInstance().token.addOnCompleteListener { task ->
+                        if (!task.isSuccessful) {
+                            return@addOnCompleteListener
+                        }
+                        val token = task.result
+                        sendPushNotification(
+                            token,
+                            "MentorMe",
+                            "Subtitle: Class",
+                            "$txt Added As Favourite",
+                            mapOf("key1" to "value1", "key2" to "value2")
+                        )
+
+                    }
+                },
+                com.android.volley.Response.ErrorListener { error ->
+                    // Handle error
+                    Log.e("Error", "Error occurred: ${error.message}")
+                }) {
+                override fun getParams(): Map<String, String> {
+                    // Set POST parameters
+                    val params = HashMap<String, String>()
+                    params["userID"] = userID
+                    params["mentorID"] = mentorID
+                    return params
                 }
-                val token = task.result
-                sendPushNotification(
-                    token,
-                    "MentorMe",
-                    "Subtitle: Class",
-                    "$txt Added As Favourite",
-                    mapOf("key1" to "value1", "key2" to "value2")
-                )
-
             }
 
-        }
-        else if (flag==1){
+            // Add the request to the RequestQueue
+            Volley.newRequestQueue(this).add(request)
 
-            val favouriteRef = database.reference.child("users").child(id).child("favourite")
-            favouriteRef.child(txt).removeValue()
+        } else if (flag == 1) {
 
-            FirebaseMessaging.getInstance().token.addOnCompleteListener { task ->
-                if (!task.isSuccessful) {
-                    return@addOnCompleteListener
+            val tempURL = "${url}removefavourite.php"
+
+            // Create a StringRequest to send a POST request
+            val request = object : StringRequest(com.android.volley.Request.Method.POST, tempURL,
+                com.android.volley.Response.Listener { response ->
+
+                    FirebaseMessaging.getInstance().token.addOnCompleteListener { task ->
+                        if (!task.isSuccessful) {
+                            return@addOnCompleteListener
+                        }
+                        val token = task.result
+                        sendPushNotification(
+                            token,
+                            "MentorMe",
+                            "Subtitle: Class",
+                            "$txt Removed From Favourite",
+                            mapOf("key1" to "value1", "key2" to "value2")
+                        )
+
+                    }
+                },
+                com.android.volley.Response.ErrorListener { error ->
+                    // Handle error
+                    Log.e("Error", "Error occurred: ${error.message}")
+                }) {
+                override fun getParams(): Map<String, String> {
+                    // Set POST parameters
+                    val params = HashMap<String, String>()
+                    params["userID"] = userID
+                    params["mentorID"] = mentorID
+                    return params
                 }
-                val token = task.result
-                sendPushNotification(
-                    token,
-                    "MentorMe",
-                    "Subtitle: Class",
-                    "$txt Removed From Favourite",
-                    mapOf("key1" to "value1", "key2" to "value2")
-                )
-
             }
 
+            // Add the request to the RequestQueue
+            Volley.newRequestQueue(this).add(request)
+
         }
+
+//        val database = FirebaseDatabase.getInstance()
+//        var my_ref = database.getReference("users")
+//
+//        val curr = mAuth.currentUser
+//        val id= curr?.uid.toString()
+//
+//        if(flag==0){
+//
+//            my_ref = database.reference.child("users").child(id)
+//            my_ref.child("favourite").child(txt).setValue("true")
+//
+//            FirebaseMessaging.getInstance().token.addOnCompleteListener { task ->
+//                if (!task.isSuccessful) {
+//                    return@addOnCompleteListener
+//                }
+//                val token = task.result
+//                sendPushNotification(
+//                    token,
+//                    "MentorMe",
+//                    "Subtitle: Class",
+//                    "$txt Added As Favourite",
+//                    mapOf("key1" to "value1", "key2" to "value2")
+//                )
+//
+//            }
+//
+//        }
+//        else if (flag==1){
+//
+//            val favouriteRef = database.reference.child("users").child(id).child("favourite")
+//            favouriteRef.child(txt).removeValue()
+//
+//            FirebaseMessaging.getInstance().token.addOnCompleteListener { task ->
+//                if (!task.isSuccessful) {
+//                    return@addOnCompleteListener
+//                }
+//                val token = task.result
+//                sendPushNotification(
+//                    token,
+//                    "MentorMe",
+//                    "Subtitle: Class",
+//                    "$txt Removed From Favourite",
+//                    mapOf("key1" to "value1", "key2" to "value2")
+//                )
+//
+//            }
+//
+//        }
     }
 
     private fun askNotificationPermission() {

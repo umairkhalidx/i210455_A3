@@ -46,13 +46,35 @@ import java.io.IOException
 import java.util.*
 import android.content.Context
 import android.content.IntentFilter
+import android.graphics.BitmapFactory
 import android.os.IBinder
+import android.provider.OpenableColumns
+import android.util.Base64
 import android.view.WindowManager
 import com.akexorcist.screenshotdetection.ScreenshotDetectionDelegate
+import com.android.volley.toolbox.StringRequest
+import com.android.volley.toolbox.Volley
+import com.squareup.picasso.Picasso
+import org.json.JSONArray
+import org.json.JSONException
+import java.io.FileNotFoundException
+import java.io.InputStream
 
 //class chat_1_activity : AppCompatActivity(), ScreenshotDetectionDelegate.ScreenshotDetectionListener {
 class chat_1_activity : AppCompatActivity() {
     @SuppressLint("MissingInflatedId")
+    lateinit var userID: String
+    lateinit var url: String
+    lateinit var mentorID: String
+    lateinit var mentorImg: String
+    var lastcheck: Long = 0
+    var maxcounter :Int =0
+
+    private lateinit var imgBitmap : Bitmap
+    private lateinit var selectedImageUri :String
+    private lateinit var encodedImage:String
+    private lateinit var uri:Uri
+
 
     private lateinit var message_recycle_view: RecyclerView
     private lateinit var message_adapter: message_adapter
@@ -142,6 +164,11 @@ class chat_1_activity : AppCompatActivity() {
 
         setContentView(R.layout.chat_1)
 
+        userID = intent.getStringExtra("userID").toString()
+        mentorID = intent.getStringExtra("mentorID").toString()
+        url = getString(R.string.url)
+        getMaxCounter(mentorID)
+
 //        checkReadExternalStoragePermission()
 
         FirebaseApp.initializeApp(this)
@@ -183,53 +210,63 @@ class chat_1_activity : AppCompatActivity() {
 
         home_btn.setOnClickListener{
             val nextActivityIntent = Intent(this, home_page_activity::class.java)
+            nextActivityIntent.putExtra("userID", userID)
             startActivity(nextActivityIntent)
             finish()
         }
 
         home_txt.setOnClickListener{
             val nextActivityIntent = Intent(this, home_page_activity::class.java)
+            nextActivityIntent.putExtra("userID", userID)
             startActivity(nextActivityIntent)
             finish()
         }
 
         search_btn.setOnClickListener{
             val nextActivityIntent = Intent(this, lets_find_activity::class.java)
+            nextActivityIntent.putExtra("userID", userID)
             startActivity(nextActivityIntent)
         }
 
         search_txt.setOnClickListener{
             val nextActivityIntent = Intent(this, lets_find_activity::class.java)
+            nextActivityIntent.putExtra("userID", userID)
             startActivity(nextActivityIntent)
         }
 
         chat_btn.setOnClickListener{
             val nextActivityIntent = Intent(this, chats_activity::class.java)
+            nextActivityIntent.putExtra("userID", userID)
             startActivity(nextActivityIntent)
         }
 
         chat_txt.setOnClickListener{
             val nextActivityIntent = Intent(this, chats_activity::class.java)
+            nextActivityIntent.putExtra("userID", userID)
             startActivity(nextActivityIntent)
         }
 
         profile_btn.setOnClickListener{
             val nextActivityIntent = Intent(this, my_profile_activity::class.java)
+            nextActivityIntent.putExtra("userID", userID)
             startActivity(nextActivityIntent)
         }
 
         profile_txt.setOnClickListener{
             val nextActivityIntent = Intent(this, my_profile_activity::class.java)
+            nextActivityIntent.putExtra("userID", userID)
             startActivity(nextActivityIntent)
         }
 
         plus_btn.setOnClickListener{
             val nextActivityIntent = Intent(this, add_new_mentor_activity::class.java)
+            nextActivityIntent.putExtra("userID", userID)
             startActivity(nextActivityIntent)
         }
 
         plus_btn.setOnClickListener{
             val nextActivityIntent = Intent(this, add_new_mentor_activity::class.java)
+            nextActivityIntent.putExtra("userID", userID)
             startActivity(nextActivityIntent)
         }
 
@@ -266,22 +303,34 @@ class chat_1_activity : AppCompatActivity() {
 
 
         val mentorName = intent.getStringExtra("MENTOR_NAME")
-        mentorName?.let {
-            mentorNameTextView.text = it
-            messages_ref = database.reference.child("users").child(userId).child("messages").child("messages_$it") // Use mentor's name in the database path
-        }
+//        mentorName?.let {
+//            mentorNameTextView.text = it
+//            messages_ref = database.reference.child("users").child(userId).child("messages").child("messages_$it") // Use mentor's name in the database path
+//        }
+
+
+        mentorNameTextView.text = mentorName
+//        getMentorImg(mentorID){
+//            if(mentorImg!=""){
+//                mentorNameTextView.text = mentorName
+//            }
+//        }
 
         val audiocall_btn: ImageButton =findViewById(R.id.audiocall_button)
         val videocall_btn: ImageButton =findViewById(R.id.videocall_btn)
 
         audiocall_btn.setOnClickListener{
             val nextActivityIntent = Intent(this, call_1_activity::class.java)
+            nextActivityIntent.putExtra("mentorID", mentorID)
+            nextActivityIntent.putExtra("userID", userID)
             nextActivityIntent.putExtra("MENTOR_NAME",mentorName )
             startActivity(nextActivityIntent)
         }
 
         videocall_btn.setOnClickListener{
             val nextActivityIntent = Intent(this, call_2_activity::class.java)
+            nextActivityIntent.putExtra("mentorID", mentorID)
+            nextActivityIntent.putExtra("userID", userID)
             nextActivityIntent.putExtra("MENTOR_NAME",mentorName )
             startActivity(nextActivityIntent)
         }
@@ -293,7 +342,7 @@ class chat_1_activity : AppCompatActivity() {
                 val message = message_list[position]
                 if (message.audioUrl != null) {
                     // Play audio
-                    play_audio_func(message.audioUrl)
+//                    play_audio_func(message.audioUrl!!)
                 } else {
                     // Handle other message types
                     show_edit_dialogbox(message)
@@ -364,7 +413,7 @@ class chat_1_activity : AppCompatActivity() {
                 audio_recorder.stopRecording { audioUri ->
                     if (audioUri != null) {
                         Toast.makeText(this, "Recording Stoped", Toast.LENGTH_SHORT).show()
-                        upload_audio_toFirebase(audioUri)
+                        upload_audio(audioUri)
 
                     } else {
                         // Handle audio recording failure
@@ -377,45 +426,59 @@ class chat_1_activity : AppCompatActivity() {
             }
         }
 
+
         // Listen for new messages
-        messages_ref.addChildEventListener(object : ChildEventListener {
-            override fun onChildAdded(snapshot: DataSnapshot, previousChildName: String?) {
-                val message = snapshot.getValue(message_data::class.java)
-                if (message != null) {
-                    message_list.add(message)
-                    message_adapter.notifyItemInserted(message_list.size - 1)
-                    scrollToBottom()
-                }
-            }
+        getMessageData(mentorID)
 
-            override fun onChildChanged(snapshot: DataSnapshot, previousChildName: String?) {
-                val updatedMessage = snapshot.getValue(message_data::class.java)
-                if (updatedMessage != null) {
-                    val existingMessage = message_list.find { it.userId == updatedMessage.userId }
-                    if (existingMessage != null) {
-                        val index = message_list.indexOf(existingMessage)
-                        message_list[index] = updatedMessage
-                        message_adapter.notifyItemChanged(index)
-                    }
-                }
-            }
 
-            override fun onChildRemoved(snapshot: DataSnapshot) {
-                val removedMessage = snapshot.getValue(message_data::class.java)
-                if (removedMessage != null) {
-                    val existingMessage = message_list.find { it.userId == removedMessage.userId }
-                    if (existingMessage != null) {
-                        val index = message_list.indexOf(existingMessage)
-                        message_list.removeAt(index)
-                        message_adapter.notifyItemRemoved(index)
-                    }
-                }
-            }
 
-            override fun onChildMoved(snapshot: DataSnapshot, previousChildName: String?) {}
 
-            override fun onCancelled(error: DatabaseError) {}
-        })
+
+
+
+
+//
+//        // Listen for new messages
+//        messages_ref.addChildEventListener(object : ChildEventListener {
+//            override fun onChildAdded(snapshot: DataSnapshot, previousChildName: String?) {
+//                val message = snapshot.getValue(message_data::class.java)
+//                if (message != null) {
+//                    message_list.add(message)
+//                    message_adapter.notifyItemInserted(message_list.size - 1)
+//                    scrollToBottom()
+//                }
+//            }
+//
+//            override fun onChildChanged(snapshot: DataSnapshot, previousChildName: String?) {
+//                val updatedMessage = snapshot.getValue(message_data::class.java)
+//                if (updatedMessage != null) {
+//                    val existingMessage = message_list.find { it.userId == updatedMessage.userId }
+//                    if (existingMessage != null) {
+//                        val index = message_list.indexOf(existingMessage)
+//                        message_list[index] = updatedMessage
+//                        message_adapter.notifyItemChanged(index)
+//                    }
+//                }
+//            }
+//
+//            override fun onChildRemoved(snapshot: DataSnapshot) {
+//                val removedMessage = snapshot.getValue(message_data::class.java)
+//                if (removedMessage != null) {
+//                    val existingMessage = message_list.find { it.userId == removedMessage.userId }
+//                    if (existingMessage != null) {
+//                        val index = message_list.indexOf(existingMessage)
+//                        message_list.removeAt(index)
+//                        message_adapter.notifyItemRemoved(index)
+//                    }
+//                }
+//            }
+//
+//            override fun onChildMoved(snapshot: DataSnapshot, previousChildName: String?) {}
+//
+//            override fun onCancelled(error: DatabaseError) {}
+//        })
+
+
 
         // Check for internet connectivity and sync offline messages
         if (check_network()) {
@@ -425,48 +488,224 @@ class chat_1_activity : AppCompatActivity() {
         }
     }
 
+
+
+
     private fun scrollToBottom() {
         message_recycle_view.scrollToPosition(message_adapter.itemCount - 1)
     }
 
     private fun send_message_func(messageText: String,mentor_name:String) {
 
-        val userId = auth.currentUser?.uid
-        if (userId != null) {
-            val message = message_data(userId, messageText, System.currentTimeMillis(), null, null, null)
-            messages_ref.push().setValue(message)
-                .addOnSuccessListener {
-                    editTextMessage.text.clear()
+        val tempUrl = "${url}insertmessage.php"
+        val type:Int=1
+        maxcounter=maxcounter+1
 
-                    if(my_flag==0){
+        val stringRequest = object : StringRequest(
+            com.android.volley.Request.Method.POST, tempUrl,
+            com.android.volley.Response.Listener { response ->
+                // Handle response
+                val message = message_data(userID,mentorID, messageText, System.currentTimeMillis(), null, null, null,"","1",maxcounter-1)
+                message_list.add(message)
+                // Notify the adapter about the new message
+                message_adapter.notifyItemInserted(message_list.size - 1)
+//                     Scroll to the bottom of the message list
+                scrollToBottom()
 
-                        FirebaseMessaging.getInstance().token.addOnCompleteListener { task ->
-                            if (!task.isSuccessful) {
-                                return@addOnCompleteListener
-                            }
-                            val token = task.result
-                            sendPushNotification(
-                                token,
-                                mentor_name.toString(),
-                                "Subtitle: Class",
-                                "I'll Get Back to You Soon",
-                                mapOf("key1" to "value1", "key2" to "value2")
-                            )
+                if(my_flag==0){
 
+                    FirebaseMessaging.getInstance().token.addOnCompleteListener { task ->
+                        if (!task.isSuccessful) {
+                            return@addOnCompleteListener
                         }
-                        my_flag=1;
+                        val token = task.result
+                        sendPushNotification(
+                            token,
+                            mentor_name.toString(),
+                            "Subtitle: Class",
+                            "I'll Get Back to You Soon",
+                            mapOf("key1" to "value1", "key2" to "value2")
+                        )
 
                     }
+                    my_flag=1;
 
                 }
-                .addOnFailureListener {
-                    // Handle message sending failure
-                    Toast.makeText(this, "Failed to send message", Toast.LENGTH_SHORT).show()
-                    // Add message to offline list
-                    offline_messages.add(message)
-                }
+            },
+            com.android.volley.Response.ErrorListener { error ->
+                // Handle message sending failure
+                Toast.makeText(this, "Failed to send message", Toast.LENGTH_SHORT).show()
+                // Add message to offline list
+                val message = message_data(userID,mentorID, messageText, System.currentTimeMillis(), null, null, null,"","1",maxcounter-1)
+                offline_messages.add(message)
+                message_list.add(message)
+                // Notify the adapter about the new message
+                message_adapter.notifyItemInserted(message_list.size - 1)
+//                     Scroll to the bottom of the message list
+                scrollToBottom()
+            }) {
+            override fun getParams(): Map<String, String> {
+                val params = HashMap<String, String>()
+                params["userID"] = userID
+                params["mentorID"] = mentorID
+                params["message"] =  messageText
+                params["image"] = ""
+                params["file"] = ""
+                params["audio"] = ""
+                params["type"] = type.toString()
+                params["time"] = System.currentTimeMillis().toString()
+                params["counter"] = maxcounter.toString()
+                return params
+            }
         }
+
+        // Add the request to the RequestQueue
+        Volley.newRequestQueue(this).add(stringRequest)
+
+
+//        val userId = auth.currentUser?.uid
+//        if (userId != null) {
+//            val message = message_data(userId,mentorID, messageText, System.currentTimeMillis(), null, null, null)
+//            messages_ref.push().setValue(message)
+//                .addOnSuccessListener {
+//                    editTextMessage.text.clear()
+//
+//                    if(my_flag==0){
+//
+//                        FirebaseMessaging.getInstance().token.addOnCompleteListener { task ->
+//                            if (!task.isSuccessful) {
+//                                return@addOnCompleteListener
+//                            }
+//                            val token = task.result
+//                            sendPushNotification(
+//                                token,
+//                                mentor_name.toString(),
+//                                "Subtitle: Class",
+//                                "I'll Get Back to You Soon",
+//                                mapOf("key1" to "value1", "key2" to "value2")
+//                            )
+//
+//                        }
+//                        my_flag=1;
+//
+//                    }
+//
+//                }
+//                .addOnFailureListener {
+//                    // Handle message sending failure
+//                    Toast.makeText(this, "Failed to send message", Toast.LENGTH_SHORT).show()
+//                    // Add message to offline list
+//                    offline_messages.add(message)
+//                }
+//        }
     }
+
+
+    fun getMaxCounter(mentorID: String) {
+        val tempURL = "${url}getmaxcountermessage.php"
+
+        val stringRequest = object : StringRequest(
+            com.android.volley.Request.Method.POST, tempURL,
+            com.android.volley.Response.Listener { response ->
+                try {
+                    val jsonObject = JSONObject(response)
+                    maxcounter = jsonObject.getInt("max_counter")
+                } catch (e: JSONException) {
+                    e.printStackTrace()
+                    // Handle JSON exception
+                }
+            },
+            com.android.volley.Response.ErrorListener { error ->
+                error.printStackTrace()
+                // Handle error
+            }) {
+            override fun getParams(): Map<String, String> {
+                val params = HashMap<String, String>()
+                params["userID"] = userID
+                params["mentorID"] = mentorID
+                return params
+            }
+        }
+
+        // Add the request to the RequestQueue
+        Volley.newRequestQueue(this).add(stringRequest)
+    }
+
+
+    fun getMessageData(mentorID: String) {
+        val tempURL = "${url}getmessages.php"
+
+        val stringRequest = object : StringRequest(
+            com.android.volley.Request.Method.POST, tempURL,
+            com.android.volley.Response.Listener { response ->
+                try {
+                    val jsonArray = JSONArray(response)
+
+                    for (i in 0 until jsonArray.length()) {
+                        val jsonObject = jsonArray.getJSONObject(i)
+                        val message = message_data(
+                            userID,
+                            mentorID,
+                            jsonObject.getString("message"),
+                            jsonObject.getLong("time").toLong(),
+                            jsonObject.getString("audio"),
+                            jsonObject.getString("image"),
+                            jsonObject.getString("file"),
+                            "",
+                            jsonObject.getString("type"),
+                            jsonObject.getInt("counter")
+                        )
+                        if(message.type=="1"){
+                            message.imageUrl=null;
+                            message.fileUrl=null;
+                            message.audioUrl=null;
+                        }
+                        if(message.type=="2"){
+                            message.fileUrl=null;
+                            message.audioUrl=null;
+                        }
+                        if(message.type=="3"){
+                            message.imageUrl=null;
+                            message.audioUrl=null;
+                        }
+                        if(message.type=="4"){
+                            message.imageUrl=null;
+                            message.fileUrl=null;
+                        }
+                        message_list.add(message)
+                        message_adapter.notifyItemInserted(message_list.size - 1)
+                        scrollToBottom()
+                    }
+                } catch (e: JSONException) {
+                    e.printStackTrace()
+                    // Handle JSON exception
+                }
+            },
+            com.android.volley.Response.ErrorListener { error ->
+                error.printStackTrace()
+                // Handle error
+            }) {
+            override fun getParams(): Map<String, String> {
+                val params = HashMap<String, String>()
+                params["userID"] = userID
+                params["mentorID"] = mentorID
+                return params
+            }
+        }
+
+        // Add the request to the RequestQueue
+        Volley.newRequestQueue(this).add(stringRequest)
+    }
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -492,20 +731,28 @@ class chat_1_activity : AppCompatActivity() {
         if (resultCode == Activity.RESULT_OK) {
             when (requestCode) {
                 IMAGE_PICK_CODE -> {
-                    data?.data?.let { imageUri ->
-                        upload_img_to_firebase(imageUri)
+                    uri = data?.data!!
+                    imageStore(uri){
+                        upload_img(uri)
                     }
+//                    data?.data?.let { imageUri ->
+//                        upload_img_to_firebase(imageUri)
+//                    }
                 }
                 FILE_PICK_CODE -> {
                     data?.data?.let { fileUri ->
-                        upload_file_to_firebase(fileUri)
+                        upload_file(fileUri)
                     }
                 }
                 CAMERA_REQUEST_CODE -> {
                     val imageBitmap = data?.extras?.get("data") as? Bitmap
                     imageBitmap?.let {
                         val imageUri = getImageUriFromBitmap(it)
-                        upload_img_to_firebase(imageUri)
+                        imageStore(imageUri){
+                            upload_img(imageUri)
+                        }
+//                        val imageUri = getImageUriFromBitmap(it)
+//                        upload_img_to_firebase(imageUri)
                     }
                 }
             }
@@ -524,103 +771,285 @@ class chat_1_activity : AppCompatActivity() {
         return Uri.parse(path)
     }
 
-    private fun upload_img_to_firebase(imageUri: Uri) {
-        val userId = auth.currentUser?.uid
-        if (userId != null) {
-            val imageRef = storage_ref.child("profile_images/${UUID.randomUUID()}")
-            val uploadTask = imageRef.putFile(imageUri)
-            uploadTask.continueWithTask { task ->
-                if (!task.isSuccessful) {
-                    task.exception?.let {
-                        throw it
-                    }
-                }
-                imageRef.downloadUrl
-            }.addOnCompleteListener { task ->
-                if (task.isSuccessful) {
-                    val downloadUri = task.result
-                    val message = message_data(
-                        userId,
-                        "",
-                        System.currentTimeMillis(),
-                        null,
-                        downloadUri.toString(),
-                        null
-                    )
-                    messages_ref.push().setValue(message)
-                } else {
-                    // Handle unsuccessful upload
-                    Toast.makeText(this, "Failed to upload image", Toast.LENGTH_SHORT).show()
-                }
-            }
+    private fun imageStore(uri: Uri,callback: () -> Unit) {
+        var inputStream: InputStream? = null
+        try {
+            inputStream = contentResolver.openInputStream(uri)
+            imgBitmap = BitmapFactory.decodeStream(inputStream)
+            val stream = ByteArrayOutputStream()
+            imgBitmap.compress(Bitmap.CompressFormat.JPEG, 100, stream)
+            val imageByte: ByteArray = stream.toByteArray()
+            encodedImage = Base64.encodeToString(imageByte, Base64.DEFAULT)
+            callback()
+        } catch (e: FileNotFoundException) {
+            e.printStackTrace()
         }
     }
 
-    private fun upload_file_to_firebase(fileUri: Uri) {
-        val userId = auth.currentUser?.uid
-        if (userId != null) {
-            val fileRef = storage_ref.child("files/${UUID.randomUUID()}")
-            val uploadTask = fileRef.putFile(fileUri)
-            uploadTask.continueWithTask { task ->
-                if (!task.isSuccessful) {
-                    task.exception?.let {
-                        throw it
-                    }
-                }
-                fileRef.downloadUrl
-            }.addOnCompleteListener { task ->
-                if (task.isSuccessful) {
-                    val downloadUri = task.result
-                    val message = message_data(
-                        userId,
-                        "",
-                        System.currentTimeMillis(),
-                        null,
-                        null,
-                        downloadUri.toString()
-                    )
-                    messages_ref.push().setValue(message)
-                } else {
-                    // Handle unsuccessful upload
-                    Toast.makeText(this, "Failed to upload file", Toast.LENGTH_SHORT).show()
-                }
+    private fun upload_img(imageUri: Uri) {
+
+        var tempUrl= "${url}insertmessageimage.php"
+        val type:Int=2
+        maxcounter=maxcounter+1
+
+        val stringRequest = object : StringRequest(
+            com.android.volley.Request.Method.POST, tempUrl,
+            com.android.volley.Response.Listener { response ->
+                // Handle response
+                val message = message_data(userID,mentorID, "", System.currentTimeMillis(), null, encodedImage.toString(), null,"","2",maxcounter-1)
+                message_list.add(message)
+                // Notify the adapter about the new message
+                message_adapter.notifyItemInserted(message_list.size - 1)
+//                     Scroll to the bottom of the message list
+                scrollToBottom()
+            },
+            com.android.volley.Response.ErrorListener { error ->
+                // Handle message sending failure
+                Toast.makeText(this, "Failed to send message", Toast.LENGTH_SHORT).show()
+                // Add message to offline list
+                val message = message_data(userID,mentorID, "", System.currentTimeMillis(), null,encodedImage.toString() ,null,"","2",maxcounter-1)
+                offline_messages.add(message)
+                message_list.add(message)
+                // Notify the adapter about the new message
+                message_adapter.notifyItemInserted(message_list.size - 1)
+//                     Scroll to the bottom of the message list
+                scrollToBottom()
+            }) {
+            override fun getParams(): Map<String, String> {
+                val params = HashMap<String, String>()
+                params["userID"] = userID
+                params["mentorID"] = mentorID
+                params["message"] = ""
+                params["image"] = encodedImage
+                params["file"] = ""
+                params["audio"] = ""
+                params["type"] = type.toString()
+                params["time"] = System.currentTimeMillis().toString()
+                params["counter"] = maxcounter.toString()
+                return params
             }
         }
+        // Add the request to the RequestQueue
+        Volley.newRequestQueue(this).add(stringRequest)
+
+
+//        val userId = auth.currentUser?.uid
+//        if (userId != null) {
+//            val imageRef = storage_ref.child("profile_images/${UUID.randomUUID()}")
+//            val uploadTask = imageRef.putFile(imageUri)
+//            uploadTask.continueWithTask { task ->
+//                if (!task.isSuccessful) {
+//                    task.exception?.let {
+//                        throw it
+//                    }
+//                }
+//                imageRef.downloadUrl
+//            }.addOnCompleteListener { task ->
+//                if (task.isSuccessful) {
+//                    val downloadUri = task.result
+//                    val message = message_data(
+//                        userId,
+//                        mentorID,
+//                        "",
+//                        System.currentTimeMillis(),
+//                        null,
+//                        downloadUri.toString(),
+//                        null
+//                    )
+//                    messages_ref.push().setValue(message)
+//                } else {
+//                    // Handle unsuccessful upload
+//                    Toast.makeText(this, "Failed to upload image", Toast.LENGTH_SHORT).show()
+//                }
+//            }
+//        }
     }
 
-    private fun upload_audio_toFirebase(audioUri: Uri) {
 
-        val userId = auth.currentUser?.uid
-        if (userId != null) {
-            val audioRef = storage_ref.child("audio/${UUID.randomUUID()}")
-            val uploadTask = audioRef.putFile(audioUri)
-            uploadTask.continueWithTask { task ->
-                if (!task.isSuccessful) {
-                    task.exception?.let {
-                        throw it
-                    }
-                }
-                audioRef.downloadUrl
-            }.addOnCompleteListener { task ->
-                if (task.isSuccessful) {
-                    val downloadUri = task.result
-                    val message = message_data(
-                        userId,
-                        "",
-                        System.currentTimeMillis(),
-                        downloadUri.toString(),
-                        null,
-                        null
-                    )
-                    messages_ref.push().setValue(message)
-                    Log.d("AudioUpload", "Audio uploaded successfully: $downloadUri")
-                } else {
-                    // Handle unsuccessful upload
-                    Toast.makeText(this, "Failed to upload audio", Toast.LENGTH_SHORT).show()
-                    Log.e("AudioUpload", "Failed to upload audio")
-                }
+    @SuppressLint("Range")
+    private fun getFileNameFromUri(uri: Uri): String {
+        val cursor = contentResolver.query(uri, null, null, null, null)
+        cursor?.use {
+            if (it.moveToFirst()) {
+                val displayName = it.getString(it.getColumnIndex(OpenableColumns.DISPLAY_NAME))
+                cursor.close()
+                return displayName
             }
         }
+        return ""
+    }
+
+
+
+    private fun upload_file(fileUri: Uri) {
+
+        val tempUrl = "${url}insertmessagefile.php"
+        val type: Int = 3 // Assuming file type is 3
+        maxcounter = maxcounter + 1
+        val name = getFileNameFromUri(fileUri)
+
+        val stringRequest = object : StringRequest(
+            com.android.volley.Request.Method.POST, tempUrl,
+            com.android.volley.Response.Listener { response ->
+                val message = message_data(userID,mentorID, "", System.currentTimeMillis(), null,null, name.toString(),"","3",maxcounter-1)
+                message_list.add(message)
+                // Notify the adapter about the new message
+                message_adapter.notifyItemInserted(message_list.size - 1)
+//                     Scroll to the bottom of the message list
+                scrollToBottom()
+            },
+            com.android.volley.Response.ErrorListener { error ->
+
+                Toast.makeText(this, "Failed to Upload File", Toast.LENGTH_SHORT).show()
+                // Add message to offline list
+                val message = message_data(userID,mentorID, "", System.currentTimeMillis(), null,encodedImage.toString() ,null,"","3",maxcounter-1)
+                offline_messages.add(message)
+                message_list.add(message)
+                // Notify the adapter about the new message
+                message_adapter.notifyItemInserted(message_list.size - 1)
+//                     Scroll to the bottom of the message list
+                scrollToBottom()
+            }) {
+            override fun getParams(): Map<String, String> {
+                val params = HashMap<String, String>()
+                params["userID"] = userID
+                params["mentorID"] = mentorID
+                params["message"] = ""
+                params["image"] = ""
+                params["file"] = name
+                params["audio"] = ""
+                params["type"] = type.toString()
+                params["time"] = System.currentTimeMillis().toString()
+                params["counter"] = maxcounter.toString()
+                return params
+            }
+            fun getByteData(): Map<String, DataPart> {
+                val fileName = getFileNameFromUri(fileUri)
+                val params = HashMap<String, DataPart>()
+                val fileInputStream = contentResolver.openInputStream(fileUri)
+                val bytes = fileInputStream?.readBytes()
+                fileInputStream?.close()
+                bytes?.let {
+                    // Here, we are sending the actual file data to the server
+                    params["file1"] = DataPart(fileName, it, "application/octet-stream")
+                }
+                return params
+            }
+        }
+
+// Add the request to the RequestQueue
+        Volley.newRequestQueue(this).add(stringRequest)
+
+
+//        val userId = auth.currentUser?.uid
+//        if (userId != null) {
+//            val fileRef = storage_ref.child("files/${UUID.randomUUID()}")
+//            val uploadTask = fileRef.putFile(fileUri)
+//            uploadTask.continueWithTask { task ->
+//                if (!task.isSuccessful) {
+//                    task.exception?.let {
+//                        throw it
+//                    }
+//                }
+//                fileRef.downloadUrl
+//            }.addOnCompleteListener { task ->
+//                if (task.isSuccessful) {
+//                    val downloadUri = task.result
+//                    val message = message_data(
+//                        userId,
+//                        mentorID,
+//                        "",
+//                        System.currentTimeMillis(),
+//                        null,
+//                        null,
+//                        downloadUri.toString()
+//                    )
+//                    messages_ref.push().setValue(message)
+//                } else {
+//                    // Handle unsuccessful upload
+//                    Toast.makeText(this, "Failed to upload file", Toast.LENGTH_SHORT).show()
+//                }
+//            }
+//        }
+    }
+
+    private fun upload_audio(audioUri: Uri) {
+
+        val tempUrl = "${url}insertmessageaudio.php"
+        val type: Int = 4
+        maxcounter++
+        val stringRequest = object : StringRequest(
+            com.android.volley.Request.Method.POST, tempUrl,
+            com.android.volley.Response.Listener { response ->
+                val message = message_data(userID,mentorID, "", System.currentTimeMillis(), audioUri.toString(),null, null,"","4",maxcounter-1)
+                message_list.add(message)
+                // Notify the adapter about the new message
+                message_adapter.notifyItemInserted(message_list.size - 1)
+//                     Scroll to the bottom of the message list
+                scrollToBottom()
+            },
+            com.android.volley.Response.ErrorListener { error ->
+                Toast.makeText(this, "Failed to Upload Audio", Toast.LENGTH_SHORT).show()
+                // Add message to offline list
+                val message = message_data(userID,mentorID, "", System.currentTimeMillis(), audioUri.toString(),null ,null,"","4",maxcounter-1)
+                offline_messages.add(message)
+                message_list.add(message)
+                // Notify the adapter about the new message
+                message_adapter.notifyItemInserted(message_list.size - 1)
+//                     Scroll to the bottom of the message list
+                scrollToBottom()
+            }) {
+            override fun getParams(): Map<String, String> {
+                val params = HashMap<String, String>()
+                params["userID"] = userID
+                params["mentorID"] = mentorID
+                params["message"] = ""
+                params["image"] = ""
+                params["file"] = ""
+                params["audio"] = audioUri.toString()
+                params["type"] = type.toString()
+                params["time"] = System.currentTimeMillis().toString()
+                params["counter"] = maxcounter.toString()
+                return params
+            }
+        }
+
+        // Add the request to the RequestQueue
+        Volley.newRequestQueue(this).add(stringRequest)
+
+
+//        val userId = auth.currentUser?.uid
+//        if (userId != null) {
+//            val audioRef = storage_ref.child("audio/${UUID.randomUUID()}")
+//            val uploadTask = audioRef.putFile(audioUri)
+//            uploadTask.continueWithTask { task ->
+//                if (!task.isSuccessful) {
+//                    task.exception?.let {
+//                        throw it
+//                    }
+//                }
+//                audioRef.downloadUrl
+//            }.addOnCompleteListener { task ->
+//                if (task.isSuccessful) {
+//                    val downloadUri = task.result
+//                    val message = message_data(
+//                        userId,
+//                        mentorID,
+//                        "",
+//                        System.currentTimeMillis(),
+//                        downloadUri.toString(),
+//                        null,
+//                        null
+//                    )
+//                    messages_ref.push().setValue(message)
+//                    Log.d("AudioUpload", "Audio uploaded successfully: $downloadUri")
+//                } else {
+//                    // Handle unsuccessful upload
+//                    Toast.makeText(this, "Failed to upload audio", Toast.LENGTH_SHORT).show()
+//                    Log.e("AudioUpload", "Failed to upload audio")
+//                }
+//            }
+//        }
     }
 
 
@@ -674,27 +1103,59 @@ class chat_1_activity : AppCompatActivity() {
     }
 
     private fun update_message(oldMessage: message_data, newMessageText: String) {
-        val messageRef = messages_ref.child(oldMessage.userId ?: "")
-        val updatedMessage = oldMessage.copy(messageText = newMessageText)
-        messageRef.setValue(updatedMessage)
-            .addOnSuccessListener {
-                // Update local list and notify adapter
+
+        val tempUrl = "${url}editmessageuserid.php"
+
+        val stringRequest = object : StringRequest(
+            com.android.volley.Request.Method.POST, tempUrl,
+            com.android.volley.Response.Listener { response ->
+                val updatedMessage = oldMessage.copy(messageText = newMessageText)
                 val index = message_list.indexOf(oldMessage)
                 if (index != -1) {
                     message_list[index] = updatedMessage
                     message_adapter.notifyItemChanged(index)
                 }
+            },
+            com.android.volley.Response.ErrorListener { error ->
+                Toast.makeText(this,"Unable to Edit Message",Toast.LENGTH_LONG).show()
+            }) {
+            override fun getParams(): Map<String, String> {
+                val params = HashMap<String, String>()
+                params["counter"] = oldMessage.counter.toString()
+                params["userID"] = oldMessage.userId.toString()
+                params["mentorID"] = oldMessage.mentorId.toString()
+                params["newMessageText"] = newMessageText
+                return params
             }
-            .addOnFailureListener {
-                Toast.makeText(this, "Failed to update message", Toast.LENGTH_SHORT).show()
-            }
+        }
+
+        // Add the request to the RequestQueue
+        Volley.newRequestQueue(this).add(stringRequest)
+
+//        val messageRef = messages_ref.child(oldMessage.userId ?: "")
+//        val updatedMessage = oldMessage.copy(messageText = newMessageText)
+//        messageRef.setValue(updatedMessage)
+//            .addOnSuccessListener {
+//                // Update local list and notify adapter
+//                val index = message_list.indexOf(oldMessage)
+//                if (index != -1) {
+//                    message_list[index] = updatedMessage
+//                    message_adapter.notifyItemChanged(index)
+//                }
+//            }
+//            .addOnFailureListener {
+//                Toast.makeText(this, "Failed to update message", Toast.LENGTH_SHORT).show()
+//            }
     }
 
     private fun delete_message(message: message_data) {
-        val messageRef = messages_ref.child(message.userId ?: "")
-        messageRef.removeValue()
-            .addOnSuccessListener {
-                // Remove from local list and notify adapter
+
+        val tempUrl = "${url}deletemessageuserid.php"
+
+        val stringRequest = object : StringRequest(
+            com.android.volley.Request.Method.POST, tempUrl,
+            com.android.volley.Response.Listener { response ->
+
                 val index = message_list.indexOf(message)
                 if (index != -1) {
                     message_list.removeAt(index)
@@ -703,10 +1164,38 @@ class chat_1_activity : AppCompatActivity() {
                     // Message not found in the list
                     // Handle this case if needed
                 }
+            },
+            com.android.volley.Response.ErrorListener { error ->
+                Toast.makeText(this,"Unable to Delete Message",Toast.LENGTH_LONG).show()
+            }) {
+            override fun getParams(): Map<String, String> {
+                val params = HashMap<String, String>()
+                params["counter"] = message.counter.toString()
+                params["userID"] = message.userId.toString()
+                params["mentorID"] = message.mentorId.toString()
+                return params
             }
-            .addOnFailureListener {
-                Toast.makeText(this, "Failed to delete message", Toast.LENGTH_SHORT).show()
-            }
+        }
+
+        // Add the request to the RequestQueue
+        Volley.newRequestQueue(this).add(stringRequest)
+
+//        val messageRef = messages_ref.child(message.userId ?: "")
+//        messageRef.removeValue()
+//            .addOnSuccessListener {
+//                // Remove from local list and notify adapter
+//                val index = message_list.indexOf(message)
+//                if (index != -1) {
+//                    message_list.removeAt(index)
+//                    message_adapter.notifyItemRemoved(index)
+//                } else {
+//                    // Message not found in the list
+//                    // Handle this case if needed
+//                }
+//            }
+//            .addOnFailureListener {
+//                Toast.makeText(this, "Failed to delete message", Toast.LENGTH_SHORT).show()
+//            }
     }
 
     override fun onRequestPermissionsResult(requestCode: Int, permissions: Array<out String>, grantResults: IntArray) {

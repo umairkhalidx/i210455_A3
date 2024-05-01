@@ -19,6 +19,9 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.core.content.ContextCompat
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
+import com.android.volley.toolbox.JsonArrayRequest
+import com.android.volley.toolbox.StringRequest
+import com.android.volley.toolbox.Volley
 import com.google.android.gms.tasks.OnCompleteListener
 import com.google.firebase.FirebaseApp
 import com.google.firebase.auth.FirebaseAuth
@@ -29,6 +32,7 @@ import com.google.firebase.database.ValueEventListener
 import com.google.firebase.messaging.FirebaseMessaging
 import com.google.gson.Gson
 import com.google.gson.reflect.TypeToken
+import com.squareup.picasso.Picasso
 import okhttp3.Call
 import okhttp3.Callback
 import okhttp3.MediaType.Companion.toMediaType
@@ -36,13 +40,21 @@ import okhttp3.OkHttpClient
 import okhttp3.Request
 import okhttp3.RequestBody.Companion.toRequestBody
 import okhttp3.Response
+import org.json.JSONArray
+import org.json.JSONException
 import org.json.JSONObject
 import java.io.IOException
 import kotlin.math.max
 
-class home_page_activity : AppCompatActivity() , click_listner {
+class home_page_activity : AppCompatActivity(), click_listner {
     @SuppressLint("MissingInflatedId")
-    private var  mAuth = FirebaseAuth.getInstance();
+    private var mAuth = FirebaseAuth.getInstance();
+    lateinit var userID: String
+    lateinit var url: String
+    var mentorListTop = mutableListOf<mentorData>()
+    var mentorListEdu = mutableListOf<mentorData>()
+    val favList = ArrayList<String>()
+
 
     private val requestPermissionLauncher = registerForActivityResult(
         ActivityResultContracts.RequestPermission()
@@ -53,10 +65,13 @@ class home_page_activity : AppCompatActivity() , click_listner {
             // Permission is not granted, handle accordingly
         }
     }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
         setContentView(R.layout.home_page)
+        userID = intent.getStringExtra("userID").toString()
+        url = getString(R.string.url)
 
         FirebaseApp.initializeApp(this)
         //firebase token
@@ -73,7 +88,8 @@ class home_page_activity : AppCompatActivity() , click_listner {
         askNotificationPermission()
 
         var requestPermissionLauncher = registerForActivityResult(
-            ActivityResultContracts.RequestPermission(),)
+            ActivityResultContracts.RequestPermission(),
+        )
         { isGranted: Boolean ->
             if (isGranted) {
                 // FCM SDK (and your app) can post notifications.
@@ -82,575 +98,396 @@ class home_page_activity : AppCompatActivity() , click_listner {
             }
         }
 
-        val home_btn: ImageButton =findViewById(R.id.home_btn)
-        val home_txt: TextView =findViewById(R.id.home_txt)
-        val search_btn: ImageButton =findViewById(R.id.search_btn)
-        val search_txt: TextView =findViewById(R.id.search_txt)
-        val chat_btn: ImageButton =findViewById(R.id.chat_btn)
-        val chat_txt: TextView =findViewById(R.id.chat_txt)
-        val profile_btn: ImageButton =findViewById(R.id.profile_btn)
-        val profile_txt: TextView =findViewById(R.id.profile_txt)
-        val plus_btn: ImageButton =findViewById(R.id.plus_btn)
-        val notifications_btn: ImageButton =findViewById(R.id.notifications_btn)
-        val username : TextView=findViewById(R.id.txt_username)
-
-        if (!isNetworkAvailable()) {
-            Toast.makeText(this,"No Internet Connection",Toast.LENGTH_LONG).show()
-
-            val sharedPref_1 = getSharedPreferences("home_page_prefs", Context.MODE_PRIVATE)
-            val storedUsername = sharedPref_1.getString("username", "")
-            username.text=storedUsername
-
-            // Initialize SharedPreferences
-            val sharedPref = getSharedPreferences("home_adapter_top_prefs", Context.MODE_PRIVATE)
-            val json = sharedPref.getString("home_adapter_top", "")
-
-            val gson = Gson()
-            val type = object : TypeToken<ArrayList<recycler_educator_data>>() {}.type
-            val adapter_data_list_top: ArrayList<recycler_educator_data> = gson.fromJson(json, type)
-
-            // 1- AdapterView: RecyclerView
-            val recyclerView_top : RecyclerView = findViewById(R.id.recyclerview_educator_top)
-            recyclerView_top.layoutManager = LinearLayoutManager(this,
-                LinearLayoutManager.HORIZONTAL,
-                false
-            )
-
-            val adapter_top = recycler_educator_adapter(adapter_data_list_top,this@home_page_activity)
-            recyclerView_top.adapter = adapter_top
-
-            // Notify your adapter that the data has changed
-            adapter_top.notifyDataSetChanged()
+        val home_btn: ImageButton = findViewById(R.id.home_btn)
+        val home_txt: TextView = findViewById(R.id.home_txt)
+        val search_btn: ImageButton = findViewById(R.id.search_btn)
+        val search_txt: TextView = findViewById(R.id.search_txt)
+        val chat_btn: ImageButton = findViewById(R.id.chat_btn)
+        val chat_txt: TextView = findViewById(R.id.chat_txt)
+        val profile_btn: ImageButton = findViewById(R.id.profile_btn)
+        val profile_txt: TextView = findViewById(R.id.profile_txt)
+        val plus_btn: ImageButton = findViewById(R.id.plus_btn)
+        val notifications_btn: ImageButton = findViewById(R.id.notifications_btn)
+        val username: TextView = findViewById(R.id.txt_username)
 
 
-            val recyclerView_edu : RecyclerView = findViewById(R.id.recyclerview_educator_edu)
-            recyclerView_edu.layoutManager = LinearLayoutManager(this,
-                LinearLayoutManager.HORIZONTAL,
-                false
-            )
+        if (userID != null) {
+            val tempUrl =
+                "${url}getusername.php" // Assuming the PHP file to retrieve username is named get_username.php
 
-            // Initialize SharedPreferences
-            val sharedPref_2 = getSharedPreferences("home_adapter_edu_prefs", Context.MODE_PRIVATE)
-            val json_1 = sharedPref_2.getString("home_adapter_edu", "")
-
-            val gson_1 = Gson()
-            val type_1 = object : TypeToken<ArrayList<recycler_educator_data>>() {}.type
-            val adapter_data_list_edu: ArrayList<recycler_educator_data> = gson_1.fromJson(json_1, type_1)
-
-
-            val lastFourMentors = adapter_data_list_edu.takeLast(4)
-            val adapter_edu = recycler_educator_adapter(ArrayList(lastFourMentors),this@home_page_activity)
-            recyclerView_edu.adapter = adapter_edu
-
-            // Notify your adapter that the data has changed
-            adapter_edu.notifyDataSetChanged()
-
-        }
-
-        var database = FirebaseDatabase.getInstance()
-        val my_ref = database.getReference("users")
-        val currentUser = FirebaseAuth.getInstance().currentUser
-        val userId = currentUser?.uid
-
-        if(userId!=null){
-
-            my_ref.addValueEventListener(object : ValueEventListener {
-                override fun onDataChange(dataSnapshot: DataSnapshot) {
-                    val name = dataSnapshot.child(userId).child("name").value.toString()
-                    username.text = name
-                    val sharedPref = getSharedPreferences("home_page_prefs", Context.MODE_PRIVATE)
-                    val editor = sharedPref.edit()
-                    editor.putString("username", name)
-                    editor.apply()
-                }
-                override fun onCancelled(databaseError: DatabaseError) {
+            val stringRequest = object : StringRequest(
+                com.android.volley.Request.Method.POST, tempUrl,
+                com.android.volley.Response.Listener { response ->
+                    // Handle successful response
+                    if (response != "User not found") {
+                        // Username is retrieved successfully
+                        val user_name = response
+                        username.text = user_name.toString()
+                        // Use the username as needed
+                    } else {
+                        // User not found with the provided user ID
+                        Toast.makeText(this, "User not found", Toast.LENGTH_SHORT).show()
+                    }
+                },
+                com.android.volley.Response.ErrorListener { error ->
                     // Handle error
-                    Log.d("TAG", "Unable to retrieve Data")
-
+                    Toast.makeText(this, "An error occurred", Toast.LENGTH_SHORT).show()
+                    Log.e("API Error", "Error occurred: ${error.message}")
+                }) {
+                override fun getParams(): MutableMap<String, String> {
+                    val params = HashMap<String, String>()
+                    params["userID"] = userID
+                    return params
                 }
-            })
+            }
+
+            // Add the request to the RequestQueue
+            Volley.newRequestQueue(this).add(stringRequest)
+        } else {
+            // userID is null, handle accordingly
+            Toast.makeText(this, "Invalid userID", Toast.LENGTH_SHORT).show()
         }
 
 
-        home_btn.setOnClickListener{
+        home_btn.setOnClickListener {
             val nextActivityIntent = Intent(this, home_page_activity::class.java)
+            nextActivityIntent.putExtra("userID", userID)
             startActivity(nextActivityIntent)
             finish()
         }
 
-        home_txt.setOnClickListener{
+        home_txt.setOnClickListener {
             val nextActivityIntent = Intent(this, home_page_activity::class.java)
+            nextActivityIntent.putExtra("userID", userID)
             startActivity(nextActivityIntent)
             finish()
         }
 
-        search_btn.setOnClickListener{
+        search_btn.setOnClickListener {
             val nextActivityIntent = Intent(this, lets_find_activity::class.java)
+            nextActivityIntent.putExtra("userID", userID)
             startActivity(nextActivityIntent)
         }
 
-        search_txt.setOnClickListener{
+        search_txt.setOnClickListener {
             val nextActivityIntent = Intent(this, lets_find_activity::class.java)
+            nextActivityIntent.putExtra("userID", userID)
             startActivity(nextActivityIntent)
         }
 
-        chat_btn.setOnClickListener{
+        chat_btn.setOnClickListener {
             val nextActivityIntent = Intent(this, chats_activity::class.java)
+            nextActivityIntent.putExtra("userID", userID)
             startActivity(nextActivityIntent)
         }
 
-        chat_txt.setOnClickListener{
+        chat_txt.setOnClickListener {
             val nextActivityIntent = Intent(this, chats_activity::class.java)
+            nextActivityIntent.putExtra("userID", userID)
             startActivity(nextActivityIntent)
         }
 
-        profile_btn.setOnClickListener{
+        profile_btn.setOnClickListener {
             val nextActivityIntent = Intent(this, my_profile_activity::class.java)
+            nextActivityIntent.putExtra("userID", userID)
             startActivity(nextActivityIntent)
         }
 
-        profile_txt.setOnClickListener{
+        profile_txt.setOnClickListener {
             val nextActivityIntent = Intent(this, my_profile_activity::class.java)
+            nextActivityIntent.putExtra("userID", userID)
             startActivity(nextActivityIntent)
         }
 
-        plus_btn.setOnClickListener{
+        plus_btn.setOnClickListener {
             val nextActivityIntent = Intent(this, add_new_mentor_activity::class.java)
             startActivity(nextActivityIntent)
         }
 
-        plus_btn.setOnClickListener{
+        plus_btn.setOnClickListener {
             val nextActivityIntent = Intent(this, add_new_mentor_activity::class.java)
             startActivity(nextActivityIntent)
         }
 
-        notifications_btn.setOnClickListener{
+        notifications_btn.setOnClickListener {
             val nextActivityIntent = Intent(this, notifications_activity::class.java)
+            nextActivityIntent.putExtra("userID", userID)
             startActivity(nextActivityIntent)
         }
 
-        // 1- AdapterView: RecyclerView
-        val recyclerView_top : RecyclerView = findViewById(R.id.recyclerview_educator_top)
-        recyclerView_top.layoutManager = LinearLayoutManager(this,
-            LinearLayoutManager.HORIZONTAL,
-            false
-        )
+        getFavouriteMentor(userID) {
 
+            getTopMentors() {
+                // 1- AdapterView: RecyclerView
+                val recyclerView_top: RecyclerView = findViewById(R.id.recyclerview_educator_top)
+                recyclerView_top.layoutManager = LinearLayoutManager(
+                    this,
+                    LinearLayoutManager.HORIZONTAL,
+                    false
+                )
 
-//         2- Data Source: List of  Objects
-        var adapter_data_list_top : ArrayList<recycler_educator_data> = ArrayList()
+                var adapter_data_list_top: ArrayList<recycler_educator_data> = ArrayList()
+                for (mentor in mentorListTop) {
+                    if (mentor.mentorID in favList) {
+                        val mentorData = recycler_educator_data(
+                            mentor.mentorID,
+                            mentor.profileImg,
+                            mentor.name,
+                            mentor.occupation,
+                            mentor.status,
+                            mentor.price, R.drawable.red_heart_btn, 1
+                        )
+                        adapter_data_list_top.add(mentorData)
 
-        database = FirebaseDatabase.getInstance()
-        val mentorsRef = database.getReference("mentors")
+                    } else {
 
-        val query = mentorsRef.limitToFirst(4) // Limit the query to the first 4 mentors
-
-        query.addListenerForSingleValueEvent(object : ValueEventListener {
-            override fun onDataChange(dataSnapshot: DataSnapshot) {
-
-                for (mentorSnapshot in dataSnapshot.children) {
-                    val name = mentorSnapshot.child("name").getValue(String::class.java)
-                    val occupation = mentorSnapshot.child("occupation").getValue(String::class.java)
-                    val price = mentorSnapshot.child("price").getValue(String::class.java)
-                    val status = mentorSnapshot.child("status").getValue(String::class.java)
-                    val profilePicUrl = mentorSnapshot.child("profile_pic").getValue(String::class.java)
-
-                    // Check if all required fields are present
-                    if (name != null && occupation != null && price != null && status != null) {
-                        val curr_usr = mAuth.currentUser
-                        val user_id = curr_usr?.uid.toString()
-                        val userRef = database.getReference("users").child(user_id)
-
-                        userRef.addListenerForSingleValueEvent(object : ValueEventListener {
-                            override fun onDataChange(dataSnapshot: DataSnapshot) {
-                                if (dataSnapshot.hasChild("favourite")) {
-                                    val fav_ref = userRef.child("favourite")
-                                    fav_ref.addListenerForSingleValueEvent(object : ValueEventListener {
-                                        override fun onDataChange(dataSnapshot: DataSnapshot) {
-                                            if (dataSnapshot.exists()) {
-                                                if (dataSnapshot.hasChild(name)) {
-                                                    val mentorData = recycler_educator_data(
-                                                        profilePicUrl,
-                                                        name,
-                                                        occupation,
-                                                        status,
-                                                        price,R.drawable.red_heart_btn,1
-                                                    )
-                                                    adapter_data_list_top.add(mentorData)
-                                                    val adapter_top = recycler_educator_adapter(adapter_data_list_top,this@home_page_activity)
-                                                    recyclerView_top.adapter = adapter_top
-
-                                                    // Notify your adapter that the data has changed
-                                                    adapter_top.notifyDataSetChanged()
-
-                                                    val gson = Gson()
-                                                    val json = gson.toJson(adapter_data_list_top)
-                                                    val sharedPref = getSharedPreferences("home_adapter_top_prefs", Context.MODE_PRIVATE)
-                                                    val editor = sharedPref.edit()
-                                                    editor.putString("home_adapter_top", json)
-                                                    editor.apply()
-                                                } else {
-                                                    val mentorData = recycler_educator_data(
-                                                        profilePicUrl,
-                                                        name,
-                                                        occupation,
-                                                        status,
-                                                        price,R.drawable.heart_unfilled,0
-                                                    )
-                                                    adapter_data_list_top.add(mentorData)
-                                                    val adapter_top = recycler_educator_adapter(adapter_data_list_top,this@home_page_activity)
-                                                    recyclerView_top.adapter = adapter_top
-
-                                                    // Notify your adapter that the data has changed
-                                                    adapter_top.notifyDataSetChanged()
-
-                                                    val gson = Gson()
-                                                    val json = gson.toJson(adapter_data_list_top)
-                                                    val sharedPref = getSharedPreferences("home_adapter_top_prefs", Context.MODE_PRIVATE)
-                                                    val editor = sharedPref.edit()
-                                                    editor.putString("home_adapter_top", json)
-                                                    editor.apply()
-                                                }
-                                            }
-                                        }
-
-                                        override fun onCancelled(databaseError: DatabaseError) {
-                                            // Handle error
-                                        }
-                                    })
-                                } else {
-
-                                    val mentorData = recycler_educator_data(
-                                        profilePicUrl,
-                                        name,
-                                        occupation,
-                                        status,
-                                        price,R.drawable.heart_unfilled,0
-                                    )
-                                    adapter_data_list_top.add(mentorData)
-                                    val adapter_top = recycler_educator_adapter(adapter_data_list_top,this@home_page_activity)
-                                    recyclerView_top.adapter = adapter_top
-
-                                    // Notify your adapter that the data has changed
-                                    adapter_top.notifyDataSetChanged()
-
-                                    val gson = Gson()
-                                    val json = gson.toJson(adapter_data_list_top)
-                                    val sharedPref = getSharedPreferences("home_adapter_top_prefs", Context.MODE_PRIVATE)
-                                    val editor = sharedPref.edit()
-                                    editor.putString("home_adapter_top", json)
-                                    editor.apply()
-
-                                }
-                            }
-
-                            override fun onCancelled(databaseError: DatabaseError) {
-                                // Handle error
-                            }
-                        })
+                        val mentorData = recycler_educator_data(
+                            mentor.mentorID,
+                            mentor.profileImg,
+                            mentor.name,
+                            mentor.occupation,
+                            mentor.status,
+                            mentor.price, R.drawable.heart_unfilled, 0
+                        )
+                        adapter_data_list_top.add(mentorData)
                     }
+
                 }
-//                val adapter_top = recycler_educator_adapter(adapter_data_list_top,this@home_page_activity)
-//                recyclerView_top.adapter = adapter_top
-//
-//                // Notify your adapter that the data has changed
-//                adapter_top.notifyDataSetChanged()
+
+                val adapter_top = recycler_educator_adapter(adapter_data_list_top, this)
+                recyclerView_top.adapter = adapter_top
+
             }
 
-            override fun onCancelled(databaseError: DatabaseError) {
-                // Handle error
-                Toast.makeText(this@home_page_activity, "Unable to Fetch Mentor Data", Toast.LENGTH_LONG).show()
-            }
-        })
 
-//        val v1  = recycler_educator_data(R.drawable.rectangle_blank,"Sample 1","Lead - Technology Officer","Available")
-//        val v2  = recycler_educator_data(R.drawable.rectangle_blank,"Sample 2","Lead - Technology Officer"," Not Available")
-//        val v3  = recycler_educator_data(R.drawable.rectangle_blank,"Sample 3","Lead - Technology Officer","Not Available")
-//        val v4  = recycler_educator_data(R.drawable.rectangle_blank,"Sample 4","Lead - Technology Officer","Available")
-//        val v5  = recycler_educator_data(R.drawable.rectangle_blank,"Sample 5","Lead - Technology Officer","Available")
-//        val v6  = recycler_educator_data(R.drawable.rectangle_blank,"Sample 6","Lead - Technology Officer","Not Available")
-//        val v7  = recycler_educator_data(R.drawable.rectangle_blank,"Sample 7","Lead - Technology Officer","Available")
-//
-//        adapter_data_list_top.add(v1)
-//        adapter_data_list_top.add(v2)
-//        adapter_data_list_top.add(v3)
-//        adapter_data_list_top.add(v4)
-//        adapter_data_list_top.add(v5)
-//        adapter_data_list_top.add(v6)
-//        adapter_data_list_top.add(v7)
-//
-//        // 3- Adapter
-//        val adapter_top = recycler_educator_adapter(adapter_data_list_top)
-//        recyclerView_top.adapter = adapter_top
+            getEduMentors() {
+                // 1- AdapterView: RecyclerView
+                val recyclerView_edu: RecyclerView = findViewById(R.id.recyclerview_educator_edu)
+                recyclerView_edu.layoutManager = LinearLayoutManager(
+                    this,
+                    LinearLayoutManager.HORIZONTAL,
+                    false
+                )
 
+                // 2- Data Source: List of  Objects
+                var adapter_data_list_edu: ArrayList<recycler_educator_data> = ArrayList()
+                for (mentor in mentorListEdu) {
+                    if (mentor.mentorID in favList) {
+                        val mentorData = recycler_educator_data(
+                            mentor.mentorID,
+                            mentor.profileImg,
+                            mentor.name,
+                            mentor.occupation,
+                            mentor.status,
+                            mentor.price, R.drawable.red_heart_btn, 1
+                        )
+                        adapter_data_list_edu.add(mentorData)
 
+                    } else {
 
-
-        // 1- AdapterView: RecyclerView
-        val recyclerView_edu : RecyclerView = findViewById(R.id.recyclerview_educator_edu)
-        recyclerView_edu.layoutManager = LinearLayoutManager(this,
-            LinearLayoutManager.HORIZONTAL,
-            false
-        )
-
-
-        // 2- Data Source: List of  Objects
-        var adapter_data_list_edu : ArrayList<recycler_educator_data> = ArrayList()
-
-        database = FirebaseDatabase.getInstance()
-        val mentorsRef_2 = database.getReference("mentors")
-
-        mentorsRef_2.addListenerForSingleValueEvent(object : ValueEventListener {
-            override fun onDataChange(dataSnapshot: DataSnapshot) {
-                val totalMentors = dataSnapshot.childrenCount.toInt()
-
-                // Calculate the starting index to retrieve the last four mentors
-                val startIndex = max(0, totalMentors - 4)
-
-                // Now, construct the query to retrieve the last four mentors
-                val query_2 = mentorsRef_2.orderByKey().startAt(startIndex.toString())
-
-                query_2.addListenerForSingleValueEvent(object : ValueEventListener {
-                    override fun onDataChange(dataSnapshot: DataSnapshot) {
-
-                        for (mentorSnapshot in dataSnapshot.children) {
-                            val name = mentorSnapshot.child("name").getValue(String::class.java)
-                            val occupation = mentorSnapshot.child("occupation").getValue(String::class.java)
-                            val price = mentorSnapshot.child("price").getValue(String::class.java)
-                            val status = mentorSnapshot.child("status").getValue(String::class.java)
-                            val profilePicUrl = mentorSnapshot.child("profile_pic").getValue(String::class.java)
-
-                            // Check if all required fields are present
-                            if (name != null && occupation != null && price != null && status != null) {
-                                val curr_usr = mAuth.currentUser
-                                val user_id = curr_usr?.uid.toString()
-                                val userRef = database.getReference("users").child(user_id)
-
-                                userRef.addListenerForSingleValueEvent(object : ValueEventListener {
-                                    override fun onDataChange(dataSnapshot: DataSnapshot) {
-                                        if (dataSnapshot.hasChild("favourite")) {
-                                            val fav_ref = userRef.child("favourite")
-                                            fav_ref.addListenerForSingleValueEvent(object : ValueEventListener {
-                                                override fun onDataChange(dataSnapshot: DataSnapshot) {
-                                                    if (dataSnapshot.exists()) {
-                                                        if (dataSnapshot.hasChild(name)) {
-                                                            val mentorData = recycler_educator_data(
-                                                                profilePicUrl,
-                                                                name,
-                                                                occupation,
-                                                                status,
-                                                                price,R.drawable.red_heart_btn,1
-                                                            )
-                                                            adapter_data_list_edu.add(mentorData)
-                                                            val lastFourMentors = adapter_data_list_edu.takeLast(4)
-                                                            val adapter_edu = recycler_educator_adapter(ArrayList(lastFourMentors),this@home_page_activity)
-                                                            recyclerView_edu.adapter = adapter_edu
-
-                                                            // Notify your adapter that the data has changed
-                                                            adapter_edu.notifyDataSetChanged()
-
-                                                            val gson = Gson()
-                                                            val json = gson.toJson(adapter_data_list_edu)
-                                                            val sharedPref = getSharedPreferences("home_adapter_edu_prefs", Context.MODE_PRIVATE)
-                                                            val editor = sharedPref.edit()
-                                                            editor.putString("home_adapter_edu", json)
-                                                            editor.apply()
-
-                                                        } else {
-                                                            val mentorData = recycler_educator_data(
-                                                                profilePicUrl,
-                                                                name,
-                                                                occupation,
-                                                                status,
-                                                                price,R.drawable.heart_unfilled,0
-                                                            )
-                                                            adapter_data_list_edu.add(mentorData)
-                                                            val lastFourMentors = adapter_data_list_edu.takeLast(4)
-                                                            val adapter_edu = recycler_educator_adapter(ArrayList(lastFourMentors),this@home_page_activity)
-                                                            recyclerView_edu.adapter = adapter_edu
-
-                                                            // Notify your adapter that the data has changed
-                                                            adapter_edu.notifyDataSetChanged()
-
-                                                            val gson = Gson()
-                                                            val json = gson.toJson(adapter_data_list_edu)
-                                                            val sharedPref = getSharedPreferences("home_adapter_edu_prefs", Context.MODE_PRIVATE)
-                                                            val editor = sharedPref.edit()
-                                                            editor.putString("home_adapter_edu", json)
-                                                            editor.apply()
-
-                                                        }
-                                                    }
-                                                }
-
-                                                override fun onCancelled(databaseError: DatabaseError) {
-                                                    // Handle error
-                                                }
-                                            })
-                                        } else {
-
-                                            val mentorData = recycler_educator_data(
-                                                profilePicUrl,
-                                                name,
-                                                occupation,
-                                                status,
-                                                price,R.drawable.heart_unfilled,0
-                                            )
-                                            adapter_data_list_edu.add(mentorData)
-                                            val lastFourMentors = adapter_data_list_edu.takeLast(4)
-                                            val adapter_edu = recycler_educator_adapter(ArrayList(lastFourMentors),this@home_page_activity)
-                                            recyclerView_edu.adapter = adapter_edu
-
-                                            // Notify your adapter that the data has changed
-                                            adapter_edu.notifyDataSetChanged()
-
-                                            val gson = Gson()
-                                            val json = gson.toJson(adapter_data_list_edu)
-                                            val sharedPref = getSharedPreferences("home_adapter_edu_prefs", Context.MODE_PRIVATE)
-                                            val editor = sharedPref.edit()
-                                            editor.putString("home_adapter_edu", json)
-                                            editor.apply()
-
-                                        }
-                                    }
-
-                                    override fun onCancelled(databaseError: DatabaseError) {
-                                        // Handle error
-                                    }
-                                })
-                            }
-                        }
-//                        val lastFourMentors = adapter_data_list_edu.takeLast(4)
-//                        val adapter_edu = recycler_educator_adapter(ArrayList(lastFourMentors),this@home_page_activity)
-//                        recyclerView_edu.adapter = adapter_edu
-//
-//                        // Notify your adapter that the data has changed
-//                        adapter_edu.notifyDataSetChanged()
+                        val mentorData = recycler_educator_data(
+                            mentor.mentorID,
+                            mentor.profileImg,
+                            mentor.name,
+                            mentor.occupation,
+                            mentor.status,
+                            mentor.price, R.drawable.heart_unfilled, 0
+                        )
+                        adapter_data_list_edu.add(mentorData)
                     }
 
-                    override fun onCancelled(databaseError: DatabaseError) {
-                        // Handle error
-                        Toast.makeText(this@home_page_activity, "Unable to Fetch Mentor Data", Toast.LENGTH_LONG).show()
-                    }
-                })
+                }
+                val adapter_edu = recycler_educator_adapter(adapter_data_list_edu, this)
+                recyclerView_edu.adapter = adapter_edu
+
             }
-
-            override fun onCancelled(databaseError: DatabaseError) {
-                // Handle error
-                Toast.makeText(this@home_page_activity, "Unable to Fetch Mentor Data", Toast.LENGTH_LONG).show()
-            }
-        })
-
-//        val v8  = recycler_educator_data(R.drawable.rectangle_blank,"Sample 1","Lead - Technology Officer","Available")
-//        val v9  = recycler_educator_data(R.drawable.rectangle_blank,"Sample 2","Lead - Technology Officer"," Not Available")
-//        val v10  = recycler_educator_data(R.drawable.rectangle_blank,"Sample 3","Lead - Technology Officer","Not Available")
-//        val v11  = recycler_educator_data(R.drawable.rectangle_blank,"Sample 4","Lead - Technology Officer","Available")
-//        val v12  = recycler_educator_data(R.drawable.rectangle_blank,"Sample 5","Lead - Technology Officer","Available")
-//        val v13  = recycler_educator_data(R.drawable.rectangle_blank,"Sample 6","Lead - Technology Officer","Not Available")
-//        val v14  = recycler_educator_data(R.drawable.rectangle_blank,"Sample 7","Lead - Technology Officer","Available")
-//
-//        adapter_data_list_edu.add(v8)
-//        adapter_data_list_edu.add(v9)
-//        adapter_data_list_edu.add(v10)
-//        adapter_data_list_edu.add(v11)
-//        adapter_data_list_edu.add(v12)
-//        adapter_data_list_edu.add(v13)
-//        adapter_data_list_edu.add(v14)
-//
-//        // 3- Adapter
-//        val adapter_edu = recycler_educator_adapter(adapter_data_list_edu)
-//        recyclerView_edu.adapter = adapter_edu
-
-
-
-        // 1- AdapterView: RecyclerView
-//        val recyclerView_rec : RecyclerView = findViewById(R.id.recyclerview_educator_rec)
-//        recyclerView_rec.layoutManager = LinearLayoutManager(this,
-//            LinearLayoutManager.HORIZONTAL,
-//            false
-//        )
-
-//
-//        // 2- Data Source: List of  Objects
-//        var adapter_data_list_rec : ArrayList<recycler_educator_data> = ArrayList()
-//
-//        val v15  = recycler_educator_data(R.drawable.rectangle_blank,"Sample 1","Lead - Technology Officer","Available")
-//        val v16  = recycler_educator_data(R.drawable.rectangle_blank,"Sample 2","Lead - Technology Officer"," Not Available")
-//        val v17  = recycler_educator_data(R.drawable.rectangle_blank,"Sample 3","Lead - Technology Officer","Not Available")
-//        val v18  = recycler_educator_data(R.drawable.rectangle_blank,"Sample 4","Lead - Technology Officer","Available")
-//        val v19  = recycler_educator_data(R.drawable.rectangle_blank,"Sample 5","Lead - Technology Officer","Available")
-//        val v20  = recycler_educator_data(R.drawable.rectangle_blank,"Sample 6","Lead - Technology Officer","Not Available")
-//        val v21  = recycler_educator_data(R.drawable.rectangle_blank,"Sample 7","Lead - Technology Officer","Available")
-//
-//        adapter_data_list_rec.add(v15)
-//        adapter_data_list_rec.add(v9)
-//        adapter_data_list_rec.add(v10)
-//        adapter_data_list_rec.add(v11)
-//        adapter_data_list_rec.add(v12)
-//        adapter_data_list_rec.add(v13)
-//        adapter_data_list_rec.add(v14)
-//
-//        // 3- Adapter
-//        val adapter_rec = recycler_educator_adapter(adapter_data_list_rec)
-//        recyclerView_rec.adapter = adapter_rec
-
-
+        }
 
     }
-    override fun click_function(txt:String){
+
+    private fun getFavouriteMentor(userID: String, callback: () -> Unit) {
+        val tempURL = "${url}getfavourite.php"
+
+        // Create a StringRequest to send a POST request
+        val request = object : StringRequest(com.android.volley.Request.Method.POST, tempURL,
+            com.android.volley.Response.Listener { response ->
+                // Handle response
+                Log.d("Response", response)
+
+                // Parse JSON response
+                val jsonArray = JSONArray(response)
+
+                for (i in 0 until jsonArray.length()) {
+                    val mentorID = jsonArray.getString(i)
+                    favList.add(mentorID)
+                }
+                callback()
+            },
+            com.android.volley.Response.ErrorListener { error ->
+                // Handle error
+                Log.e("Error", "Error occurred: ${error.message}")
+            }) {
+            override fun getParams(): Map<String, String> {
+                // Set POST parameters
+                val params = HashMap<String, String>()
+                params["userID"] = userID
+                return params
+            }
+        }
+        Volley.newRequestQueue(this).add(request)
+    }
+
+    private fun getTopMentors(callback: () -> Unit) {
+
+        val tempURL = "${url}getfirst4mentors.php" // Replace "your_domain" with your actual domain
+        val request = JsonArrayRequest(
+            com.android.volley.Request.Method.GET,
+            tempURL,
+            null,
+            com.android.volley.Response.Listener { response ->
+
+                for (i in 0 until response.length()) {
+                    val mentorObject = response.getJSONObject(i)
+                    val mentor = mentorData(
+                        mentorObject.getString("mentorID"),
+                        mentorObject.getString("name"),
+                        mentorObject.getString("occupation"),
+                        mentorObject.getString("description"),
+                        mentorObject.getString("price"),
+                        mentorObject.getString("profileImg"),
+                        mentorObject.getString("status"),
+                        mentorObject.getString("favourite")
+                    )
+                    mentorListTop.add(mentor)
+                }
+                callback()
+            },
+            com.android.volley.Response.ErrorListener { error ->
+                Log.e("Error", "Error fetching mentors: ${error.message}")
+            }
+        )
+        Volley.newRequestQueue(this).add(request)
+    }
+
+    private fun getEduMentors(callback: () -> Unit) {
+        val tempURL = "${url}getlast4mentors.php" // Replace "your_domain" with your actual domain
+        val request = JsonArrayRequest(
+            com.android.volley.Request.Method.GET,
+            tempURL,
+            null,
+            com.android.volley.Response.Listener { response ->
+
+                for (i in 0 until response.length()) {
+                    val mentorObject = response.getJSONObject(i)
+                    val mentor = mentorData(
+                        mentorObject.getString("mentorID"),
+                        mentorObject.getString("name"),
+                        mentorObject.getString("occupation"),
+                        mentorObject.getString("description"),
+                        mentorObject.getString("price"),
+                        mentorObject.getString("profileImg"),
+                        mentorObject.getString("status"),
+                        mentorObject.getString("favourite")
+                    )
+                    mentorListEdu.add(mentor)
+                }
+                callback()
+            },
+            com.android.volley.Response.ErrorListener { error ->
+                Log.e("Error", "Error fetching mentors: ${error.message}")
+            }
+        )
+        Volley.newRequestQueue(this).add(request)
+    }
+
+    override fun click_function(txt: String, mentorID: String) {
         val nextActivityIntent = Intent(this, john_cooper_1_activity::class.java)
+        nextActivityIntent.putExtra("mentorID", mentorID)
+        nextActivityIntent.putExtra("userID", userID)
         nextActivityIntent.putExtra("user_name", txt)
         startActivity(nextActivityIntent)
 
     }
 
-    override fun change_heart(flag:Int,txt:String){
-        val database = FirebaseDatabase.getInstance()
-        var my_ref = database.getReference("users")
+    override fun change_heart(flag: Int, txt: String, mentorID: String) {
 
-        val curr = mAuth.currentUser
-        val id= curr?.uid.toString()
+        if (flag == 0) {
 
-        if(flag==0){
+            val tempURL = "${url}setfavourite.php"
 
-            my_ref = database.reference.child("users").child(id)
-            my_ref.child("favourite").child(txt).setValue("true")
+            // Create a StringRequest to send a POST request
+            val request = object : StringRequest(com.android.volley.Request.Method.POST, tempURL,
+                com.android.volley.Response.Listener { response ->
 
-            FirebaseMessaging.getInstance().token.addOnCompleteListener { task ->
-                if (!task.isSuccessful) {
-                    return@addOnCompleteListener
+                    FirebaseMessaging.getInstance().token.addOnCompleteListener { task ->
+                        if (!task.isSuccessful) {
+                            return@addOnCompleteListener
+                        }
+                        val token = task.result
+                        sendPushNotification(
+                            token,
+                            "MentorMe",
+                            "Subtitle: Class",
+                            "$txt Added As Favourite",
+                            mapOf("key1" to "value1", "key2" to "value2")
+                        )
+
+                    }
+                },
+                com.android.volley.Response.ErrorListener { error ->
+                    // Handle error
+                    Log.e("Error", "Error occurred: ${error.message}")
+                }) {
+                override fun getParams(): Map<String, String> {
+                    // Set POST parameters
+                    val params = HashMap<String, String>()
+                    params["userID"] = userID
+                    params["mentorID"] = mentorID
+                    return params
                 }
-                val token = task.result
-                sendPushNotification(
-                    token,
-                    "MentorMe",
-                    "Subtitle: Class",
-                    "$txt Added As Favourite",
-                    mapOf("key1" to "value1", "key2" to "value2")
-                )
-
             }
 
-        }
-        else if (flag==1){
+            // Add the request to the RequestQueue
+            Volley.newRequestQueue(this).add(request)
 
-            val favouriteRef = database.reference.child("users").child(id).child("favourite")
-            favouriteRef.child(txt).removeValue()
+        } else if (flag == 1) {
 
-            FirebaseMessaging.getInstance().token.addOnCompleteListener { task ->
-                if (!task.isSuccessful) {
-                    return@addOnCompleteListener
+            val tempURL = "${url}removefavourite.php"
+
+            // Create a StringRequest to send a POST request
+            val request = object : StringRequest(com.android.volley.Request.Method.POST, tempURL,
+                com.android.volley.Response.Listener { response ->
+
+                    FirebaseMessaging.getInstance().token.addOnCompleteListener { task ->
+                        if (!task.isSuccessful) {
+                            return@addOnCompleteListener
+                        }
+                        val token = task.result
+                        sendPushNotification(
+                            token,
+                            "MentorMe",
+                            "Subtitle: Class",
+                            "$txt Removed From Favourite",
+                            mapOf("key1" to "value1", "key2" to "value2")
+                        )
+
+                    }
+                },
+                com.android.volley.Response.ErrorListener { error ->
+                    // Handle error
+                    Log.e("Error", "Error occurred: ${error.message}")
+                }) {
+                override fun getParams(): Map<String, String> {
+                    // Set POST parameters
+                    val params = HashMap<String, String>()
+                    params["userID"] = userID
+                    params["mentorID"] = mentorID
+                    return params
                 }
-                val token = task.result
-                sendPushNotification(
-                    token,
-                    "MentorMe",
-                    "Subtitle: Class",
-                    "$txt Removed From Favourite",
-                    mapOf("key1" to "value1", "key2" to "value2")
-                )
-
             }
+
+            // Add the request to the RequestQueue
+            Volley.newRequestQueue(this).add(request)
 
         }
 
@@ -686,7 +523,13 @@ class home_page_activity : AppCompatActivity() , click_listner {
         }
     }
 
-    fun sendPushNotification(token: String, title: String, subtitle: String, body: String, data: Map<String, String> = emptyMap()) {
+    fun sendPushNotification(
+        token: String,
+        title: String,
+        subtitle: String,
+        body: String,
+        data: Map<String, String> = emptyMap()
+    ) {
         val url = "https://fcm.googleapis.com/fcm/send"
         val bodyJson = JSONObject()
         bodyJson.put("to", token)
@@ -703,7 +546,8 @@ class home_page_activity : AppCompatActivity() , click_listner {
             bodyJson.put("data", JSONObject(data))
         }
 
-        var key="AAAAhfqz-ls:APA91bEQFjo8C3YLtR6V0AsR6m52hVMniNYzBC8GTWMkU6gyx8YzP5wPxFhieeyQPYcoQFmPEx0bXmMumzk3cYj3jiQ4uMm-NvlP5YOYeabErgHvFqF5Rwac8NwLeg3_005xdofYV0l6"
+        var key =
+            "AAAAhfqz-ls:APA91bEQFjo8C3YLtR6V0AsR6m52hVMniNYzBC8GTWMkU6gyx8YzP5wPxFhieeyQPYcoQFmPEx0bXmMumzk3cYj3jiQ4uMm-NvlP5YOYeabErgHvFqF5Rwac8NwLeg3_005xdofYV0l6"
         val request = Request.Builder()
             .url(url)
             .addHeader("Content-Type", "application/json")

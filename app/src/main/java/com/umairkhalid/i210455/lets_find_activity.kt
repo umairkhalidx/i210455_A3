@@ -11,10 +11,15 @@ import android.widget.TextView
 import android.widget.Toast
 
 class lets_find_activity : AppCompatActivity() {
+    lateinit var userID: String
+    lateinit var url: String
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
         setContentView(R.layout.lets_find)
+
+        userID = intent.getStringExtra("userID").toString()
+        url = getString(R.string.url)
 
         val home_btn: ImageButton =findViewById(R.id.home_btn)
         val home_txt: TextView =findViewById(R.id.home_txt)
@@ -59,6 +64,7 @@ class lets_find_activity : AppCompatActivity() {
             val txt:String ="Entrepreneurship"
             val nextActivityIntent = Intent(this, search_results_activity::class.java)
             nextActivityIntent.putExtra("search_txt", txt)
+            nextActivityIntent.putExtra("userID", userID)
             startActivity(nextActivityIntent)
 //            finish()
 //            val nextActivityIntent = Intent(this, search_results_activity::class.java)
@@ -69,6 +75,7 @@ class lets_find_activity : AppCompatActivity() {
             val txt:String ="Personal"
             val nextActivityIntent = Intent(this, search_results_activity::class.java)
             nextActivityIntent.putExtra("search_txt", txt)
+            nextActivityIntent.putExtra("userID", userID)
             startActivity(nextActivityIntent)
 //            finish()
 //            val nextActivityIntent = Intent(this, search_results_activity::class.java)
@@ -79,6 +86,7 @@ class lets_find_activity : AppCompatActivity() {
             val txt:String ="Education"
             val nextActivityIntent = Intent(this, search_results_activity::class.java)
             nextActivityIntent.putExtra("search_txt", txt)
+            nextActivityIntent.putExtra("userID", userID)
             startActivity(nextActivityIntent)
 //            finish()
 //            val nextActivityIntent = Intent(this, search_results_activity::class.java)
@@ -89,6 +97,7 @@ class lets_find_activity : AppCompatActivity() {
             val txt:String ="Entrepreneurship"
             val nextActivityIntent = Intent(this, search_results_activity::class.java)
             nextActivityIntent.putExtra("search_txt", txt)
+            nextActivityIntent.putExtra("userID", userID)
             startActivity(nextActivityIntent)
 //            finish()
 //            val nextActivityIntent = Intent(this, search_results_activity::class.java)
@@ -99,6 +108,7 @@ class lets_find_activity : AppCompatActivity() {
             val txt:String ="Personal"
             val nextActivityIntent = Intent(this, search_results_activity::class.java)
             nextActivityIntent.putExtra("search_txt", txt)
+            nextActivityIntent.putExtra("userID", userID)
             startActivity(nextActivityIntent)
 //            finish()
 //            val nextActivityIntent = Intent(this, search_results_activity::class.java)
@@ -109,6 +119,7 @@ class lets_find_activity : AppCompatActivity() {
             val txt:String ="Education"
             val nextActivityIntent = Intent(this, search_results_activity::class.java)
             nextActivityIntent.putExtra("search_txt", txt)
+            nextActivityIntent.putExtra("userID", userID)
             startActivity(nextActivityIntent)
 //            finish()
 //            val nextActivityIntent = Intent(this, search_results_activity::class.java)
@@ -119,6 +130,7 @@ class lets_find_activity : AppCompatActivity() {
             val txt:String ="Entrepreneurship"
             val nextActivityIntent = Intent(this, search_results_activity::class.java)
             nextActivityIntent.putExtra("search_txt", txt)
+            nextActivityIntent.putExtra("userID", userID)
             startActivity(nextActivityIntent)
 //            finish()
 //            val nextActivityIntent = Intent(this, john_cooper_1_activity::class.java)
@@ -129,6 +141,7 @@ class lets_find_activity : AppCompatActivity() {
             val txt:String ="Personal"
             val nextActivityIntent = Intent(this, search_results_activity::class.java)
             nextActivityIntent.putExtra("search_txt", txt)
+            nextActivityIntent.putExtra("userID", userID)
             startActivity(nextActivityIntent)
 //            finish()
 //            val nextActivityIntent = Intent(this, john_cooper_1_activity::class.java)
@@ -139,6 +152,7 @@ class lets_find_activity : AppCompatActivity() {
             val txt:String ="Education"
             val nextActivityIntent = Intent(this, search_results_activity::class.java)
             nextActivityIntent.putExtra("search_txt", txt)
+            nextActivityIntent.putExtra("userID", userID)
             startActivity(nextActivityIntent)
 //            finish()
 //            val nextActivityIntent = Intent(this, john_cooper_1_activity::class.java)
@@ -153,53 +167,63 @@ class lets_find_activity : AppCompatActivity() {
 
         home_btn.setOnClickListener{
             val nextActivityIntent = Intent(this, home_page_activity::class.java)
+            nextActivityIntent.putExtra("userID", userID)
             startActivity(nextActivityIntent)
             finish()
         }
 
         home_txt.setOnClickListener{
             val nextActivityIntent = Intent(this, home_page_activity::class.java)
+            nextActivityIntent.putExtra("userID", userID)
             startActivity(nextActivityIntent)
             finish()
         }
 
         search_btn.setOnClickListener{
             val nextActivityIntent = Intent(this, lets_find_activity::class.java)
+            nextActivityIntent.putExtra("userID", userID)
             startActivity(nextActivityIntent)
         }
 
         search_txt.setOnClickListener{
             val nextActivityIntent = Intent(this, lets_find_activity::class.java)
+            nextActivityIntent.putExtra("userID", userID)
             startActivity(nextActivityIntent)
         }
 
         chat_btn.setOnClickListener{
             val nextActivityIntent = Intent(this, chats_activity::class.java)
+            nextActivityIntent.putExtra("userID", userID)
             startActivity(nextActivityIntent)
         }
 
         chat_txt.setOnClickListener{
             val nextActivityIntent = Intent(this, chats_activity::class.java)
+            nextActivityIntent.putExtra("userID", userID)
             startActivity(nextActivityIntent)
         }
 
         profile_btn.setOnClickListener{
             val nextActivityIntent = Intent(this, my_profile_activity::class.java)
+            nextActivityIntent.putExtra("userID", userID)
             startActivity(nextActivityIntent)
         }
 
         profile_txt.setOnClickListener{
             val nextActivityIntent = Intent(this, my_profile_activity::class.java)
+            nextActivityIntent.putExtra("userID", userID)
             startActivity(nextActivityIntent)
         }
 
         plus_btn.setOnClickListener{
             val nextActivityIntent = Intent(this, add_new_mentor_activity::class.java)
+            nextActivityIntent.putExtra("userID", userID)
             startActivity(nextActivityIntent)
         }
 
         plus_btn.setOnClickListener{
             val nextActivityIntent = Intent(this, add_new_mentor_activity::class.java)
+            nextActivityIntent.putExtra("userID", userID)
             startActivity(nextActivityIntent)
         }
 

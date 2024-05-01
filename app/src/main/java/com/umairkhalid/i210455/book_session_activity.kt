@@ -30,6 +30,8 @@ import java.util.Locale
 import android.annotation.SuppressLint
 import android.app.Notification
 import androidx.activity.result.contract.ActivityResultContracts
+import com.android.volley.toolbox.StringRequest
+import com.android.volley.toolbox.Volley
 import com.google.android.gms.tasks.OnCompleteListener
 import com.google.firebase.FirebaseApp
 import com.google.firebase.messaging.FirebaseMessaging
@@ -39,11 +41,16 @@ import okhttp3.Response
 import java.io.IOException
 import okhttp3.MediaType.Companion.toMediaType
 import okhttp3.RequestBody.Companion.toRequestBody
+import org.json.JSONException
 
 
 class book_session_activity : AppCompatActivity() {
     @SuppressLint("MissingInflatedId")
     private var  mAuth = FirebaseAuth.getInstance();
+    lateinit var userID: String
+    lateinit var url: String
+    lateinit var mentorID: String
+    lateinit var Mentor: mentorData
 
     private val requestPermissionLauncher = registerForActivityResult(
         ActivityResultContracts.RequestPermission()
@@ -58,6 +65,9 @@ class book_session_activity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
 
         setContentView(R.layout.book_your_session)
+        userID = intent.getStringExtra("userID").toString()
+        mentorID = intent.getStringExtra("mentorID").toString()
+        url = getString(R.string.url)
 
         FirebaseApp.initializeApp(this)
         //firebase token
@@ -125,7 +135,7 @@ class book_session_activity : AppCompatActivity() {
         }
 
         time_btn_2.setOnClickListener{
-            selected_time=time_btn_1.text.toString()
+            selected_time=time_btn_2.text.toString()
             if(c2==0){
                 time_btn_2.setBackgroundColor(Color.parseColor("#0b8fac"))
                 c2=1
@@ -137,7 +147,7 @@ class book_session_activity : AppCompatActivity() {
         }
 
         time_btn_3.setOnClickListener{
-            selected_time=time_btn_1.text.toString()
+            selected_time=time_btn_3.text.toString()
             if(c3==0){
                 time_btn_3.setBackgroundColor(Color.parseColor("#0b8fac"))
                 c3=1
@@ -156,42 +166,52 @@ class book_session_activity : AppCompatActivity() {
         val user_name: TextView =findViewById(R.id.txt_mentor_name)
         var mentor_occupation:String=""
 
+        Mentor = mentorData(mentorID, "", "", "", "", "", "", "")
+        getMentors(mentorID) {
+            user_name.text = Mentor.name
+            price.text=Mentor.price
+            val imageURL = "${url}MentorImages/${Mentor.profileImg}"
+            Picasso.get().load(imageURL).into(user_img)
+
+        }
+
         val database = FirebaseDatabase.getInstance()
         val mentorsRef = database.getReference("mentors")
         var profilePicUrl:String=""
-
-        val query = mentorsRef.orderByChild("name").equalTo(input_txt.toString())
-
-        query.addListenerForSingleValueEvent(object : ValueEventListener {
-            override fun onDataChange(dataSnapshot: DataSnapshot) {
-                for (mentorSnapshot in dataSnapshot.children) {
-
-                    val name = mentorSnapshot.child("name").getValue(String::class.java)
-                    val mentor_price = mentorSnapshot.child("name").getValue(String::class.java)
-                    profilePicUrl = mentorSnapshot.child("profile_pic").getValue(String::class.java).toString()
-                    mentor_occupation = mentorSnapshot.child("occupation").getValue(String::class.java).toString()
-
-                    // Check if all required fields are present
-                    if (name != null && mentor_price!=null && profilePicUrl != null) {
-                        user_name.text=name.toString()
-                        price.text=mentor_price.toString()
-                        Picasso.get().load(profilePicUrl).into(user_img)
-                    }
-                }
-                // Notify your adapter that the data has changed
-                // adapter.notifyDataSetChanged()
-            }
-
-            override fun onCancelled(databaseError: DatabaseError) {
-                // Handle error
-                Toast.makeText(this@book_session_activity,"Unable to Fetch Mentor Data", Toast.LENGTH_LONG).show()
-            }
-        })
+//
+//        val query = mentorsRef.orderByChild("name").equalTo(input_txt.toString())
+//
+//        query.addListenerForSingleValueEvent(object : ValueEventListener {
+//            override fun onDataChange(dataSnapshot: DataSnapshot) {
+//                for (mentorSnapshot in dataSnapshot.children) {
+//
+//                    val name = mentorSnapshot.child("name").getValue(String::class.java)
+//                    val mentor_price = mentorSnapshot.child("name").getValue(String::class.java)
+//                    profilePicUrl = mentorSnapshot.child("profile_pic").getValue(String::class.java).toString()
+//                    mentor_occupation = mentorSnapshot.child("occupation").getValue(String::class.java).toString()
+//
+//                    // Check if all required fields are present
+//                    if (name != null && mentor_price!=null && profilePicUrl != null) {
+//                        user_name.text=name.toString()
+//                        price.text=mentor_price.toString()
+//                        Picasso.get().load(profilePicUrl).into(user_img)
+//                    }
+//                }
+//                // Notify your adapter that the data has changed
+//                // adapter.notifyDataSetChanged()
+//            }
+//
+//            override fun onCancelled(databaseError: DatabaseError) {
+//                // Handle error
+//                Toast.makeText(this@book_session_activity,"Unable to Fetch Mentor Data", Toast.LENGTH_LONG).show()
+//            }
+//        })
 
 
         back_btn.setOnClickListener{
-            val nextActivityIntent = Intent(this, john_cooper_1_activity::class.java)
-            startActivity(nextActivityIntent)
+//            val nextActivityIntent = Intent(this, john_cooper_1_activity::class.java)
+//            startActivity(nextActivityIntent)
+            onBackPressed()
             finish()
         }
 
@@ -204,38 +224,60 @@ class book_session_activity : AppCompatActivity() {
 
             if(input_txt!=null){
 
-                if(profilePicUrl!=""){
+                if(Mentor.profileImg!=""){
 
-//                    my_ref.child(id).child("reviews").setValue(null)
-                    my_ref.child(id).child("booked_sessions").child(input_txt).child("mentor_name").setValue(input_txt)
-                    my_ref.child(id).child("booked_sessions").child(input_txt).child("occupation").setValue(mentor_occupation)
-                    my_ref.child(id).child("booked_sessions").child(input_txt).child("date").setValue(selectedDate)
-                    my_ref.child(id).child("booked_sessions").child(input_txt).child("time").setValue(selected_time)
-                    my_ref.child(id).child("booked_sessions").child(input_txt).child("img_url").setValue(profilePicUrl)
+                    val tempUrl = "${url}addbookedsession.php"
 
-                    FirebaseMessaging.getInstance().token.addOnCompleteListener { task ->
-                        if (!task.isSuccessful) {
-                            return@addOnCompleteListener
+                    val stringRequest = object : StringRequest(
+                        com.android.volley.Request.Method.POST, tempUrl,
+                        com.android.volley.Response.Listener { response ->
+
+                            FirebaseMessaging.getInstance().token.addOnCompleteListener { task ->
+                                if (!task.isSuccessful) {
+                                    return@addOnCompleteListener
+                                }
+                                val token = task.result
+                                sendPushNotification(
+                                    token,
+                                    input_txt.toString(),
+                                    "Subtitle: Class",
+                                    "Hi! There",
+                                    mapOf("key1" to "value1", "key2" to "value2")
+                                )
+
+                            }
+
+                            Toast.makeText(this,"Session Booked Successfully", Toast.LENGTH_LONG).show()
+
+                            // Handle response
+//                            val nextActivityIntent = Intent(this, lets_find_activity::class.java)
+//                            startActivity(nextActivityIntent)
+                            onBackPressed()
+                            finish()
+                                          },
+                        com.android.volley.Response.ErrorListener { error ->
+                            // Handle error
+                            Toast.makeText(this, "Error occurred: ${error.message}", Toast.LENGTH_SHORT).show()
+                        }) {
+                        override fun getParams(): MutableMap<String, String> {
+                            val params = HashMap<String, String>()
+                            params["userID"] = userID
+                            params["mentorID"] = Mentor.mentorID
+                            params["name"] = Mentor.name
+                            params["occupation"] = Mentor.occupation
+                            params["date"] = selectedDate
+                            params["time"] = selected_time
+                            params["profileImg"] = Mentor.profileImg
+                            return params
                         }
-                        val token = task.result
-                        sendPushNotification(
-                            token,
-                            input_txt.toString(),
-                            "Subtitle: Class",
-                            "Hi! There",
-                            mapOf("key1" to "value1", "key2" to "value2")
-                        )
-
                     }
 
-                    Toast.makeText(this,"Session Booked Successfully", Toast.LENGTH_LONG).show()
+                    // Add the request to the RequestQueue
+                    Volley.newRequestQueue(this).add(stringRequest)
                 }
                 else{
                     Toast.makeText(this,"Fetching Data, Please Wait",Toast.LENGTH_LONG).show()
                 }
-                val nextActivityIntent = Intent(this, lets_find_activity::class.java)
-                startActivity(nextActivityIntent)
-                finish()
 
             }
             else{
@@ -247,6 +289,8 @@ class book_session_activity : AppCompatActivity() {
 
         message_btn.setOnClickListener{
             val nextActivityIntent = Intent(this, chat_1_activity::class.java)
+            nextActivityIntent.putExtra("mentorID", mentorID)
+            nextActivityIntent.putExtra("userID", userID)
             nextActivityIntent.putExtra("MENTOR_NAME", input_txt)
             startActivity(nextActivityIntent)
 //            val nextActivityIntent = Intent(this, chat_1_activity::class.java)
@@ -255,6 +299,8 @@ class book_session_activity : AppCompatActivity() {
 
         audiocall_btn.setOnClickListener{
             val nextActivityIntent = Intent(this, call_1_activity::class.java)
+            nextActivityIntent.putExtra("mentorID", mentorID)
+            nextActivityIntent.putExtra("userID", userID)
             nextActivityIntent.putExtra("MENTOR_NAME", input_txt)
             startActivity(nextActivityIntent)
             finish()
@@ -262,6 +308,8 @@ class book_session_activity : AppCompatActivity() {
 
         videocall_btn.setOnClickListener{
             val nextActivityIntent = Intent(this, call_2_activity::class.java)
+            nextActivityIntent.putExtra("mentorID", mentorID)
+            nextActivityIntent.putExtra("userID", userID)
             nextActivityIntent.putExtra("MENTOR_NAME", input_txt)
             startActivity(nextActivityIntent)
             finish()
@@ -335,6 +383,53 @@ class book_session_activity : AppCompatActivity() {
                 }
             }
         )
+    }
+
+    private fun getMentors(mentorID: String, callback: () -> Unit) {
+
+        val tempURL = "${url}getmentordata_id.php"
+
+        val stringRequest = object : StringRequest(
+            com.android.volley.Request.Method.POST, tempURL,
+            com.android.volley.Response.Listener { response ->
+                // Handle response
+                if (response.startsWith("Mentor not found")) {
+                    // User not found, handle accordingly
+                    Toast.makeText(this, "Mentor not found", Toast.LENGTH_SHORT).show()
+                } else {
+                    // Parse JSON response
+                    try {
+                        val jsonObject = JSONObject(response)
+                        Mentor.mentorID = jsonObject.getString("mentorID")
+                        Mentor.name = jsonObject.getString("name")
+                        Mentor.occupation = jsonObject.getString("occupation")
+                        Mentor.description = jsonObject.getString("description")
+                        Mentor.price = jsonObject.getString("price")
+                        Mentor.profileImg = jsonObject.getString("profileImg")
+                        Mentor.status = jsonObject.getString("status")
+                        Mentor.favourite = jsonObject.getString("favourite")
+                        callback()
+                    } catch (e: JSONException) {
+                        e.printStackTrace()
+                        Toast.makeText(this, "Error Fetching Data", Toast.LENGTH_SHORT).show()
+                    }
+                }
+            },
+            com.android.volley.Response.ErrorListener { error ->
+                // Handle error
+                Toast.makeText(this, "Error Fetching Data", Toast.LENGTH_SHORT).show()
+                Log.e("API Error", "Error occurred: ${error.message}")
+            }) {
+            override fun getParams(): MutableMap<String, String> {
+                val params = HashMap<String, String>()
+                params["mentorID"] = mentorID
+                return params
+            }
+        }
+
+        // Add the request to the RequestQueue
+        Volley.newRequestQueue(this).add(stringRequest)
+
     }
 
 }

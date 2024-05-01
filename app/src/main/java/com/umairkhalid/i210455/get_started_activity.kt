@@ -6,18 +6,25 @@ import android.os.Bundle
 import android.text.SpannableString
 import android.text.Spanned
 import android.text.style.UnderlineSpan
+import android.util.Log
 import android.view.View
 import android.widget.AdapterView
 import android.widget.ArrayAdapter
 import android.widget.Spinner
 import android.widget.TextView
 import android.widget.Toast
+import com.android.volley.Request
+import com.android.volley.Response
+import com.android.volley.toolbox.StringRequest
+import com.android.volley.toolbox.Volley
 import com.google.firebase.auth.FirebaseAuth
 
 class get_started_activity : AppCompatActivity() {
-    private var  mAuth = FirebaseAuth.getInstance();
+    lateinit var url :String
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+
+        url = getString(R.string.url)
 
         setContentView(R.layout.getting_started)
         val sign_up_btn: TextView =findViewById(R.id.sign_up_btn)
@@ -99,7 +106,31 @@ class get_started_activity : AppCompatActivity() {
                 }
                 else{
                     val userdata=user_data(name,email,contact,country,city,pass)
-                    signup_func(userdata)
+                    val tempUrl = "${url}checkuser.php"
+                    val stringRequest = object : StringRequest(
+                        Request.Method.POST, tempUrl,
+                        Response.Listener { response ->
+                            // Handle response
+                            if (response == "User not found") {
+                                SignUp(userdata)
+                            } else {
+                                val userID = response
+                                Toast.makeText(this,"User Already Exists",Toast.LENGTH_LONG).show()
+                            }
+                        },
+                        Response.ErrorListener { error ->
+                            // Handle error
+                            Toast.makeText(this, "An error occurred", Toast.LENGTH_SHORT).show()
+                            Log.e("API Error", "Error occurred: ${error.message}")
+                        }) {
+                        override fun getParams(): MutableMap<String, String> {
+                            val params = HashMap<String, String>()
+                            params["email"] = email
+                            return params
+                        }
+                    }
+                    // Add the request to the RequestQueue
+                    Volley.newRequestQueue(this).add(stringRequest)
                 }
 
             }
@@ -114,7 +145,7 @@ class get_started_activity : AppCompatActivity() {
             finish()
         }
     }
-    fun signup_func(userData: user_data) {
+    fun SignUp(userData: user_data) {
         val intent = Intent(this, dialer_activity::class.java)
         intent.putExtra("myData", userData)
         startActivity(intent)
